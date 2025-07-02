@@ -353,6 +353,215 @@ kubectl patch configmap falco-ai-alerts-config -n falco-ai-alerts \
 kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-alerts
 ```
 
+## 🗑️ Uninstall and Cleanup
+
+### 🚀 **Quick Option: Use the Cleanup Script**
+
+We provide an automated cleanup script for easy uninstallation:
+
+```bash
+# Clean up development environment (with backup)
+./cleanup.sh dev
+
+# Clean up production environment and delete all data
+./cleanup.sh prod --delete-data
+
+# Clean up everything without prompts
+./cleanup.sh all --force
+
+# Get help with all options
+./cleanup.sh --help
+```
+
+The script provides:
+- ✅ **Automatic backups** (database and configuration)
+- ✅ **Graceful shutdown** (scale to 0 before deletion)
+- ✅ **Safety confirmations** (prevents accidental deletion)
+- ✅ **Cleanup verification** (ensures complete removal)
+- ✅ **Error handling** (robust cleanup even if some resources fail)
+
+### Complete Uninstall Instructions
+
+#### ⚠️ **IMPORTANT: Data Backup First!**
+```bash
+# 1. Backup your database before cleanup
+kubectl exec deployment/falco-ai-alerts -n falco-ai-alerts -- \
+  cp /app/data/alerts.db /tmp/alerts-backup-$(date +%Y%m%d).db
+
+# 2. Copy backup to local machine
+kubectl cp falco-ai-alerts/$(kubectl get pods -n falco-ai-alerts -l app.kubernetes.io/name=falco-ai-alerts -o jsonpath='{.items[0].metadata.name}'):/tmp/alerts-backup-$(date +%Y%m%d).db ./alerts-backup.db
+
+# 3. Backup configuration (optional)
+kubectl get configmap,secret -n falco-ai-alerts -o yaml > config-backup.yaml
+```
+
+#### 🧹 **Development Environment Cleanup**
+```bash
+# Delete development deployment
+kubectl delete -k overlays/development/
+
+# Verify removal
+kubectl get all -n falco-ai-alerts-dev
+# Should show: No resources found in falco-ai-alerts-dev namespace.
+
+# Clean up persistent volumes (⚠️ This deletes all data!)
+kubectl delete pvc --all -n falco-ai-alerts-dev
+
+# Remove namespace (this removes everything)
+kubectl delete namespace falco-ai-alerts-dev
+
+# Clean up cluster-wide resources
+kubectl delete clusterrole dev-falco-ai-alerts
+kubectl delete clusterrolebinding dev-falco-ai-alerts
+```
+
+#### 🏭 **Production Environment Cleanup**
+```bash
+# ⚠️ PRODUCTION WARNING: This will delete your production system!
+# Make sure you have backups and approval for this operation.
+
+# Step 1: Scale down to prevent new alerts
+kubectl scale deployment prod-falco-ai-alerts --replicas=0 -n falco-ai-alerts
+
+# Step 2: Wait for graceful shutdown
+kubectl wait --for=delete pod -l app.kubernetes.io/name=falco-ai-alerts -n falco-ai-alerts --timeout=60s
+
+# Step 3: Delete the deployment
+kubectl delete -k overlays/production/
+
+# Step 4: Clean up persistent data (⚠️ IRREVERSIBLE!)
+kubectl delete pvc --all -n falco-ai-alerts
+
+# Step 5: Remove namespace
+kubectl delete namespace falco-ai-alerts
+
+# Step 6: Clean up cluster-wide resources
+kubectl delete clusterrole prod-falco-ai-alerts
+kubectl delete clusterrolebinding prod-falco-ai-alerts
+```
+
+#### 🔍 **Verification Steps**
+```bash
+# 1. Check no resources remain
+kubectl get all,pvc,secrets,configmaps -n falco-ai-alerts
+kubectl get all,pvc,secrets,configmaps -n falco-ai-alerts-dev
+
+# 2. Check cluster-wide resources
+kubectl get clusterrole | grep falco-ai-alerts
+kubectl get clusterrolebinding | grep falco-ai-alerts
+
+# 3. Check for stuck finalizers
+kubectl get namespace falco-ai-alerts -o yaml
+kubectl get namespace falco-ai-alerts-dev -o yaml
+
+# Should show: Error from server (NotFound) for successful cleanup
+```
+
+#### 🚨 **Troubleshooting Stuck Resources**
+
+##### Namespace Stuck in "Terminating"
+```bash
+# Check what's preventing deletion
+kubectl get all -n falco-ai-alerts
+kubectl describe namespace falco-ai-alerts
+
+# Force remove finalizers (last resort)
+kubectl patch namespace falco-ai-alerts -p '{"metadata":{"finalizers":[]}}' --type=merge
+kubectl patch namespace falco-ai-alerts-dev -p '{"metadata":{"finalizers":[]}}' --type=merge
+```
+
+##### Persistent Volumes Stuck
+```bash
+# Check PV status
+kubectl get pv | grep falco-ai-alerts
+
+# Force delete PVs if stuck
+kubectl patch pv <pv-name> -p '{"metadata":{"finalizers":[]}}' --type=merge
+kubectl delete pv <pv-name> --force --grace-period=0
+```
+
+##### Pods Stuck in Terminating
+```bash
+# Check pod status
+kubectl get pods -n falco-ai-alerts --field-selector=status.phase!=Running
+
+# Force delete stuck pods
+kubectl delete pod <pod-name> -n falco-ai-alerts --force --grace-period=0
+```
+
+#### 🔄 **Selective Cleanup (Keep Data)**
+
+If you want to remove the application but keep your data:
+
+```bash
+# Remove application but keep PVCs
+kubectl delete deployment,service,ingress,hpa,networkpolicy -n falco-ai-alerts
+kubectl delete deployment,service,ingress,hpa,networkpolicy -n falco-ai-alerts-dev
+
+# Keep: PVCs, Secrets, ConfigMaps, Namespace
+# This preserves your alert database and configuration
+```
+
+#### 📦 **Clean Reinstall Process**
+```bash
+# 1. Complete cleanup (including data)
+kubectl delete -k overlays/production/
+kubectl delete pvc --all -n falco-ai-alerts
+kubectl delete namespace falco-ai-alerts
+
+# 2. Wait for complete removal
+kubectl get namespace | grep falco-ai-alerts
+# Should show no results
+
+# 3. Fresh install
+kubectl apply -k overlays/production/
+
+# 4. Restore data (if you have backups)
+kubectl cp ./alerts-backup.db falco-ai-alerts/$(kubectl get pods -n falco-ai-alerts -l app.kubernetes.io/name=falco-ai-alerts -o jsonpath='{.items[0].metadata.name}'):/app/data/alerts.db
+```
+
+### 📋 **Cleanup Checklist**
+
+#### Pre-Cleanup
+- [ ] **Backup Database**: Export alert data and configuration
+- [ ] **Team Notification**: Inform team about planned downtime  
+- [ ] **Falco Configuration**: Update Falco to stop sending alerts
+- [ ] **Monitoring**: Disable alerts for the cleanup period
+- [ ] **Access Verification**: Ensure you have cluster admin access
+
+#### During Cleanup
+- [ ] **Scale Down**: Gracefully scale replicas to 0
+- [ ] **Wait for Drain**: Allow pods to finish processing
+- [ ] **Delete Resources**: Remove application resources
+- [ ] **Remove Data**: Delete PVCs and persistent data (if desired)
+- [ ] **Clean Cluster Resources**: Remove cluster-wide RBAC
+
+#### Post-Cleanup Verification
+- [ ] **No Resources**: Verify no resources remain in namespaces
+- [ ] **No Cluster Resources**: Check cluster-wide resources removed
+- [ ] **No Stuck Objects**: Ensure no objects stuck in terminating state
+- [ ] **Storage Cleanup**: Verify persistent volumes cleaned up
+- [ ] **DNS Cleanup**: Ensure service DNS entries removed
+
+### ⚡ **Quick Cleanup Commands**
+
+#### Emergency Full Cleanup
+```bash
+# ⚠️ DANGER: This removes EVERYTHING immediately
+kubectl delete namespace falco-ai-alerts falco-ai-alerts-dev --force --grace-period=0
+kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/name=falco-ai-alerts
+```
+
+#### Development Only
+```bash
+kubectl delete -k overlays/development/ && kubectl delete namespace falco-ai-alerts-dev
+```
+
+#### Production Only  
+```bash
+kubectl delete -k overlays/production/ && kubectl delete namespace falco-ai-alerts
+```
+
 ## 🚀 Advanced Deployments
 
 ### Multi-Region Setup

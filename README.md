@@ -147,6 +147,51 @@ echo "PROVIDER_NAME=ollama" >> .env
 echo "OLLAMA_MODEL_NAME=llama3" >> .env
 ```
 
+## ☸️ Kubernetes Deployment
+
+Complete production-ready Kubernetes deployment with auto-scaling, monitoring, and security hardening:
+
+### Quick Deploy
+```bash
+# Deploy to development environment
+kubectl apply -k k8s/overlays/development/
+
+# Deploy to production environment  
+kubectl apply -k k8s/overlays/production/
+
+# Access via port-forward (development)
+kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-dev
+
+# Access Web UI
+open http://localhost:8080/dashboard
+```
+
+### Easy Cleanup
+```bash
+# Clean up development environment (with backup)
+./k8s/cleanup.sh dev
+
+# Clean up production environment and delete all data
+./k8s/cleanup.sh prod --delete-data
+
+# Clean up everything without prompts
+./k8s/cleanup.sh all --force
+
+# Get help with all options
+./k8s/cleanup.sh --help
+```
+
+### Kubernetes Features
+- 🔄 **Auto-scaling** (HPA with CPU/memory metrics)
+- 🔒 **Security-hardened** (RBAC, Network Policies, Security Contexts)
+- 📊 **Monitoring ready** (Prometheus integration, health checks)
+- 🏗️ **Multi-environment** (Development and Production overlays)
+- 💾 **Persistent storage** (Database and configuration persistence)
+- 🌐 **Ingress support** (TLS termination, custom domains)
+- 🗑️ **Easy cleanup** (Automated uninstall script with backups)
+
+**📖 Complete Documentation**: See [k8s/README.md](k8s/README.md) for detailed deployment instructions, configuration options, troubleshooting, and advanced deployment scenarios.
+
 ## 📊 Web UI Usage
 
 ### Dashboard Features
