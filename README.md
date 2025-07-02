@@ -86,8 +86,20 @@ WEB_UI_ENABLED=true
 ```
 
 ### 3. Run the Application
+
+#### Option A: Using Docker (Recommended)
 ```bash
-# Development mode
+# Pull and run the published image
+docker run -d \
+  --name falco-ai-alerts \
+  -p 8080:8080 \
+  -v $(pwd)/.env:/app/.env \
+  maddigsys/falco-ai-alerts:latest
+```
+
+#### Option B: Development mode
+```bash
+# Local development
 python app.py
 
 # The application will start with:

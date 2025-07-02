@@ -30,7 +30,10 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 git clone <repository-url>
 cd falco-ai-alerts/k8s
 
-# Build and push the Docker image
+# Use the published image (recommended)
+# Image is available at: maddigsys/falco-ai-alerts:latest
+
+# Or build and push your own image
 docker build -t your-registry/falco-ai-alerts:latest ..
 docker push your-registry/falco-ai-alerts:latest
 ```

@@ -67,4 +67,5 @@ configMapGenerator:
 
 images:
   - name: falco-ai-alerts
-    newTag: "1.0.0" 
+    newName: maddigsys/falco-ai-alerts
+    newTag: "v1.0.0" 
