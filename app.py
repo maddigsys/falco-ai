@@ -1995,6 +1995,67 @@ def api_reset_general_config():
     
     return jsonify({"message": "General configuration reset to defaults"})
 
+@app.route('/api/falco/config')
+def api_falco_config():
+    """Get Falco webhook configuration."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI is disabled"}), 404
+    
+    try:
+        # Get the actual port from configuration
+        general_config = get_cached_general_config()
+        webhook_port = general_config.get('falco_ai_port', {}).get('value', '8080')
+        
+        # Get request host and protocol
+        host = request.host.split(':')[0]  # Remove port if present
+        protocol = 'https' if request.is_secure else 'http'
+        
+        # Build webhook URL
+        webhook_url = f"{protocol}://{host}:{webhook_port}/falco-webhook"
+        
+        # Generate Falco YAML configuration
+        falco_yaml = f"""# Falco HTTP Output Configuration
+# Add this to your falco.yaml file
+
+http_output:
+  enabled: true
+  url: "{webhook_url}"
+  user_agent: "Falco Webhook"
+  # Optional: Add custom headers if needed
+  # headers:
+  #   X-Custom-Header: "value"
+
+# Optional: JSON output formatting
+json_output: true
+json_include_output_property: true
+json_include_tags_property: true
+
+# Optional: Configure log level and priority
+log_level: info
+priority: warning
+
+# Optional: Configure buffering for better performance
+# buffered_outputs: true
+# outputs:
+#   rate: 1000
+#   max_burst: 10000"""
+        
+        return jsonify({
+            'success': True,
+            'webhook_url': webhook_url,
+            'webhook_port': webhook_port,
+            'falco_yaml': falco_yaml,
+            'host': host,
+            'protocol': protocol
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting Falco config: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Initialize database if Web UI is enabled
     if WEB_UI_ENABLED:

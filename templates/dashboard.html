@@ -255,6 +255,67 @@
             margin-bottom: 1rem;
         }
 
+        /* Falco Configuration Styles */
+        .falco-config-toggle-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            color: var(--primary-color);
+            font-size: 0.875rem;
+        }
+
+        #falcoConfigCard.collapsed .falco-config-content {
+            display: none;
+        }
+
+        #falcoConfigCard.collapsed .falco-config-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .config-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .config-value-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .config-value {
+            background: var(--bg-light);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .config-yaml-container {
+            position: relative;
+            margin-top: 0.5rem;
+        }
+
+        .config-yaml {
+            background: var(--bg-light);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .config-yaml-container button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+
         .stat-card.danger {
             background: var(--danger-gradient);
         }
@@ -1035,6 +1096,80 @@
                     </div>
                 </div>
 
+                <!-- Falco Configuration -->
+                <div class="content-card" id="falcoConfigCard">
+                    <div class="content-card-header collapsible-header" onclick="toggleFalcoConfig()">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-cog"></i>
+                            Falco Webhook Configuration
+                            <i class="fas fa-chevron-up falco-config-toggle-icon"></i>
+                        </h3>
+                    </div>
+                    <div class="content-card-body falco-config-content">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-link"></i> Webhook Endpoint</h5>
+                                    <p class="text-muted">Configure Falco to send alerts to this endpoint:</p>
+                                    <div class="config-value-container">
+                                        <code id="webhookUrl" class="config-value">Loading...</code>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('webhookUrl')" title="Copy to clipboard">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-file-code"></i> Falco Configuration</h5>
+                                    <p class="text-muted">Add this to your falco.yaml file:</p>
+                                    <div class="config-yaml-container">
+                                        <pre id="falcoYamlConfig" class="config-yaml">Loading...</pre>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('falcoYamlConfig')" title="Copy configuration">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-info-circle"></i> Configuration Notes</h5>
+                                    <div class="alert alert-info">
+                                        <ul class="mb-0">
+                                            <li><strong>Local Development:</strong> Use <code>http://localhost:8080/falco-webhook</code> if running locally</li>
+                                            <li><strong>Docker:</strong> Use <code>http://host.docker.internal:8080/falco-webhook</code> from container</li>
+                                            <li><strong>Kubernetes:</strong> Use the service name, e.g., <code>http://falco-ai-alerts:8080/falco-webhook</code></li>
+                                            <li><strong>Production:</strong> Replace with your actual domain/IP address</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-primary btn-sm" onclick="testWebhook()">
+                                        <i class="fas fa-play"></i>
+                                        Test Webhook
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="downloadFalcoConfig()">
+                                        <i class="fas fa-download"></i>
+                                        Download falco.yaml
+                                    </button>
+                                    <a href="https://falco.org/docs/outputs/" class="btn btn-outline-info btn-sm" target="_blank">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Falco Docs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quick Stats -->
                 <div class="content-card" id="quickStatsCard" style="display: none;">
                     <div class="content-card-header collapsible-header" onclick="toggleQuickStats()">
@@ -1132,7 +1267,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeSidebarState();
             initializeQuickStatsState();
+            initializeFalcoConfigState();
             loadDashboardData();
+            loadFalcoConfig();
             setupAutoRefresh();
         });
 
@@ -1990,6 +2127,155 @@
                 setTimeout(() => {
                     clickedCard.style.transform = '';
                 }, 200);
+            }
+        }
+
+        // Initialize Falco Config state
+        function initializeFalcoConfigState() {
+            const collapsed = localStorage.getItem('falcoConfigCollapsed') === 'true';
+            const falcoConfigCard = document.getElementById('falcoConfigCard');
+            
+            if (collapsed) {
+                falcoConfigCard.classList.add('collapsed');
+            }
+        }
+
+        // Toggle Falco Config
+        function toggleFalcoConfig() {
+            const falcoConfigCard = document.getElementById('falcoConfigCard');
+            const isCollapsed = falcoConfigCard.classList.toggle('collapsed');
+            
+            localStorage.setItem('falcoConfigCollapsed', isCollapsed);
+        }
+
+        // Load Falco Configuration
+        async function loadFalcoConfig() {
+            try {
+                const response = await fetch('/api/falco/config');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const config = await response.json();
+                
+                if (config.success) {
+                    // Update webhook URL
+                    document.getElementById('webhookUrl').textContent = config.webhook_url;
+                    
+                    // Update Falco YAML configuration
+                    document.getElementById('falcoYamlConfig').textContent = config.falco_yaml;
+                } else {
+                    throw new Error(config.error || 'Failed to load configuration');
+                }
+                
+            } catch (error) {
+                console.error('Error loading Falco configuration:', error);
+                document.getElementById('webhookUrl').textContent = 'Error loading configuration';
+                document.getElementById('falcoYamlConfig').textContent = 'Error loading configuration';
+            }
+        }
+
+        // Copy to clipboard function
+        async function copyToClipboard(elementId) {
+            try {
+                const element = document.getElementById(elementId);
+                const text = element.textContent;
+                
+                await navigator.clipboard.writeText(text);
+                
+                // Show success feedback
+                const button = element.parentElement.querySelector('button') || element.nextElementSibling;
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                button.classList.add('btn-success');
+                button.classList.remove('btn-outline-secondary');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-secondary');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error copying to clipboard:', error);
+                showError('Failed to copy to clipboard');
+            }
+        }
+
+        // Test webhook function
+        async function testWebhook() {
+            const testBtn = document.querySelector('[onclick="testWebhook()"]');
+            const originalHTML = testBtn.innerHTML;
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+            testBtn.disabled = true;
+            
+            try {
+                const webhookUrl = document.getElementById('webhookUrl').textContent;
+                
+                // Create a test alert payload
+                const testPayload = {
+                    rule: "Test Alert from Dashboard",
+                    priority: "Warning",
+                    output: "This is a test alert generated from the Falco AI Dashboard to verify webhook connectivity.",
+                    output_fields: {
+                        "container.name": "test-container",
+                        "proc.cmdline": "test-command",
+                        "evt.time": new Date().toISOString()
+                    },
+                    time: new Date().toISOString(),
+                    hostname: window.location.hostname
+                };
+                
+                // Send test webhook directly to our endpoint
+                const response = await fetch('/falco-webhook', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'Falco Webhook Test'
+                    },
+                    body: JSON.stringify(testPayload)
+                });
+                
+                if (response.ok) {
+                    showError('✅ Test webhook sent successfully! Check the alerts list for the test alert.');
+                    // Refresh alerts to show the test alert
+                    setTimeout(() => {
+                        loadAlerts();
+                    }, 1000);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('Error testing webhook:', error);
+                showError('❌ Webhook test failed: ' + error.message);
+            } finally {
+                testBtn.innerHTML = originalHTML;
+                testBtn.disabled = false;
+            }
+        }
+
+        // Download Falco config function
+        function downloadFalcoConfig() {
+            try {
+                const configText = document.getElementById('falcoYamlConfig').textContent;
+                const blob = new Blob([configText], { type: 'text/yaml' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'falco-webhook-config.yaml';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showError('✅ Falco configuration downloaded successfully!');
+                
+            } catch (error) {
+                console.error('Error downloading config:', error);
+                showError('❌ Failed to download configuration');
             }
         }
 

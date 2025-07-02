@@ -149,7 +149,32 @@ echo "OLLAMA_MODEL_NAME=llama3" >> .env
 
 ## ☸️ Kubernetes Deployment
 
-Complete production-ready Kubernetes deployment with auto-scaling, monitoring, and security hardening:
+Complete production-ready Kubernetes deployment with auto-scaling, monitoring, and security hardening.
+
+### 🔧 **Resource Requirements**
+
+⚠️ **Important**: Ensure your cluster has sufficient resources before deployment!
+
+#### **Development Environment** (Single-node testing)
+- **Memory**: 8GB available RAM (6GB for Ollama 7B model + 2GB for app)
+- **CPU**: 2 cores minimum  
+- **Storage**: 15GB available storage
+- **Model**: `llama3.1:7b` (smaller, faster for testing)
+
+#### **Production Environment** (Multi-node cluster)
+- **Memory**: 18GB available RAM (16GB for Ollama 13B model + 2GB for app)
+- **CPU**: 4 cores minimum
+- **Storage**: 30GB available storage
+- **Model**: `jimscard/whiterabbit-neo:latest` (13B, optimized for security)
+- **Note**: ⚠️ 13B model has slower inference (15-30s), consider 7B for high-volume
+
+#### **Enterprise Environment** (High-performance)
+- **Memory**: 24GB+ available RAM (for 30B+ models)
+- **CPU**: 8+ cores
+- **Storage**: 50GB+ available storage
+- **Model**: `llama3.1:70b` or similar large models
+
+📖 **See [k8s/OLLAMA_MODELS.md](k8s/OLLAMA_MODELS.md) for complete model selection and resource planning guide.**
 
 ### 🚀 Easy Install
 ```bash

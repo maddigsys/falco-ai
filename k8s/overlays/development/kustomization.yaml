@@ -68,7 +68,7 @@ patches:
         value: "DEBUG"
       - op: replace
         path: /data/MIN_PRIORITY
-        value: "informational"
+        value: "notice"
       - op: add
         path: /data/ALERT_RETENTION_DAYS
         value: "7"
@@ -100,6 +100,61 @@ patches:
           curl -s http://dev-ollama:11434/api/tags | grep -q "jimscard/whiterabbit-neo" || exit 1
           
           echo "Model initialization complete!"
+
+  # Development Ollama resource optimization
+  # Use smaller model (7B) for development to reduce resource requirements
+  - target:
+      kind: Deployment
+      name: ollama
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "6Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "8Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "2000m"
+
+  # Use smaller model for development
+  - target:
+      kind: Job
+      name: ollama-model-init
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: "llama3.1:7b"
+
+  # Development PVC size
+  - target:
+      kind: PersistentVolumeClaim
+      name: ollama-data
+    patch: |-
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: "15Gi"
+
+  # Fix service names for development environment
+  - target:
+      kind: ConfigMap
+      name: falco-ai-alerts-config
+    patch: |-
+      - op: replace
+        path: /data/OLLAMA_API_URL
+        value: "http://dev-ollama:11434/api/generate"
+
+  # Fix init job service name reference
+  - target:
+      kind: Job
+      name: ollama-model-init
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "http://dev-ollama:11434"
 
 images:
   - name: falco-ai-alerts

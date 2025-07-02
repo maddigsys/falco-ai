@@ -11,6 +11,29 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 - **Ingress Controller**: NGINX Ingress Controller (recommended)
 - **DNS**: CoreDNS or kube-dns
 
+### 🔧 **Resource Requirements**
+
+#### **Development Environment** (Single-node testing)
+- **Memory**: 8GB available RAM (6GB for Ollama 7B model + 2GB for app)
+- **CPU**: 2 cores minimum
+- **Storage**: 15GB available storage
+- **Model**: `llama3.1:7b` (smaller, faster)
+
+#### **Production Environment** (Multi-node cluster)
+- **Memory**: 18GB available RAM (16GB for Ollama 13B model + 2GB for app)
+- **CPU**: 4 cores minimum
+- **Storage**: 30GB available storage
+- **Model**: `jimscard/whiterabbit-neo:latest` (13B, optimized for security)
+- **Note**: ⚠️ 13B model has slower inference (15-30s), consider 7B for high-volume
+
+#### **Enterprise Environment** (High-performance)
+- **Memory**: 24GB+ available RAM (for 30B+ models)
+- **CPU**: 8+ cores
+- **Storage**: 50GB+ available storage
+- **Model**: `llama3.1:70b` or similar large models
+
+📖 **See [OLLAMA_MODELS.md](OLLAMA_MODELS.md) for detailed model selection and resource planning guide.**
+
 ### Required Cluster Add-ons
 - **Metrics Server**: For HPA functionality
 - **Cert-Manager**: For TLS certificate management (optional)

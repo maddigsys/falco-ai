@@ -34,17 +34,23 @@ spec:
         - name: ollama-data
           mountPath: /root/.ollama
         resources:
+          # Resource requirements based on model size:
+          # - 7B models (llama2:7b, mistral:7b): 6-8GB RAM
+          # - 13B models (jimscard/whiterabbit-neo:latest): 14-16GB RAM
+          # - 30B+ models: 20GB+ RAM
+          # Current default is for 13B models like whiterabbit-neo
+          # TESTED: 13B model requires ~8.8GB for model buffer + ~6GB for context = 16GB total
           requests:
-            memory: "2Gi"
-            cpu: "1000m"
+            memory: "14Gi"  # Minimum for 13B models (model buffer + context overhead)
+            cpu: "2000m"    # Higher CPU for better performance
           limits:
-            memory: "4Gi"
-            cpu: "2000m"
+            memory: "16Gi"  # Tested requirement for 13B models
+            cpu: "4000m"    # Allow burst for inference
         livenessProbe:
           httpGet:
             path: /api/tags
             port: api
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60   # Increased for model loading
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
@@ -52,7 +58,7 @@ spec:
           httpGet:
             path: /api/tags
             port: api
-          initialDelaySeconds: 10
+          initialDelaySeconds: 30   # Increased for model loading
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -100,4 +106,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi  # Ollama models can be large 
+      storage: 30Gi  # Increased for larger models (13B model ~9GB + overhead) 
