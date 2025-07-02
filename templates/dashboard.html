@@ -1209,6 +1209,105 @@
                     </div>
                 </div>
 
+                <!-- Falco Configuration -->
+                <div class="content-card" id="falcoConfigCard" style="display: none;">
+                    <div class="content-card-header collapsible-header" onclick="toggleFalcoConfig()">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-cog"></i>
+                            Falco Integration Setup
+                            <i class="fas fa-chevron-up falco-config-toggle-icon"></i>
+                        </h3>
+                    </div>
+                    <div class="content-card-body falco-config-content">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Configure Falco to send alerts to this system</strong><br>
+                                    Use the webhook URLs below in your Falco configuration to start receiving security alerts with AI analysis.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-link"></i> Webhook URLs</h5>
+                                    <p class="text-muted">Use these URLs to configure Falco HTTP output</p>
+                                    
+                                    <div class="mb-3">
+                                        <label class="fw-bold">🌐 External/Ingress URL:</label>
+                                        <div class="config-value-container">
+                                            <input type="text" class="config-value" id="externalWebhookUrl" value="" readonly>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('externalWebhookUrl')" title="Copy URL">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Use this URL if Falco runs outside Kubernetes or you have external access configured</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="fw-bold">🏠 Internal/Kubernetes URL:</label>
+                                        <div class="config-value-container">
+                                            <input type="text" class="config-value" id="internalWebhookUrl" value="" readonly>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('internalWebhookUrl')" title="Copy URL">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Use this URL if Falco runs inside the same Kubernetes cluster</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-chart-line"></i> Test Webhook</h5>
+                                    <p class="text-muted">Send a test alert to verify configuration</p>
+                                    
+                                    <button class="btn btn-primary w-100" onclick="sendTestAlert()">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Send Test Alert
+                                    </button>
+                                    
+                                    <div id="testResult" class="mt-3" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-file-code"></i> Falco Configuration</h5>
+                                    <p class="text-muted">Add this configuration to your <code>falco.yaml</code> file:</p>
+                                    
+                                    <div class="config-yaml-container">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('falcoYamlConfig')" title="Copy Configuration">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                        <pre id="falcoYamlConfig" class="config-yaml"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="config-section">
+                                    <h5><i class="fas fa-cube"></i> Kubernetes Deployment</h5>
+                                    <p class="text-muted">If running Falco in Kubernetes, use this configuration:</p>
+                                    
+                                    <div class="config-yaml-container">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('falcoK8sConfig')" title="Copy Kubernetes Config">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                        <pre id="falcoK8sConfig" class="config-yaml"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Alerts List -->
                 <div class="content-card" id="alertsCard" style="display: none;">
                     <div class="content-card-header">
@@ -1380,10 +1479,12 @@
                 if (alerts.length > 0) {
                     document.getElementById('welcomeCard').style.display = 'none';
                     document.getElementById('quickStatsCard').style.display = 'block';
+                    document.getElementById('falcoConfigCard').style.display = 'block';
                     document.getElementById('alertsCard').style.display = 'block';
                 } else {
                     document.getElementById('welcomeCard').style.display = 'block';
                     document.getElementById('quickStatsCard').style.display = 'none';
+                    document.getElementById('falcoConfigCard').style.display = 'block';
                     document.getElementById('alertsCard').style.display = 'none';
                     document.getElementById('alertDetailsCard').style.display = 'none';
                 }
@@ -1393,6 +1494,7 @@
                 currentAlerts = [];
                 document.getElementById('welcomeCard').style.display = 'block';
                 document.getElementById('quickStatsCard').style.display = 'none';
+                document.getElementById('falcoConfigCard').style.display = 'block';
                 document.getElementById('alertsCard').style.display = 'none';
                 document.getElementById('alertDetailsCard').style.display = 'none';
             }
@@ -2151,28 +2253,89 @@
         // Load Falco Configuration
         async function loadFalcoConfig() {
             try {
-                const response = await fetch('/api/falco/config');
+                // Determine webhook URLs based on current location
+                const host = window.location.host;
+                const protocol = window.location.protocol;
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                // External URL (current domain)
+                const externalWebhookUrl = `${protocol}//${host}/falco-webhook`;
                 
-                const config = await response.json();
+                // Internal Kubernetes URL (assuming standard deployment)
+                const namespace = 'falco-ai-alerts'; // Default production namespace
+                const serviceName = 'prod-falco-ai-alerts-webhook';
+                const internalWebhookUrl = `http://${serviceName}.${namespace}/falco-webhook`;
                 
-                if (config.success) {
-                    // Update webhook URL
-                    document.getElementById('webhookUrl').textContent = config.webhook_url;
-                    
-                    // Update Falco YAML configuration
-                    document.getElementById('falcoYamlConfig').textContent = config.falco_yaml;
-                } else {
-                    throw new Error(config.error || 'Failed to load configuration');
-                }
+                // Update URL fields
+                document.getElementById('externalWebhookUrl').value = externalWebhookUrl;
+                document.getElementById('internalWebhookUrl').value = internalWebhookUrl;
+                
+                // Generate Falco YAML configuration
+                const falcoYaml = `# Falco Webhook Configuration
+# Add this to your falco.yaml file
+
+json_output: true
+json_include_output_property: true
+json_include_tags_property: true
+
+http_output:
+  enabled: true
+  url: "${internalWebhookUrl}"
+  user_agent: "falcosecurity/falco"
+  # For external access, use: "${externalWebhookUrl}"
+
+# Optional: Configure webhook retry and timeout
+# webhook_retry_attempts: 3
+# webhook_retry_delay: 1000
+# webhook_timeout: 5000`;
+
+                document.getElementById('falcoYamlConfig').textContent = falcoYaml;
+                
+                // Generate Kubernetes configuration
+                const k8sConfig = `# Kubernetes Falco ConfigMap
+# Apply this to configure Falco in your cluster
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco
+  namespace: falco-system
+data:
+  falco.yaml: |
+    json_output: true
+    json_include_output_property: true
+    json_include_tags_property: true
+    
+    http_output:
+      enabled: true
+      url: "${internalWebhookUrl}"
+      user_agent: "falcosecurity/falco"
+    
+    # Enable syscall event source
+    syscall_event_drops:
+      actions:
+        - log
+        - alert
+      rate: 0.03333
+      max_burst: 1000
+    
+    # Output priority threshold
+    priority: warning
+    
+    # Rules configuration
+    rules_file:
+      - /etc/falco/falco_rules.yaml
+      - /etc/falco/falco_rules.local.yaml
+      - /etc/falco/k8s_audit_rules.yaml
+      - /etc/falco/rules.d/`;
+
+                document.getElementById('falcoK8sConfig').textContent = k8sConfig;
+                
+                // Show the Falco config card
+                document.getElementById('falcoConfigCard').style.display = 'block';
                 
             } catch (error) {
                 console.error('Error loading Falco configuration:', error);
-                document.getElementById('webhookUrl').textContent = 'Error loading configuration';
-                document.getElementById('falcoYamlConfig').textContent = 'Error loading configuration';
+                showError('Failed to load Falco configuration: ' + error.message);
             }
         }
 
@@ -2180,51 +2343,63 @@
         async function copyToClipboard(elementId) {
             try {
                 const element = document.getElementById(elementId);
-                const text = element.textContent;
+                const text = element.value || element.textContent || element.innerText;
                 
                 await navigator.clipboard.writeText(text);
                 
-                // Show success feedback
-                const button = element.parentElement.querySelector('button') || element.nextElementSibling;
-                const originalHTML = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check"></i>';
-                button.classList.add('btn-success');
-                button.classList.remove('btn-outline-secondary');
+                // Find the copy button (either sibling or in parent container)
+                const button = element.parentElement.querySelector('button') || 
+                             element.parentElement.parentElement.querySelector('button') ||
+                             document.querySelector(`[onclick="copyToClipboard('${elementId}')"]`);
                 
-                setTimeout(() => {
-                    button.innerHTML = originalHTML;
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-outline-secondary');
-                }, 2000);
+                if (button) {
+                    const originalHTML = button.innerHTML;
+                    const originalClasses = button.className;
+                    
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    button.classList.add('btn-success');
+                    button.classList.remove('btn-outline-secondary');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.className = originalClasses;
+                    }, 2000);
+                }
+                
+                showError('✅ Copied to clipboard successfully!');
                 
             } catch (error) {
                 console.error('Error copying to clipboard:', error);
-                showError('Failed to copy to clipboard');
+                showError('❌ Failed to copy to clipboard: ' + error.message);
             }
         }
 
-        // Test webhook function
-        async function testWebhook() {
-            const testBtn = document.querySelector('[onclick="testWebhook()"]');
+        // Send test alert function
+        async function sendTestAlert() {
+            const testBtn = document.querySelector('[onclick="sendTestAlert()"]');
+            const testResult = document.getElementById('testResult');
             const originalHTML = testBtn.innerHTML;
-            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+            
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             testBtn.disabled = true;
+            testResult.style.display = 'none';
             
             try {
-                const webhookUrl = document.getElementById('webhookUrl').textContent;
-                
                 // Create a test alert payload
                 const testPayload = {
                     rule: "Test Alert from Dashboard",
-                    priority: "Warning",
-                    output: "This is a test alert generated from the Falco AI Dashboard to verify webhook connectivity.",
+                    priority: "warning",
+                    output: "This is a test alert generated from the Falco AI Dashboard to verify webhook connectivity and AI analysis.",
                     output_fields: {
                         "container.name": "test-container",
                         "proc.cmdline": "test-command",
+                        "k8s.pod.name": "test-pod",
+                        "k8s.ns.name": "test-namespace",
                         "evt.time": new Date().toISOString()
                     },
                     time: new Date().toISOString(),
-                    hostname: window.location.hostname
+                    hostname: window.location.hostname,
+                    source: "Dashboard Test"
                 };
                 
                 // Send test webhook directly to our endpoint
@@ -2237,19 +2412,37 @@
                     body: JSON.stringify(testPayload)
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
-                    showError('✅ Test webhook sent successfully! Check the alerts list for the test alert.');
+                    testResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Test Successful!</strong><br>
+                            Webhook sent successfully. Check the alerts list for the test alert with AI analysis.
+                        </div>
+                    `;
+                    testResult.style.display = 'block';
+                    
                     // Refresh alerts to show the test alert
                     setTimeout(() => {
                         loadAlerts();
-                    }, 1000);
+                        loadAlertCounts();
+                    }, 2000);
                 } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(result.error || `HTTP ${response.status}: ${response.statusText}`);
                 }
                 
             } catch (error) {
-                console.error('Error testing webhook:', error);
-                showError('❌ Webhook test failed: ' + error.message);
+                console.error('Error sending test alert:', error);
+                testResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Test Failed!</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                testResult.style.display = 'block';
             } finally {
                 testBtn.innerHTML = originalHTML;
                 testBtn.disabled = false;
