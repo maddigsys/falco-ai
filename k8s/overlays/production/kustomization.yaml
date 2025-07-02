@@ -45,16 +45,7 @@ patches:
         path: /spec/template/spec/containers/0/resources/limits/cpu
         value: "1000m"
 
-  # Add production readiness configurations
-  - target:
-      kind: Deployment
-      name: falco-ai-alerts
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: ENVIRONMENT
-          value: "production"
+
 
   # Override ConfigMap values for production
   - target:
@@ -77,4 +68,4 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: "v1.0.0" 
+    newTag: "v1.0.2" 
