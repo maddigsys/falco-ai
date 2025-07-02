@@ -174,13 +174,36 @@ install_environment() {
     print_info "Waiting for Ollama deployment..."
     kubectl wait --for=condition=available deployment/"${prefix}ollama" -n "$namespace" --timeout=300s
     
-    # Check if model initialization job completed
+    # Check if model initialization job completed with progress tracking
     print_info "Checking Ollama model initialization..."
-    if kubectl wait --for=condition=complete job/"${prefix}ollama-model-init" -n "$namespace" --timeout=600s; then
-        print_success "Ollama model initialization completed"
+    
+    # Wait for job to start
+    local job_name="${prefix}ollama-model-init"
+    local max_wait=60
+    local waited=0
+    
+    while [ $waited -lt $max_wait ]; do
+        if kubectl get job "$job_name" -n "$namespace" &> /dev/null; then
+            break
+        fi
+        sleep 5
+        waited=$((waited + 5))
+        print_info "Waiting for Ollama model initialization job to start... (${waited}s)"
+    done
+    
+    # Check if job exists
+    if ! kubectl get job "$job_name" -n "$namespace" &> /dev/null; then
+        print_warning "Ollama model initialization job not found"
+        return 0
+    fi
+    
+    # Monitor progress with real-time logs
+    if [ "$SKIP_WAIT" = "true" ]; then
+        print_info "Skipping Ollama progress monitoring (--skip-wait enabled)"
+        print_info "Model download started. Check progress with: kubectl logs job/$job_name -n $namespace -f"
     else
-        print_warning "Ollama model initialization taking longer than expected"
-        print_info "You can check the status with: kubectl logs job/${prefix}ollama-model-init -n $namespace"
+        print_info "Downloading AI model (this may take several minutes for large models)..."
+        monitor_ollama_progress "$job_name" "$namespace"
     fi
     
     print_success "$environment environment installation completed!"
@@ -287,6 +310,196 @@ show_post_install() {
     fi
 }
 
+# Function to monitor Ollama model download progress
+monitor_ollama_progress() {
+    local job_name=$1
+    local namespace=$2
+    local timeout=900  # 15 minutes timeout
+    local start_time=$(date +%s)
+    local last_percentage=0
+    local download_complete=false
+    
+    # Function to convert bytes to human readable format
+    bytes_to_human() {
+        local bytes=$1
+        if [ $bytes -lt 1024 ]; then
+            echo "${bytes}B"
+        elif [ $bytes -lt 1048576 ]; then
+            echo "$((bytes / 1024))KB"
+        elif [ $bytes -lt 1073741824 ]; then
+            echo "$((bytes / 1048576))MB"
+        else
+            echo "$((bytes / 1073741824))GB"
+        fi
+    }
+    
+    # Function to draw progress bar
+    draw_progress_bar() {
+        local percentage=$1
+        local width=40
+        
+        # Ensure percentage is within bounds
+        if [ $percentage -lt 0 ]; then
+            percentage=0
+        elif [ $percentage -gt 100 ]; then
+            percentage=100
+        fi
+        
+        local filled=$((percentage * width / 100))
+        local empty=$((width - filled))
+        
+        # Clear line and draw progress bar
+        printf "\r\033[K["
+        if [ $filled -gt 0 ]; then
+            printf "%*s" $filled | tr ' ' '█'
+        fi
+        if [ $empty -gt 0 ]; then
+            printf "%*s" $empty | tr ' ' '░'
+        fi
+        printf "] %3d%%" $percentage
+    }
+    
+    print_info "Monitoring model download progress..."
+    echo ""
+    
+    # Monitor job logs for progress
+    while true; do
+        local current_time=$(date +%s)
+        local elapsed=$((current_time - start_time))
+        
+        # Check timeout
+        if [ $elapsed -gt $timeout ]; then
+            echo ""
+            print_warning "Model download timeout after $((timeout / 60)) minutes"
+            print_info "The download may still be running. Check logs: kubectl logs job/$job_name -n $namespace"
+            return 1
+        fi
+        
+        # Check if job completed
+        if kubectl get job "$job_name" -n "$namespace" -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' 2>/dev/null | grep -q "True"; then
+            if [ "$download_complete" = "false" ]; then
+                echo ""
+                print_success "Model download completed successfully!"
+                download_complete=true
+            fi
+            break
+        fi
+        
+        # Check if job failed
+        if kubectl get job "$job_name" -n "$namespace" -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' 2>/dev/null | grep -q "True"; then
+            echo ""
+            print_error "Model download failed"
+            print_info "Check logs: kubectl logs job/$job_name -n $namespace"
+            return 1
+        fi
+        
+        # Get the latest logs and parse progress
+        local latest_logs=$(kubectl logs job/"$job_name" -n "$namespace" --tail=10 2>/dev/null || echo "")
+        
+        if [ -n "$latest_logs" ]; then
+            # Parse JSON for download progress
+            local progress_line=$(echo "$latest_logs" | grep -E '"total":[0-9]+.*"completed":[0-9]+' | tail -1)
+            
+            if [ -n "$progress_line" ]; then
+                # Extract total and completed bytes using grep and sed
+                local total=$(echo "$progress_line" | grep -oE '"total":[0-9]+' | grep -oE '[0-9]+')
+                local completed=$(echo "$progress_line" | grep -oE '"completed":[0-9]+' | grep -oE '[0-9]+')
+                
+                if [ -n "$total" ] && [ -n "$completed" ] && [ "$total" -gt 0 ]; then
+                    local percentage=$((completed * 100 / total))
+                    
+                    # Only update if percentage changed significantly
+                    if [ $percentage -gt $last_percentage ]; then
+                        local completed_human=$(bytes_to_human $completed)
+                        local total_human=$(bytes_to_human $total)
+                        
+                        # Calculate download speed and ETA
+                        local remaining_bytes=$((total - completed))
+                        local speed_info=""
+                        if [ $elapsed -gt 10 ] && [ $completed -gt 0 ]; then
+                            local speed_bps=$((completed / elapsed))
+                            if [ $speed_bps -gt 0 ]; then
+                                local eta_seconds=$((remaining_bytes / speed_bps))
+                                local eta_minutes=$((eta_seconds / 60))
+                                if [ $eta_minutes -gt 0 ]; then
+                                    speed_info=$(printf " ETA: %dm" $eta_minutes)
+                                else
+                                    speed_info=$(printf " ETA: %ds" $eta_seconds)
+                                fi
+                            fi
+                        fi
+                        
+                        draw_progress_bar $percentage
+                        printf " %s / %s%s" "$completed_human" "$total_human" "$speed_info"
+                        
+                        last_percentage=$percentage
+                    fi
+                fi
+            else
+                # Check for status messages and other important log lines
+                local status_line=$(echo "$latest_logs" | grep -E '"status":"' | tail -1)
+                if [ -n "$status_line" ]; then
+                    local status=$(echo "$status_line" | grep -oE '"status":"[^"]*"' | cut -d'"' -f4)
+                    case "$status" in
+                        "success")
+                            printf "\r[✅] Model download completed                                    "
+                            ;;
+                        "verifying"*)
+                            printf "\r[🔍] Verifying model integrity...                               "
+                            ;;
+                        "writing"*)
+                            printf "\r[💾] Writing model to disk...                                  "
+                            ;;
+                        "pulling")
+                            if [ $elapsed -gt 30 ]; then
+                                printf "\r[📥] Downloading model (this may take several minutes)...       "
+                            fi
+                            ;;
+                        *)
+                            if [ -n "$status" ]; then
+                                printf "\r[ℹ️ ] Status: %s                                    " "$status"
+                            fi
+                            ;;
+                    esac
+                else
+                    # Check for other important messages
+                    if echo "$latest_logs" | grep -q "Model initialization complete"; then
+                        printf "\r[✅] Model initialization completed!                            "
+                        download_complete=true
+                        break
+                    elif echo "$latest_logs" | grep -q "Waiting for Ollama"; then
+                        printf "\r[⏳] Waiting for Ollama service to be ready...                 "
+                    elif [ $elapsed -gt 60 ] && [ $((elapsed % 10)) -eq 0 ]; then
+                        printf "\r[⏳] Model download in progress... (%dm %ds elapsed)            " $((elapsed / 60)) $((elapsed % 60))
+                    fi
+                fi
+            fi
+        fi
+        
+        sleep 2
+    done
+    
+    echo ""
+    
+    # Final verification
+    if kubectl wait --for=condition=complete job/"$job_name" -n "$namespace" --timeout=60s &> /dev/null; then
+        print_success "Ollama model initialization completed successfully!"
+        
+        # Show model verification
+        print_info "Verifying model installation..."
+        local verification_logs=$(kubectl logs job/"$job_name" -n "$namespace" --tail=5 2>/dev/null || echo "")
+        if echo "$verification_logs" | grep -q "Model initialization complete"; then
+            print_success "Model verification passed"
+        else
+            print_warning "Could not verify model installation"
+        fi
+    else
+        print_warning "Job completed but verification failed"
+        print_info "Check logs: kubectl logs job/$job_name -n $namespace"
+        return 1
+    fi
+}
+
 # Function to show help
 show_help() {
     cat << EOF
@@ -310,13 +523,14 @@ EXAMPLES:
     $0 dev --validate-only    # Just validate development config
     $0 prod --skip-wait       # Install production without waiting
 
-FEATURES:
-    - ✅ Automated prerequisite checking
-    - ✅ Configuration validation
-    - ✅ Secret setup guidance
-    - ✅ Deployment status monitoring
-    - ✅ Access instructions
-    - ✅ Post-installation guidance
+ FEATURES:
+     - ✅ Automated prerequisite checking
+     - ✅ Configuration validation
+     - ✅ Secret setup guidance
+     - ✅ Deployment status monitoring
+     - ✅ Real-time Ollama model download progress
+     - ✅ Access instructions
+     - ✅ Post-installation guidance
 
 REQUIREMENTS:
     - kubectl (v1.14+)

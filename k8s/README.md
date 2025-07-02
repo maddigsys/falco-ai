@@ -396,6 +396,7 @@ The script provides:
 - ✅ **Prerequisite checking** (kubectl, cluster access, kustomize)
 - ✅ **Configuration validation** (syntax and dependency checks)
 - ✅ **Automated deployment** (applies manifests and waits for readiness)
+- ✅ **Progress monitoring** (real-time AI model download with progress bar and ETA)
 - ✅ **Secret setup guidance** (shows commands for API keys)
 - ✅ **Access instructions** (port-forward commands and URLs)
 - ✅ **Post-install guidance** (configuration and testing steps)
