@@ -347,7 +347,16 @@ show_access_instructions() {
     
     echo "  kubectl port-forward svc/$service_name 8080:8080 -n $namespace"
     echo "  Browser: http://localhost:8080/dashboard"
-    echo "  Webhook: http://localhost:8080/falco-webhook"
+    echo ""
+    
+    print_info "🔗 Webhook URLs (for Falco configuration):"
+    if [ "$environment" = "development" ]; then
+        echo "  Internal: http://dev-falco-ai-alerts-webhook.falco-ai-alerts-dev/falco-webhook"
+        echo "  External: http://localhost:8080/falco-webhook (via port-forward)"
+    else
+        echo "  Internal: http://prod-falco-ai-alerts-webhook.falco-ai-alerts/falco-webhook"
+        echo "  External: http://your-domain.com/falco-webhook (via ingress)"
+    fi
     echo ""
     
     print_info "Check deployment status:"
@@ -359,11 +368,13 @@ show_access_instructions() {
     echo ""
     
     if [ "$environment" = "production" ]; then
-        print_info "Production features enabled:"
-        echo "  • Auto-scaling (HPA): 3-10 replicas"
-        echo "  • Network policies for security"
-        echo "  • Resource limits and monitoring"
-        echo "  • Ingress support (configure ingress.yaml)"
+        print_info "🚀 Production Features Enabled:"
+        echo "  • Auto-scaling (HPA): 3-10 replicas based on CPU/memory"
+        echo "  • Dedicated webhook service with clean URLs (port 80)"
+        echo "  • Network policies for enhanced security"
+        echo "  • Resource limits and Prometheus monitoring"
+        echo "  • Ingress support for external access"
+        echo "  • Optimized timeouts for large AI models (90s)"
     fi
 }
 
@@ -375,26 +386,35 @@ show_post_install() {
     print_step "Post-Installation Steps:"
     echo ""
     
-    print_info "1. Configure Falco to send alerts:"
-    echo "   Edit falco.yaml and add webhook URL to your dashboard"
+    print_info "1. 🎯 Configure Falco Integration (Easy Setup):"
+    echo "   • Open the dashboard: http://localhost:8080/dashboard"
+    echo "   • Navigate to the 'Falco Integration Setup' section"
+    echo "   • Copy the provided webhook URL and configuration"
+    echo "   • Paste into your falco.yaml file"
     echo ""
     
-    print_info "2. Test the webhook:"
-    echo "   curl -X POST http://localhost:8080/falco-webhook \\"
-    echo "     -H 'Content-Type: application/json' \\"
-    echo "     -d '{\"rule\": \"Test Alert\", \"priority\": \"warning\", \"output\": \"Test message\"}'"
+    print_info "2. ✅ Test the Integration:"
+    echo "   • Use the 'Send Test Alert' button in the dashboard, OR"
+    echo "   • Manual test:"
+    echo "     curl -X POST http://localhost:8080/falco-webhook \\"
+    echo "       -H 'Content-Type: application/json' \\"
+    echo "       -d '{\"rule\": \"Test Alert\", \"priority\": \"warning\", \"output\": \"Test message\"}'"
     echo ""
     
-    print_info "3. Monitor the system:"
-    echo "   kubectl get events -n falco-ai-alerts --sort-by='.lastTimestamp'"
+    print_info "3. 📊 Monitor Your System:"
+    echo "   • Dashboard: Real-time alerts with AI analysis"
+    echo "   • Logs: kubectl logs -f deployment/$service_name -n $namespace"
+    echo "   • Events: kubectl get events -n $namespace --sort-by='.lastTimestamp'"
     echo ""
     
     if [ "$environment" = "production" ]; then
-        print_info "4. Production considerations:"
-        echo "   • Configure Ingress for external access"
-        echo "   • Set up monitoring and alerting"
-        echo "   • Configure backup schedules"
-        echo "   • Review security policies"
+        print_info "4. 🏭 Production Considerations:"
+        echo "   • Configure Ingress for external webhook access"
+        echo "   • Set up monitoring (Prometheus metrics available)"
+        echo "   • Configure backup schedules for persistent data"
+        echo "   • Review and customize network security policies"
+        echo "   • Adjust AI model timeouts based on your model size"
+        echo "   • Consider setting up external AI providers for redundancy"
     fi
 }
 
@@ -619,8 +639,9 @@ EXAMPLES:
      - ✅ Required secret validation
      - ✅ Deployment status monitoring
      - ✅ Real-time Ollama model download progress
-     - ✅ Access instructions
-     - ✅ Post-installation guidance
+     - ✅ Clean webhook URLs (dedicated service on port 80)
+     - ✅ Comprehensive dashboard with Falco integration setup
+     - ✅ Access instructions and post-installation guidance
 
 REQUIREMENTS:
     - kubectl (v1.14+)
