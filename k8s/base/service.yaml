@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: falco-ai-alerts
     app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: falco-ecosystem
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "8080"
@@ -13,13 +14,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: webhook
+  - name: http
     port: 8080
-    targetPort: webhook
-    protocol: TCP
-  - name: web-ui
-    port: 8081
-    targetPort: web-ui
+    targetPort: http
     protocol: TCP
   selector:
     app.kubernetes.io/name: falco-ai-alerts
@@ -32,12 +29,13 @@ metadata:
   labels:
     app.kubernetes.io/name: falco-ai-alerts
     app.kubernetes.io/component: webhook
+    app.kubernetes.io/part-of: falco-ecosystem
 spec:
   type: ClusterIP
   ports:
   - name: webhook
     port: 80
-    targetPort: webhook
+    targetPort: http
     protocol: TCP
   selector:
     app.kubernetes.io/name: falco-ai-alerts 

@@ -17,7 +17,6 @@ resources:
   - ollama-init-job.yaml
 
 commonLabels:
-  app.kubernetes.io/name: falco-ai-alerts
   app.kubernetes.io/part-of: falco-ecosystem
 
 images:

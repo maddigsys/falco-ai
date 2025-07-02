@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: falco-ai-alerts
     app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: falco-ecosystem
 data:
   # Application Configuration
   WEB_UI_ENABLED: "true"
@@ -31,6 +32,9 @@ data:
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
+  # Timeout configuration (increased for 13B models like whiterabbit-neo)
+  OLLAMA_TIMEOUT: "90"  # seconds - adjust based on model size: 7B=30s, 13B=90s, 30B+=120s
+  AI_REQUEST_TIMEOUT: "90"  # seconds - application-level timeout
   
   # Slack Configuration
   SLACK_ENABLED: "true"

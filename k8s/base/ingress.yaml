@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: falco-ai-alerts
     app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: falco-ecosystem
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -28,7 +29,7 @@ spec:
           service:
             name: falco-ai-alerts
             port:
-              number: 8081
+              number: 8080
       - path: /falco-webhook
         pathType: Exact
         backend:

@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: falco-ai-alerts
     app.kubernetes.io/component: application
     app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/part-of: falco-ecosystem
 spec:
   replicas: 2
   strategy:
@@ -38,10 +39,7 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
-          name: webhook
-          protocol: TCP
-        - containerPort: 8081
-          name: web-ui
+          name: http
           protocol: TCP
         envFrom:
         - configMapRef:
@@ -63,7 +61,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: webhook
+            port: http
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 5
@@ -71,7 +69,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: webhook
+            port: http
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 3
