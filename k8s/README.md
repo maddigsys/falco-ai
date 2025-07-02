@@ -81,21 +81,54 @@ docker push your-registry/falco-ai-alerts:latest
 ```
 
 #### 2. Configure Secrets
+
+**For Development Environment:**
 ```bash
 # Create the namespace first
 kubectl apply -f base/namespace.yaml
 
-# Create secrets manually (recommended for production)
-kubectl create secret generic falco-ai-alerts-secrets \
-  --from-literal=SLACK_BOT_TOKEN="xoxb-your-actual-slack-token" \
-  --from-literal=PORTKEY_API_KEY="your-portkey-api-key" \
-  --from-literal=OPENAI_VIRTUAL_KEY="your-openai-virtual-key" \
-  --from-literal=GEMINI_VIRTUAL_KEY="your-gemini-virtual-key" \
+# Create secrets for development environment
+kubectl create secret generic dev-falco-ai-alerts-secrets \
+  --from-literal=SLACK_BOT_TOKEN="xoxb-your-slack-bot-token" \
+  --from-literal=PORTKEY_API_KEY="pk-your-portkey-api-key" \
+  --from-literal=OPENAI_VIRTUAL_KEY="openai-your-virtual-key" \
+  --from-literal=GEMINI_VIRTUAL_KEY="gemini-your-virtual-key" \
+  --from-literal=DB_ENCRYPTION_KEY="$(openssl rand -base64 32)" \
+  --namespace falco-ai-alerts-dev
+```
+
+**For Production Environment:**
+```bash
+# Create the namespace first  
+kubectl apply -f base/namespace.yaml
+
+# Create secrets for production environment
+kubectl create secret generic prod-falco-ai-alerts-secrets \
+  --from-literal=SLACK_BOT_TOKEN="xoxb-your-slack-bot-token" \
+  --from-literal=PORTKEY_API_KEY="pk-your-portkey-api-key" \
+  --from-literal=OPENAI_VIRTUAL_KEY="openai-your-virtual-key" \
+  --from-literal=GEMINI_VIRTUAL_KEY="gemini-your-virtual-key" \
   --from-literal=DB_ENCRYPTION_KEY="$(openssl rand -base64 32)" \
   --namespace falco-ai-alerts
 
 # Note: For Ollama (default), no API keys needed - it runs locally in the cluster!
 ```
+
+**🔑 Secret Key Reference:**
+| Key Name | Required | Description | Example Format |
+|----------|----------|-------------|----------------|
+| `SLACK_BOT_TOKEN` | ✅ Yes | Slack bot token | `xoxb-1234-5678-abcd` |
+| `PORTKEY_API_KEY` | ☁️ Cloud AI | Portkey security layer key | `pk-abc123...` |
+| `OPENAI_VIRTUAL_KEY` | ☁️ OpenAI | OpenAI virtual key via Portkey | `openai_vk_abc123...` |
+| `GEMINI_VIRTUAL_KEY` | ☁️ Gemini | Gemini virtual key via Portkey | `gemini_vk_abc123...` |
+| `DB_ENCRYPTION_KEY` | 🔐 Security | Database encryption | `$(openssl rand -base64 32)` |
+
+**📝 Setup Guide:**
+1. **Slack**: Create bot at https://api.slack.com/apps
+2. **Portkey**: Sign up at https://portkey.ai for cloud AI security
+3. **OpenAI**: Add OpenAI to Portkey, get virtual key
+4. **Gemini**: Add Gemini to Portkey, get virtual key
+5. **Ollama**: No setup needed (included in deployment)
 
 #### 3. Deploy Development Environment
 ```bash
@@ -423,6 +456,27 @@ The script provides:
 - ✅ **Secret setup guidance** (shows commands for API keys)
 - ✅ **Access instructions** (port-forward commands and URLs)
 - ✅ **Post-install guidance** (configuration and testing steps)
+
+## 🔐 **Standardized Secret Creation**
+
+**Important**: All deployment methods (script, manual, README) now use consistent secret naming and key structures.
+
+### **Secret Naming Convention**
+- **Development**: `dev-falco-ai-alerts-secrets` in `falco-ai-alerts-dev` namespace
+- **Production**: `prod-falco-ai-alerts-secrets` in `falco-ai-alerts` namespace
+
+### **Required Secret Keys** 
+All environments use the same key structure:
+```bash
+SLACK_BOT_TOKEN="xoxb-your-slack-bot-token"
+PORTKEY_API_KEY="pk-your-portkey-api-key"  
+OPENAI_VIRTUAL_KEY="openai-your-virtual-key"
+GEMINI_VIRTUAL_KEY="gemini-your-virtual-key"
+DB_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+```
+
+### **Automated Secret Creation**
+The install script will guide you through creating secrets with the correct names and keys.
 
 ## 🗑️ **Quick Cleanup: Use the Cleanup Script**
 

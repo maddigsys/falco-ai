@@ -64,6 +64,9 @@ patches:
       - op: add
         path: /data/MAX_ALERTS_STORAGE
         value: "100000"
+      - op: replace
+        path: /data/OLLAMA_API_URL
+        value: "http://prod-ollama:11434/api/generate"
 
   # Fix Ollama service name in init job
   - target:
@@ -92,6 +95,15 @@ patches:
           curl -s http://prod-ollama:11434/api/tags | grep -q "jimscard/whiterabbit-neo" || exit 1
           
           echo "Model initialization complete!"
+
+  # Fix init job service name reference
+  - target:
+      kind: Job
+      name: ollama-model-init
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "http://prod-ollama:11434"
 
 images:
   - name: maddigsys/falco-ai-alerts

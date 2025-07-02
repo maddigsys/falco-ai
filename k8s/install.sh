@@ -135,7 +135,7 @@ validate_secrets() {
     # Validate secret has required keys
     print_info "Checking secret content..."
     local missing_keys=()
-    local required_keys=("SLACK_BOT_TOKEN" "OPENAI_API_KEY" "GEMINI_API_KEY")
+    local required_keys=("SLACK_BOT_TOKEN" "PORTKEY_API_KEY" "OPENAI_VIRTUAL_KEY" "GEMINI_VIRTUAL_KEY")
     
     for key in "${required_keys[@]}"; do
         if ! kubectl get secret "$secret_name" -n "$namespace" -o jsonpath="{.data.$key}" &> /dev/null; then
@@ -169,14 +169,16 @@ show_secret_creation_instructions() {
     echo "2. Create the required secrets:"
     echo "   kubectl create secret generic $secret_name -n $namespace \\"
     echo "     --from-literal=SLACK_BOT_TOKEN=\"xoxb-your-slack-bot-token\" \\"
-    echo "     --from-literal=SLACK_APP_TOKEN=\"xapp-your-slack-app-token\" \\"
-    echo "     --from-literal=OPENAI_API_KEY=\"your-openai-api-key\" \\"
-    echo "     --from-literal=GEMINI_API_KEY=\"your-gemini-api-key\""
+    echo "     --from-literal=PORTKEY_API_KEY=\"pk-your-portkey-api-key\" \\"
+    echo "     --from-literal=OPENAI_VIRTUAL_KEY=\"openai-your-virtual-key\" \\"
+    echo "     --from-literal=GEMINI_VIRTUAL_KEY=\"gemini-your-virtual-key\" \\"
+    echo "     --from-literal=DB_ENCRYPTION_KEY=\"\$(openssl rand -base64 32)\""
     echo ""
     print_info "📝 AI Provider Configuration:"
-    echo "   • Slack: Get tokens from https://api.slack.com/apps"
-    echo "   • OpenAI: Get API key from https://platform.openai.com/api-keys"
-    echo "   • Gemini: Get API key from https://ai.google.dev/"
+    echo "   • Slack: Get bot token from https://api.slack.com/apps"
+    echo "   • Portkey: Get API key from https://portkey.ai (security layer for cloud AI)"
+    echo "   • OpenAI: Get virtual key from Portkey dashboard (after adding OpenAI)"
+    echo "   • Gemini: Get virtual key from Portkey dashboard (after adding Gemini)"
     echo "   • Ollama: No API key needed (runs locally in cluster)"
     echo ""
     print_info "🔄 After creating secrets, run the installation again:"
@@ -197,13 +199,14 @@ show_secret_update_instructions() {
     echo "   kubectl delete secret $secret_name -n $namespace"
     echo "   kubectl create secret generic $secret_name -n $namespace \\"
     echo "     --from-literal=SLACK_BOT_TOKEN=\"xoxb-your-slack-bot-token\" \\"
-    echo "     --from-literal=SLACK_APP_TOKEN=\"xapp-your-slack-app-token\" \\"
-    echo "     --from-literal=OPENAI_API_KEY=\"your-openai-api-key\" \\"
-    echo "     --from-literal=GEMINI_API_KEY=\"your-gemini-api-key\""
+    echo "     --from-literal=PORTKEY_API_KEY=\"pk-your-portkey-api-key\" \\"
+    echo "     --from-literal=OPENAI_VIRTUAL_KEY=\"openai-your-virtual-key\" \\"
+    echo "     --from-literal=GEMINI_VIRTUAL_KEY=\"gemini-your-virtual-key\" \\"
+    echo "     --from-literal=DB_ENCRYPTION_KEY=\"\$(openssl rand -base64 32)\""
     echo ""
     print_info "Or update existing secret by adding missing keys:"
     echo "   kubectl patch secret $secret_name -n $namespace \\"
-    echo "     --type='merge' -p='{\"data\":{\"MISSING_KEY\":\"base64-encoded-value\"}}'"
+    echo "     --type='merge' -p='{\"stringData\":{\"MISSING_KEY\":\"your-key-value\"}}'"
 }
 
 # Function to setup secrets
