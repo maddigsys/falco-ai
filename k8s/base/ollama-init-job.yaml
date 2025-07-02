@@ -35,10 +35,10 @@ spec:
         - sh
         - -c
         - |
-          echo "Pulling default model: llama3.1:7b"
+          echo "Pulling default model: llama3.1:8b"
           curl -X POST http://OLLAMA_SERVICE_NAME:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "llama3.1:7b"}' \
+            -d '{"name": "llama3.1:8b"}' \
             --max-time 1800
           
           echo "Verifying model was pulled..."

@@ -96,19 +96,19 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/command/2
         value: |
-          echo "Pulling default model: jimscard/whiterabbit-neo:latest"
+          echo "Pulling default model: llama3.1:8b"
           curl -X POST http://dev-ollama:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "jimscard/whiterabbit-neo:latest"}' \
+            -d '{"name": "llama3.1:8b"}' \
             --max-time 1800
           
           echo "Verifying model was pulled..."
-          curl -s http://dev-ollama:11434/api/tags | grep -q "jimscard/whiterabbit-neo" || exit 1
+          curl -s http://dev-ollama:11434/api/tags | grep -q "llama3.1" || exit 1
           
           echo "Model initialization complete!"
 
-  # Development Ollama resource optimization
-  # Use smaller model (7B) for development to reduce resource requirements
+  # Development Ollama resource optimization  
+  # Use smaller 8B model for development to reduce resource requirements
   - target:
       kind: Deployment
       name: ollama
@@ -125,15 +125,6 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/resources/limits/cpu
         value: "2000m"
-
-  # Use smaller model for development
-  - target:
-      kind: Job
-      name: ollama-model-init
-    patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/env/1/value
-        value: "llama3.1:7b"
 
   # Development PVC size
   - target:
@@ -152,15 +143,6 @@ patches:
       - op: replace
         path: /data/OLLAMA_API_URL
         value: "http://dev-ollama:11434/api/generate"
-
-  # Fix init job service name reference
-  - target:
-      kind: Job
-      name: ollama-model-init
-    patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/env/0/value
-        value: "http://dev-ollama:11434"
 
 images:
   - name: falco-ai-alerts

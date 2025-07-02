@@ -14,16 +14,16 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 ### 🔧 **Resource Requirements**
 
 #### **Development Environment** (Single-node testing)
-- **Memory**: 8GB available RAM (6GB for Ollama 7B model + 2GB for app)
+- **Memory**: 8GB available RAM (6GB for Ollama 8B model + 2GB for app)
 - **CPU**: 2 cores minimum
 - **Storage**: 15GB available storage
-- **Model**: `llama3.1:7b` (default, fast, reliable)
+- **Model**: `llama3.1:8b` (default, fast, reliable)
 
 #### **Production Environment** (Multi-node cluster)
-- **Memory**: 10GB available RAM (8GB for Ollama 7B model + 2GB for app)
+- **Memory**: 10GB available RAM (8GB for Ollama 8B model + 2GB for app)
 - **CPU**: 4 cores minimum
 - **Storage**: 20GB available storage
-- **Model**: `llama3.1:7b` (default for reliability)
+- **Model**: `llama3.1:8b` (default for reliability)
 - **Cybersecurity Upgrade**: `jimscard/whiterabbit-neo:latest` (optional, requires 18GB RAM)
 
 #### **Enterprise Environment** (High-performance cybersecurity)
@@ -212,10 +212,10 @@ The deployment includes **three AI provider options**:
 
 #### 🤖 Ollama (Default - Included)
 - **Deployment**: Automatically deployed in cluster
-- **Default Model**: `llama3.1:7b` (fast, reliable, 4GB)
+- **Default Model**: `llama3.1:8b` (fast, reliable, 4GB)
 - **Cybersecurity Upgrade**: `jimscard/whiterabbit-neo:latest` (13B, specialized for security analysis)
 - **Storage**: 15Gi for default model (30Gi for cybersecurity model)
-- **Resources**: 6-8Gi memory for 7B (14-16Gi for 13B cybersecurity model)
+- **Resources**: 6-8Gi memory for 8B (14-16Gi for 13B cybersecurity model)
 - **API Keys**: None required (local deployment)
 - **Advantages**: Privacy, no external dependencies, cost-effective
 

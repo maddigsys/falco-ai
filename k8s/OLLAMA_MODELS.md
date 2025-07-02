@@ -5,17 +5,17 @@ This guide helps you choose the right Ollama model for your environment and unde
 ## Model Recommendations by Use Case
 
 ### Development/Testing ✅ **DEFAULT**
-**Recommended Model**: `llama3.1:7b`
+**Recommended Model**: `llama3.1:8b`
 - **Memory Required**: 6-8GB RAM
-- **Storage**: ~4GB
+- **Storage**: ~4.5GB
 - **Response Quality**: Good for testing and development
 - **Speed**: Fast inference (2-5 seconds)
 - **Use Case**: Default for all environments
 
 ### Production (Balanced) ✅ **RECOMMENDED**
-**Default Model**: `llama3.1:7b`
+**Default Model**: `llama3.1:8b`
 - **Memory Required**: 6-8GB RAM
-- **Storage**: ~4GB
+- **Storage**: ~4.5GB
 - **Response Quality**: Good general security analysis
 - **Speed**: Fast inference (2-5 seconds)
 - **Reliability**: Excellent uptime and responsiveness

@@ -68,6 +68,15 @@ patches:
         path: /data/OLLAMA_API_URL
         value: "http://prod-ollama:11434/api/generate"
 
+  # Keep larger storage for production Ollama (30Gi vs 15Gi base)
+  - target:
+      kind: PersistentVolumeClaim
+      name: ollama-data
+    patch: |-
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: "30Gi"
+
   # Fix Ollama service name in init job
   - target:
       kind: Job
@@ -85,10 +94,10 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/command/2
         value: |
-          echo "Pulling default model: llama3.1:7b"
+          echo "Pulling default model: llama3.1:8b"
           curl -X POST http://prod-ollama:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "llama3.1:7b"}' \
+            -d '{"name": "llama3.1:8b"}' \
             --max-time 1800
           
           echo "Verifying model was pulled..."

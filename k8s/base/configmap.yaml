@@ -26,14 +26,14 @@ data:
   
   # AI Configuration
   PROVIDER_NAME: "ollama"
-  MODEL_NAME: "llama3.1:7b"
+  MODEL_NAME: "llama3.1:8b"
   OLLAMA_API_URL: "http://ollama:11434/api/generate"
-  OLLAMA_MODEL_NAME: "llama3.1:7b"
+  OLLAMA_MODEL_NAME: "llama3.1:8b"
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
-  # Timeout configuration (optimized for 7B models for faster, more reliable responses)
-  OLLAMA_TIMEOUT: "30"  # seconds - adjusted for 7B model: 7B=30s, 13B=90s, 30B+=120s
+  # Timeout configuration (optimized for 8B models for faster, more reliable responses)
+  OLLAMA_TIMEOUT: "30"  # seconds - adjusted for 8B model: 8B=30s, 13B=90s, 30B+=120s
   AI_REQUEST_TIMEOUT: "30"  # seconds - application-level timeout
   
   # Slack Configuration
