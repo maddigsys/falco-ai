@@ -96,15 +96,6 @@ patches:
           
           echo "Model initialization complete!"
 
-  # Fix init job service name reference
-  - target:
-      kind: Job
-      name: ollama-model-init
-    patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/env/0/value
-        value: "http://prod-ollama:11434"
-
 images:
   - name: maddigsys/falco-ai-alerts
     newName: maddigsys/falco-ai-alerts

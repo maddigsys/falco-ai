@@ -99,6 +99,22 @@ validate_config() {
     print_success "Configuration validated"
 }
 
+# Function to get standardized secret name
+get_secret_name() {
+    local environment=$1
+    case $environment in
+        development)
+            echo "dev-falco-ai-alerts-secrets"
+            ;;
+        production)
+            echo "prod-falco-ai-alerts-secrets"
+            ;;
+        *)
+            echo "${environment}-falco-ai-alerts-secrets"
+            ;;
+    esac
+}
+
 # Function to validate secrets
 validate_secrets() {
     local environment=$1
@@ -113,7 +129,7 @@ validate_secrets() {
         return 0
     fi
     
-    local secret_name="${environment}-falco-ai-alerts-secrets"
+    local secret_name=$(get_secret_name "$environment")
     
     # Check if namespace exists first
     if ! kubectl get namespace "$namespace" &> /dev/null; then
@@ -158,7 +174,7 @@ validate_secrets() {
 show_secret_creation_instructions() {
     local environment=$1
     local namespace=$2
-    local secret_name="${environment}-falco-ai-alerts-secrets"
+    local secret_name=$(get_secret_name "$environment")
     
     echo ""
     print_info "🔑 REQUIRED: Create secrets before installation"
@@ -192,7 +208,7 @@ show_secret_creation_instructions() {
 show_secret_update_instructions() {
     local environment=$1
     local namespace=$2
-    local secret_name="${environment}-falco-ai-alerts-secrets"
+    local secret_name=$(get_secret_name "$environment")
     
     echo ""
     echo "Delete and recreate the secret with all required keys:"
@@ -217,7 +233,8 @@ setup_secrets() {
     print_step "Verifying secrets for $environment..."
     
     # Check if secrets already exist
-    if kubectl get secret "${environment}-falco-ai-alerts-secrets" -n "$namespace" &> /dev/null; then
+    local secret_name=$(get_secret_name "$environment")
+    if kubectl get secret "$secret_name" -n "$namespace" &> /dev/null; then
         print_success "Secrets found and ready to use"
         return 0
     fi
