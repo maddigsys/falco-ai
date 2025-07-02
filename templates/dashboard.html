@@ -232,6 +232,24 @@
             background: linear-gradient(135deg, rgba(0, 174, 199, 0.08), rgba(83, 86, 90, 0.08));
         }
 
+        /* Add visual hint for collapsed sections */
+        #falcoConfigCard.collapsed .content-card-header {
+            border-left: 4px solid var(--primary-color);
+            position: relative;
+        }
+
+        #falcoConfigCard.collapsed .content-card-header::after {
+            content: "Click to expand setup instructions";
+            position: absolute;
+            right: 3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
         .quick-stats-toggle-icon {
             margin-left: auto;
             transition: transform 0.3s ease;
@@ -1074,6 +1092,11 @@
                         <div class="empty-state">
                             <p>Your intelligent security monitoring dashboard is ready to help you stay ahead of threats.</p>
                             
+                            <div class="alert alert-primary mb-4">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Getting Started:</strong> Click to expand the <strong>Falco Integration Setup</strong> section below to configure Falco webhooks and start receiving AI-powered security analysis.
+                            </div>
+                            
                             <div class="welcome-grid">
                                 <div class="feature-card">
                                     <h4><i class="fas fa-shield-alt"></i> Real-time Monitoring</h4>
@@ -1096,121 +1119,10 @@
                     </div>
                 </div>
 
-                <!-- Falco Configuration -->
-                <div class="content-card" id="falcoConfigCard">
-                    <div class="content-card-header collapsible-header" onclick="toggleFalcoConfig()">
-                        <h3 class="content-card-title">
-                            <i class="fas fa-cog"></i>
-                            Falco Webhook Configuration
-                            <i class="fas fa-chevron-up falco-config-toggle-icon"></i>
-                        </h3>
-                    </div>
-                    <div class="content-card-body falco-config-content">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="config-section">
-                                    <h5><i class="fas fa-link"></i> Webhook Endpoint</h5>
-                                    <p class="text-muted">Configure Falco to send alerts to this endpoint:</p>
-                                    <div class="config-value-container">
-                                        <code id="webhookUrl" class="config-value">Loading...</code>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('webhookUrl')" title="Copy to clipboard">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="config-section">
-                                    <h5><i class="fas fa-file-code"></i> Falco Configuration</h5>
-                                    <p class="text-muted">Add this to your falco.yaml file:</p>
-                                    <div class="config-yaml-container">
-                                        <pre id="falcoYamlConfig" class="config-yaml">Loading...</pre>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('falcoYamlConfig')" title="Copy configuration">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="config-section">
-                                    <h5><i class="fas fa-info-circle"></i> Configuration Notes</h5>
-                                    <div class="alert alert-info">
-                                        <ul class="mb-0">
-                                            <li><strong>Local Development:</strong> Use <code>http://localhost:8080/falco-webhook</code> if running locally</li>
-                                            <li><strong>Docker:</strong> Use <code>http://host.docker.internal:8080/falco-webhook</code> from container</li>
-                                            <li><strong>Kubernetes:</strong> Use the service name, e.g., <code>http://falco-ai-alerts:8080/falco-webhook</code></li>
-                                            <li><strong>Production:</strong> Replace with your actual domain/IP address</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <button class="btn btn-primary btn-sm" onclick="testWebhook()">
-                                        <i class="fas fa-play"></i>
-                                        Test Webhook
-                                    </button>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="downloadFalcoConfig()">
-                                        <i class="fas fa-download"></i>
-                                        Download falco.yaml
-                                    </button>
-                                    <a href="https://falco.org/docs/outputs/" class="btn btn-outline-info btn-sm" target="_blank">
-                                        <i class="fas fa-external-link-alt"></i>
-                                        Falco Docs
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="content-card" id="quickStatsCard" style="display: none;">
-                    <div class="content-card-header collapsible-header" onclick="toggleQuickStats()">
-                        <h3 class="content-card-title">
-                            <i class="fas fa-chart-bar"></i>
-                            Quick Stats
-                            <i class="fas fa-chevron-up quick-stats-toggle-icon"></i>
-                        </h3>
-                    </div>
-                    <div class="content-card-body quick-stats-content">
-                        <div class="stats-grid-main">
-                            <div class="stat-card clickable" onclick="applyStatFilter('all', event)" title="Show all alerts">
-                                <div class="stat-number" id="totalAlertsMain">-</div>
-                                <div class="stat-label">Total Alerts</div>
-                            </div>
-                            <div class="stat-card danger clickable" onclick="applyStatFilter('critical', event)" title="Show critical alerts">
-                                <div class="stat-number" id="criticalAlertsMain">-</div>
-                                <div class="stat-label">Critical Alerts</div>
-                            </div>
-                            <div class="stat-card success clickable" onclick="applyStatFilter('recent', event)" title="Show alerts from last hour">
-                                <div class="stat-number" id="recentAlertsMain">-</div>
-                                <div class="stat-label">Last Hour</div>
-                            </div>
-                            <div class="stat-card status-card unread clickable" onclick="applyStatFilter('unread', event)" title="Show unread alerts">
-                                <div class="stat-number" id="unreadCountMain">-</div>
-                                <div class="stat-label">Unread</div>
-                            </div>
-                            <div class="stat-card status-card read clickable" onclick="applyStatFilter('read', event)" title="Show read alerts">
-                                <div class="stat-number" id="readCountMain">-</div>
-                                <div class="stat-label">Read</div>
-                            </div>
-                            <div class="stat-card status-card dismissed clickable" onclick="applyStatFilter('dismissed', event)" title="Show dismissed alerts">
-                                <div class="stat-number" id="dismissedCountMain">-</div>
-                                <div class="stat-label">Dismissed</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Falco Configuration -->
-                <div class="content-card" id="falcoConfigCard" style="display: none;">
+                <div class="content-card collapsed" id="falcoConfigCard" style="display: none;">
                     <div class="content-card-header collapsible-header" onclick="toggleFalcoConfig()">
                         <h3 class="content-card-title">
                             <i class="fas fa-cog"></i>
@@ -1303,6 +1215,45 @@
                                         <pre id="falcoK8sConfig" class="config-yaml"></pre>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="content-card" id="quickStatsCard" style="display: none;">
+                    <div class="content-card-header collapsible-header" onclick="toggleQuickStats()">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Quick Stats
+                            <i class="fas fa-chevron-up quick-stats-toggle-icon"></i>
+                        </h3>
+                    </div>
+                    <div class="content-card-body quick-stats-content">
+                        <div class="stats-grid-main">
+                            <div class="stat-card clickable" onclick="applyStatFilter('all', event)" title="Show all alerts">
+                                <div class="stat-number" id="totalAlertsMain">-</div>
+                                <div class="stat-label">Total Alerts</div>
+                            </div>
+                            <div class="stat-card danger clickable" onclick="applyStatFilter('critical', event)" title="Show critical alerts">
+                                <div class="stat-number" id="criticalAlertsMain">-</div>
+                                <div class="stat-label">Critical Alerts</div>
+                            </div>
+                            <div class="stat-card success clickable" onclick="applyStatFilter('recent', event)" title="Show alerts from last hour">
+                                <div class="stat-number" id="recentAlertsMain">-</div>
+                                <div class="stat-label">Last Hour</div>
+                            </div>
+                            <div class="stat-card status-card unread clickable" onclick="applyStatFilter('unread', event)" title="Show unread alerts">
+                                <div class="stat-number" id="unreadCountMain">-</div>
+                                <div class="stat-label">Unread</div>
+                            </div>
+                            <div class="stat-card status-card read clickable" onclick="applyStatFilter('read', event)" title="Show read alerts">
+                                <div class="stat-number" id="readCountMain">-</div>
+                                <div class="stat-label">Read</div>
+                            </div>
+                            <div class="stat-card status-card dismissed clickable" onclick="applyStatFilter('dismissed', event)" title="Show dismissed alerts">
+                                <div class="stat-number" id="dismissedCountMain">-</div>
+                                <div class="stat-label">Dismissed</div>
                             </div>
                         </div>
                     </div>
@@ -1478,13 +1429,13 @@
                 // Show/hide appropriate cards
                 if (alerts.length > 0) {
                     document.getElementById('welcomeCard').style.display = 'none';
-                    document.getElementById('quickStatsCard').style.display = 'block';
                     document.getElementById('falcoConfigCard').style.display = 'block';
+                    document.getElementById('quickStatsCard').style.display = 'block';
                     document.getElementById('alertsCard').style.display = 'block';
                 } else {
                     document.getElementById('welcomeCard').style.display = 'block';
-                    document.getElementById('quickStatsCard').style.display = 'none';
                     document.getElementById('falcoConfigCard').style.display = 'block';
+                    document.getElementById('quickStatsCard').style.display = 'none';
                     document.getElementById('alertsCard').style.display = 'none';
                     document.getElementById('alertDetailsCard').style.display = 'none';
                 }
@@ -1493,8 +1444,8 @@
                 // Show welcome card and hide alerts on error
                 currentAlerts = [];
                 document.getElementById('welcomeCard').style.display = 'block';
-                document.getElementById('quickStatsCard').style.display = 'none';
                 document.getElementById('falcoConfigCard').style.display = 'block';
+                document.getElementById('quickStatsCard').style.display = 'none';
                 document.getElementById('alertsCard').style.display = 'none';
                 document.getElementById('alertDetailsCard').style.display = 'none';
             }
@@ -2234,10 +2185,11 @@
 
         // Initialize Falco Config state
         function initializeFalcoConfigState() {
-            const collapsed = localStorage.getItem('falcoConfigCollapsed') === 'true';
+            const collapsed = localStorage.getItem('falcoConfigCollapsed');
             const falcoConfigCard = document.getElementById('falcoConfigCard');
             
-            if (collapsed) {
+            // Default to collapsed unless user has explicitly expanded it
+            if (collapsed === null || collapsed === 'true') {
                 falcoConfigCard.classList.add('collapsed');
             }
         }

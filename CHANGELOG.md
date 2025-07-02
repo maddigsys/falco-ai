@@ -5,6 +5,38 @@ All notable changes to the Falco AI Alert System project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-01-02
+
+### 🎨 UI/UX Improvements
+
+#### Changed
+- **Improved Section Layout** - Moved Falco Integration Setup above Quick Stats for better workflow
+- **Collapsed by Default** - Falco Integration Setup now starts collapsed for cleaner interface
+- **Enhanced User Guidance** - Updated welcome message to indicate expandable configuration section
+- **Persistent User Preferences** - Collapse/expand state properly maintained via localStorage
+
+#### Fixed
+- **Section Ordering** - Logical flow now follows: Welcome → Falco Setup → Stats → Alerts
+- **Default Behavior** - New deployments start with collapsed setup section for better UX
+
+## [1.0.3] - 2025-01-02
+
+### 🔧 Configuration & Setup Fixes
+
+#### Fixed
+- **Falco Configuration Visibility** - Resolved issue where Falco Integration Setup section was not visible in UI
+- **Duplicate Section Removal** - Eliminated conflicting duplicate Falco configuration sections
+- **Auto-expand Logic** - Fixed automatic expansion behavior for new users with no alerts
+- **CSS Styling** - Added visual indicators for collapsed sections with user hints
+
+#### Added
+- **Visual Cues** - Added "Click to expand setup instructions" hint for collapsed configuration
+- **Better Onboarding** - Enhanced welcome message with clear guidance to configuration section
+
+#### Changed
+- **Section Display Logic** - Improved show/hide logic for better user experience
+- **New User Experience** - Streamlined first-time setup workflow
+
 ## [1.0.0] - 2024-01-XX
 
 ### 🎉 Initial Public Release
