@@ -58,13 +58,21 @@ patches:
         path: /spec/template/spec/containers/0/resources/limits/cpu
         value: "200m"
 
-configMapGenerator:
-  - name: falco-ai-alerts-config
-    behavior: merge
-    literals:
-      - LOG_LEVEL=DEBUG
-      - MIN_PRIORITY=informational
-      - ALERT_RETENTION_DAYS=7
+patches:
+  # Override ConfigMap values for development
+  - target:
+      kind: ConfigMap
+      name: falco-ai-alerts-config
+    patch: |-
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: "DEBUG"
+      - op: replace
+        path: /data/MIN_PRIORITY
+        value: "informational"
+      - op: add
+        path: /data/ALERT_RETENTION_DAYS
+        value: "7"
 
 images:
   - name: falco-ai-alerts

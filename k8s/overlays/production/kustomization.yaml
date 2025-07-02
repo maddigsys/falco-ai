@@ -56,14 +56,23 @@ patches:
           name: ENVIRONMENT
           value: "production"
 
-configMapGenerator:
-  - name: falco-ai-alerts-config
-    behavior: merge
-    literals:
-      - LOG_LEVEL=INFO
-      - MIN_PRIORITY=warning
-      - ALERT_RETENTION_DAYS=90
-      - MAX_ALERTS_STORAGE=100000
+  # Override ConfigMap values for production
+  - target:
+      kind: ConfigMap
+      name: falco-ai-alerts-config
+    patch: |-
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: "INFO"
+      - op: replace
+        path: /data/MIN_PRIORITY
+        value: "warning"
+      - op: add
+        path: /data/ALERT_RETENTION_DAYS
+        value: "90"
+      - op: add
+        path: /data/MAX_ALERTS_STORAGE
+        value: "100000"
 
 images:
   - name: falco-ai-alerts

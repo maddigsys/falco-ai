@@ -27,7 +27,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 # --- Web UI Configuration ---
 WEB_UI_ENABLED = os.environ.get("WEB_UI_ENABLED", "true").lower() == "true"
 WEB_UI_PORT = int(os.environ.get("WEB_UI_PORT", 8081))
-DB_PATH = 'alerts.db'
+DB_PATH = os.getenv('DB_PATH', '/app/data/alerts.db')
 
 # --- Initialize Portkey clients ---
 portkey_client_openai, portkey_client_gemini = portkey_config.initialize_portkey_clients()
