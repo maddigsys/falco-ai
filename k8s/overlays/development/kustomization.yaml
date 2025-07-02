@@ -69,6 +69,12 @@ patches:
       - op: replace
         path: /data/MIN_PRIORITY
         value: "notice"
+      - op: replace
+        path: /data/OLLAMA_TIMEOUT
+        value: "45"
+      - op: replace
+        path: /data/AI_REQUEST_TIMEOUT  
+        value: "45"
       - op: add
         path: /data/ALERT_RETENTION_DAYS
         value: "7"

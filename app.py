@@ -484,7 +484,9 @@ Command: {alert_payload.get('output_fields', {}).get('proc.cmdline', 'N/A')}"""
                 }
             }
 
-            response = requests.post(ollama_api_url, json=ollama_payload, timeout=30)
+            # Get configurable timeout (default 90s for 13B models)
+            ollama_timeout = int(os.environ.get("OLLAMA_TIMEOUT", "90"))
+            response = requests.post(ollama_api_url, json=ollama_payload, timeout=ollama_timeout)
             response.raise_for_status()
             
             response_data = response.json()
@@ -1790,7 +1792,9 @@ def test_ai_connection(provider_name, config_data):
                     }
                 }
                 
-                response = requests.post(ollama_api_url, json=ollama_payload, timeout=30)
+                # Get configurable timeout (default 90s for 13B models)
+                ollama_timeout = int(os.environ.get("OLLAMA_TIMEOUT", "90"))
+                response = requests.post(ollama_api_url, json=ollama_payload, timeout=ollama_timeout)
                 response.raise_for_status()
                 
                 response_data = response.json()
