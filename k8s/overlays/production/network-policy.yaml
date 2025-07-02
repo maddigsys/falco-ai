@@ -1,0 +1,68 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: falco-ai-alerts-network-policy
+  namespace: falco-ai-alerts
+  labels:
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: security
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: falco-ai-alerts
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow ingress from nginx ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+  # Allow ingress from Falco (webhook)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: falco-system
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow ingress from monitoring namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS to external AI providers (OpenAI, Gemini)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow HTTP to Ollama if deployed in cluster
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: ollama-system
+    ports:
+    - protocol: TCP
+      port: 11434
+  # Allow Slack webhook calls
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443 

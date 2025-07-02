@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Main Falco AI Alert System
+  falco-ai-alerts:
+    build: .
+    ports:
+      - "8080:8080"  # Main webhook and Web UI port
+    environment:
+      # Core Configuration
+      - FALCO_AI_PORT=8080
+      - WEB_UI_ENABLED=true
+      - LOG_LEVEL=INFO
+      
+      # AI Provider Configuration (defaults to Ollama for local testing)
+      - PROVIDER_NAME=${PROVIDER_NAME:-ollama}
+      - MODEL_NAME=${MODEL_NAME:-jimscard/whiterabbit-neo:latest}
+      
+      # Cloud AI Providers (optional)
+      - PORTKEY_API_KEY=${PORTKEY_API_KEY:-}
+      - OPENAI_VIRTUAL_KEY=${OPENAI_VIRTUAL_KEY:-}
+      - GEMINI_VIRTUAL_KEY=${GEMINI_VIRTUAL_KEY:-}
+      
+      # Ollama Configuration (for local testing)
+      - OLLAMA_API_URL=http://ollama:11434/api/generate
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME:-jimscard/whiterabbit-neo:latest}
+      
+      # Slack Configuration (optional)
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN:-}
+      - SLACK_CHANNEL_NAME=${SLACK_CHANNEL_NAME:-#security-alerts}
+      
+      # Alert Configuration
+      - MIN_PRIORITY=${MIN_PRIORITY:-warning}
+      - IGNORE_OLDER=${IGNORE_OLDER:-1}
+    volumes:
+      - ./templates:/app/templates:ro
+      - ./alerts.db:/app/alerts.db  # Persist database locally
+      - alerts_data:/app/data  # Additional persistent storage
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # Give Ollama time to start
+    networks:
+      - falco-network
+
+  # Ollama Local LLM Service (included by default for local testing)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - falco-network
+    # Just serve Ollama - model will be pulled on first use
+    command: serve
+
+  # Optional: Adminer for database management (development only)
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=sqlite:///app/alerts.db
+    volumes:
+      - ./alerts.db:/app/alerts.db:ro
+    profiles:
+      - dev
+    networks:
+      - falco-network
+
+  # Optional: Prometheus for monitoring (development/testing)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    profiles:
+      - monitoring
+    networks:
+      - falco-network
+
+networks:
+  falco-network:
+    driver: bridge
+
+volumes:
+  alerts_data:
+    driver: local
+  ollama_data:
+    driver: local

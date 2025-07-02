@@ -1,0 +1,1205 @@
+{% extends "settings_base.html" %}
+
+{% block title %}AI Configuration{% endblock %}
+{% block page_icon %}<i class="fas fa-robot"></i>{% endblock %}
+{% block page_title %}AI Configuration{% endblock %}
+{% block page_description %}Configure AI providers for security analysis with Portkey security layer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .provider-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+    }
+
+    .provider-tab {
+        background: var(--bg-light);
+        border: 2px solid var(--border-color);
+        color: var(--text-dark);
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .provider-tab:hover {
+        border-color: var(--primary-color);
+        background: rgba(102, 126, 234, 0.05);
+        color: var(--primary-color);
+    }
+
+    .provider-tab.active {
+        background: var(--primary-gradient);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .provider-config {
+        display: none;
+        margin-top: 1.5rem;
+    }
+
+    .provider-config.active {
+        display: block;
+    }
+
+    .config-info {
+        background: linear-gradient(135deg, rgba(66, 153, 225, 0.05), rgba(49, 130, 206, 0.05));
+        border-left: 4px solid #4299e1;
+        padding: 1rem 1.25rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+        color: var(--text-dark);
+    }
+
+    .portkey-info {
+        background: linear-gradient(135deg, rgba(237, 137, 54, 0.05), rgba(221, 107, 32, 0.05));
+        border-left: 4px solid #ed8936;
+        padding: 1rem 1.25rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+        color: var(--text-dark);
+    }
+
+    .model-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .model-chip {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        color: var(--text-dark);
+        padding: 0.375rem 0.75rem;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 0.825rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .model-chip:hover {
+        border-color: var(--primary-color);
+        background: rgba(102, 126, 234, 0.05);
+        color: var(--primary-color);
+    }
+
+    .model-chip.downloaded {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+        border-color: #48bb78;
+        color: #22543d;
+    }
+
+    .model-chip.downloaded::before {
+        content: "✓";
+        font-weight: bold;
+    }
+
+    .model-status {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: var(--bg-light);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+    }
+
+    .status-text {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .status-text.downloading {
+        color: #3182ce;
+    }
+
+    .status-text.downloaded {
+        color: #38a169;
+    }
+
+    .status-text.not-available {
+        color: #e53e3e;
+    }
+
+    .progress-container {
+        width: 100%;
+        background: #e2e8f0;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        margin-top: 0.75rem;
+        display: none;
+    }
+
+    .progress-bar {
+        height: 1.5rem;
+        background: var(--success-gradient);
+        width: 0%;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.825rem;
+        font-weight: 600;
+    }
+
+    .response-preview {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .preview-header {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.75rem;
+        font-family: var(--font-family);
+    }
+
+    .connection-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .connection-status.success {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+        color: #22543d;
+        border: 1px solid #9ae6b4;
+    }
+
+    .connection-status.error {
+        background: linear-gradient(135deg, rgba(245, 101, 101, 0.1), rgba(229, 62, 62, 0.1));
+        color: #742a2a;
+        border: 1px solid #fc8181;
+    }
+
+    .connection-status.warning {
+        background: linear-gradient(135deg, rgba(237, 137, 54, 0.1), rgba(221, 107, 32, 0.1));
+        color: #744210;
+        border: 1px solid #f6ad55;
+    }
+
+    @media (max-width: 768px) {
+        .provider-tabs {
+            flex-direction: column;
+        }
+        
+        .provider-tab {
+            justify-content: center;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Connection Status -->
+<div id="connectionStatus"></div>
+
+<!-- Current Status Summary -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-info-circle"></i>
+            Current Status Summary
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div id="statusInfo">
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading status...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- General AI Configuration -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-cogs"></i>
+            General AI Settings
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="aiEnabled" checked>
+                        <label class="form-check-label" for="aiEnabled">
+                            <i class="fas fa-robot"></i>
+                            Enable AI Analysis
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Enable or disable AI-powered security analysis
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="maxTokens" class="form-label">
+                        <i class="fas fa-text-width"></i>
+                        Max Tokens
+                    </label>
+                    <input type="number" class="form-control" id="maxTokens" value="500" min="50" max="2000">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Maximum tokens in AI response (50-2000)
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="temperature" class="form-label">
+                        <i class="fas fa-thermometer-half"></i>
+                        Temperature
+                    </label>
+                    <input type="number" class="form-control" id="temperature" value="0.7" min="0" max="1" step="0.1">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Response randomness (0.0 = focused, 1.0 = creative)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Portkey Security Layer -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-shield-alt"></i>
+            Portkey Security Layer
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="portkey-info">
+            <strong><i class="fas fa-lock"></i> AI Security & Sanitization</strong><br>
+            Portkey acts as a security layer that sanitizes and monitors all AI interactions. Configure once to protect all cloud AI providers.
+            <br><br>
+            <a href="https://portkey.ai" target="_blank" class="btn btn-outline">
+                <i class="fas fa-external-link-alt"></i> Get your Portkey API key
+            </a>
+        </div>
+
+        <div class="form-group">
+            <label for="portkeyApiKey" class="form-label">
+                <i class="fas fa-key"></i>
+                Portkey API Key *
+            </label>
+            <input type="password" class="form-control" id="portkeyApiKey" placeholder="pk_...">
+            <div class="form-text">
+                <i class="fas fa-info-circle"></i>
+                Required for OpenAI and Gemini. Provides security, monitoring, and sanitization.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Provider Selection -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-brain"></i>
+            AI Provider Configuration
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="form-group">
+            <label for="providerName" class="form-label">
+                <i class="fas fa-server"></i>
+                AI Provider
+            </label>
+            <select class="form-select" id="providerName" onchange="switchProvider()">
+                <option value="openai">OpenAI (Cloud via Portkey)</option>
+                <option value="gemini">Google Gemini (Cloud via Portkey)</option>
+                <option value="ollama">Ollama (Local Deployment)</option>
+            </select>
+            <div class="form-text">
+                <i class="fas fa-info-circle"></i>
+                Choose your preferred AI provider for security analysis
+            </div>
+        </div>
+
+        <!-- Provider Tabs -->
+        <div class="provider-tabs">
+            <button class="provider-tab active" data-provider="openai" onclick="showProviderConfig('openai')">
+                <i class="fas fa-brain"></i>
+                OpenAI
+            </button>
+            <button class="provider-tab" data-provider="gemini" onclick="showProviderConfig('gemini')">
+                <i class="fas fa-gem"></i>
+                Gemini
+            </button>
+            <button class="provider-tab" data-provider="ollama" onclick="showProviderConfig('ollama')">
+                <i class="fas fa-home"></i>
+                Ollama
+            </button>
+        </div>
+
+        <!-- OpenAI Configuration -->
+        <div id="openai-config" class="provider-config active">
+            <div class="config-info">
+                <strong><i class="fas fa-cloud"></i> OpenAI via Portkey</strong><br>
+                Access GPT models through Portkey's secure infrastructure.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="openaiVirtualKey" class="form-label">
+                            <i class="fas fa-key"></i>
+                            OpenAI Virtual Key *
+                        </label>
+                        <input type="password" class="form-control" id="openaiVirtualKey" placeholder="openai_...">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Portkey virtual key for OpenAI access
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="openaiModelName" class="form-label">
+                            <i class="fas fa-robot"></i>
+                            Model Name
+                        </label>
+                        <input type="text" class="form-control" id="openaiModelName" value="gpt-3.5-turbo">
+                        <div class="model-suggestions" id="openaiModels"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gemini Configuration -->
+        <div id="gemini-config" class="provider-config">
+            <div class="config-info">
+                <strong><i class="fas fa-cloud"></i> Google Gemini via Portkey</strong><br>
+                Access Gemini models through Portkey's secure infrastructure.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="geminiVirtualKey" class="form-label">
+                            <i class="fas fa-key"></i>
+                            Gemini Virtual Key *
+                        </label>
+                        <input type="password" class="form-control" id="geminiVirtualKey" placeholder="gemini_...">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Portkey virtual key for Gemini access
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="geminiModelName" class="form-label">
+                            <i class="fas fa-robot"></i>
+                            Model Name
+                        </label>
+                        <input type="text" class="form-control" id="geminiModelName" value="gemini-pro">
+                        <div class="model-suggestions" id="geminiModels"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ollama Configuration -->
+        <div id="ollama-config" class="provider-config">
+            <div class="config-info">
+                <strong><i class="fas fa-home"></i> Ollama (Local AI)</strong><br>
+                Run AI models locally for maximum privacy and control. No external connections required.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ollamaApiUrl" class="form-label">
+                            <i class="fas fa-link"></i>
+                            Ollama API URL *
+                        </label>
+                        <input type="text" class="form-control" id="ollamaApiUrl" value="http://ollama:11434/api/generate">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Local Ollama server endpoint
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ollamaModelName" class="form-label">
+                            <i class="fas fa-robot"></i>
+                            Model Name
+                        </label>
+                        <input type="text" class="form-control" id="ollamaModelName" value="jimscard/whiterabbit-neo:latest">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Selected model name
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="model-status" id="modelStatus">
+                <span id="statusText" class="status-text not-available">Checking model status...</span>
+                <button class="btn btn-success" id="downloadBtn" onclick="downloadModel()" style="display: none;">
+                    <i class="fas fa-download"></i>
+                    Download Model
+                </button>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label class="form-label">
+                    <i class="fas fa-list"></i>
+                    Available Models
+                </label>
+                <div class="model-suggestions" id="ollamaModels"></div>
+                <div class="form-text">
+                    <i class="fas fa-info-circle"></i>
+                    Click to select. ✓ = Downloaded locally
+                </div>
+                <button class="btn btn-secondary" onclick="refreshOllamaModels()" style="margin-top: 0.75rem;">
+                    <i class="fas fa-sync"></i>
+                    Refresh Models
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-area">
+        <button class="btn btn-success" onclick="testConnection()">
+            <i class="fas fa-check-circle"></i>
+            Test Connection
+        </button>
+        <button class="btn btn-secondary" onclick="generateSample()">
+            <i class="fas fa-magic"></i>
+            Generate Sample
+        </button>
+        <button class="btn btn-primary" onclick="saveConfig()">
+            <i class="fas fa-save"></i>
+            Save Configuration
+        </button>
+    </div>
+</div>
+
+<!-- Status Messages -->
+<div id="status-alert" class="status-alert"></div>
+
+<!-- System Prompt Configuration -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-file-alt"></i>
+            System Prompt Configuration
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="config-info">
+            <strong><i class="fas fa-brain"></i> AI Behavior Customization</strong><br>
+            The system prompt defines how the AI analyzes security alerts. Customize it to match your organization's security analysis needs and response procedures.
+        </div>
+        
+        <div class="form-group">
+            <label for="systemPrompt" class="form-label">
+                <i class="fas fa-file-alt"></i>
+                System Prompt
+            </label>
+            <textarea 
+                class="form-control" 
+                id="systemPrompt" 
+                rows="12" 
+                placeholder="Leave empty to use the default prompt..."
+                style="font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace; font-size: 0.875rem;"
+            ></textarea>
+            <div class="form-text">
+                <i class="fas fa-info-circle"></i>
+                Define how the AI should analyze Falco alerts. Leave empty to use the default prompt.
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-warning" onclick="resetSystemPrompt()">
+                <i class="fas fa-undo"></i>
+                Reset to Default
+            </button>
+            <button class="btn btn-secondary" onclick="previewCurrentPrompt()">
+                <i class="fas fa-eye"></i>
+                Preview Current
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- AI Response Preview -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-eye"></i>
+            AI Response Preview
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="preview-header">Sample AI Analysis:</div>
+            <button class="btn btn-primary" onclick="generateSample()">
+                <i class="fas fa-magic"></i>
+                Generate Sample
+            </button>
+        </div>
+        <div class="response-preview">
+            <div id="responsePreview" style="color: var(--text-light);">
+                Click "Generate Sample" to see how AI analyzes security alerts with your current configuration
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set the current page for sidebar navigation
+    window.page = 'ai';
+    
+    let currentConfig = {};
+    let downloadCheckInterval = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadConfig();
+        loadModels();
+        updateStatus();
+    });
+
+    async function loadConfig() {
+        try {
+            const response = await fetch('/api/ai/config');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned HTML instead of JSON');
+            }
+            
+            const config = await response.json();
+            currentConfig = config;
+            
+            document.getElementById('providerName').value = config.provider_name?.value || 'openai';
+            document.getElementById('aiEnabled').checked = config.enabled?.value === 'true';
+            
+            document.getElementById('portkeyApiKey').value = config.portkey_api_key?.value || '';
+            document.getElementById('openaiVirtualKey').value = config.openai_virtual_key?.value || '';
+            document.getElementById('openaiModelName').value = config.model_name?.value || 'gpt-3.5-turbo';
+            
+            document.getElementById('geminiVirtualKey').value = config.gemini_virtual_key?.value || '';
+            document.getElementById('geminiModelName').value = config.model_name?.value || 'gemini-pro';
+            
+            document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || 'http://ollama:11434/api/generate';
+            document.getElementById('ollamaModelName').value = config.ollama_model_name?.value || 'jimscard/whiterabbit-neo:latest';
+            
+            document.getElementById('maxTokens').value = config.max_tokens?.value || '500';
+            document.getElementById('temperature').value = config.temperature?.value || '0.7';
+            document.getElementById('systemPrompt').value = config.system_prompt?.value || '';
+            
+            switchProvider();
+            updateStatus();
+            
+            // Check Ollama model status if Ollama is selected
+            if (config.provider_name?.value === 'ollama') {
+                checkModelStatus();
+            }
+        } catch (error) {
+            console.error('Error loading config:', error);
+            showAlert('danger', 'Failed to load configuration: ' + error.message);
+        }
+    }
+
+    async function loadModels() {
+        try {
+            const response = await fetch('/api/ai/models');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned HTML instead of JSON');
+            }
+            
+            const models = await response.json();
+            
+            ['openai', 'gemini'].forEach(provider => {
+                const container = document.getElementById(`${provider}Models`);
+                if (container && models[provider]) {
+                    container.innerHTML = models[provider].map(model => 
+                        `<span class="model-chip" onclick="selectModel('${provider}', '${model}')">${model}</span>`
+                    ).join('');
+                }
+            });
+
+            // Load suggested Ollama models
+            const ollamaContainer = document.getElementById('ollamaModels');
+            if (ollamaContainer && models.ollama) {
+                ollamaContainer.innerHTML = models.ollama.map(model => 
+                    `<span class="model-chip" onclick="selectModel('ollama', '${model}')">${model}</span>`
+                ).join('');
+            }
+            
+            // Load locally available Ollama models
+            refreshOllamaModels();
+        } catch (error) {
+            console.error('Error loading models:', error);
+        }
+    }
+
+    function switchProvider() {
+        const selectedProvider = document.getElementById('providerName').value;
+        
+        // Update tabs
+        document.querySelectorAll('.provider-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-provider="${selectedProvider}"]`).classList.add('active');
+        
+        // Update config sections
+        document.querySelectorAll('.provider-config').forEach(config => {
+            config.classList.remove('active');
+        });
+        document.getElementById(`${selectedProvider}-config`).classList.add('active');
+        
+        // Check model status for Ollama
+        if (selectedProvider === 'ollama') {
+            checkModelStatus();
+        }
+    }
+
+    function showProviderConfig(provider) {
+        // Update select
+        document.getElementById('providerName').value = provider;
+        
+        // Update tabs and configs
+        switchProvider();
+    }
+
+    function selectModel(provider, modelName) {
+        if (provider === 'openai') {
+            document.getElementById('openaiModelName').value = modelName;
+        } else if (provider === 'gemini') {
+            document.getElementById('geminiModelName').value = modelName;
+        } else if (provider === 'ollama') {
+            document.getElementById('ollamaModelName').value = modelName;
+            checkModelStatus();
+        }
+    }
+
+    async function saveConfig() {
+        const saveBtn = document.querySelector('[onclick="saveConfig()"]');
+        setLoading(saveBtn, true);
+        
+        try {
+            const config = {
+                provider_name: document.getElementById('providerName').value,
+                enabled: document.getElementById('aiEnabled').checked ? 'true' : 'false',
+                portkey_api_key: document.getElementById('portkeyApiKey').value,
+                openai_virtual_key: document.getElementById('openaiVirtualKey').value,
+                gemini_virtual_key: document.getElementById('geminiVirtualKey').value,
+                ollama_api_url: document.getElementById('ollamaApiUrl').value,
+                ollama_model_name: document.getElementById('ollamaModelName').value,
+                max_tokens: document.getElementById('maxTokens').value,
+                temperature: document.getElementById('temperature').value,
+                system_prompt: document.getElementById('systemPrompt').value
+            };
+
+            // Set model name based on provider
+            const provider = config.provider_name;
+            if (provider === 'openai') {
+                config.model_name = document.getElementById('openaiModelName').value;
+            } else if (provider === 'gemini') {
+                config.model_name = document.getElementById('geminiModelName').value;
+            } else if (provider === 'ollama') {
+                config.model_name = document.getElementById('ollamaModelName').value;
+            }
+
+            const response = await fetch('/api/ai/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            if (!response.ok) {
+                const textResponse = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned HTML instead of JSON');
+            }
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to save configuration');
+            }
+            
+            showAlert('success', '✅ AI configuration saved successfully!');
+            updateStatus();
+            
+        } catch (error) {
+            console.error('Error saving config:', error);
+            showAlert('danger', 'Failed to save configuration: ' + error.message);
+        } finally {
+            setLoading(saveBtn, false);
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Configuration';
+        }
+    }
+
+    async function testConnection() {
+        const testBtn = document.querySelector('[onclick="testConnection()"]');
+        setLoading(testBtn, true);
+        
+        try {
+            const provider = document.getElementById('providerName').value;
+            const config = {
+                provider_name: provider,
+                portkey_api_key: document.getElementById('portkeyApiKey').value,
+                openai_virtual_key: document.getElementById('openaiVirtualKey').value,
+                gemini_virtual_key: document.getElementById('geminiVirtualKey').value,
+                ollama_api_url: document.getElementById('ollamaApiUrl').value,
+                ollama_model_name: document.getElementById('ollamaModelName').value
+            };
+
+            if (provider === 'openai') {
+                config.model_name = document.getElementById('openaiModelName').value;
+            } else if (provider === 'gemini') {
+                config.model_name = document.getElementById('geminiModelName').value;
+            } else if (provider === 'ollama') {
+                config.model_name = document.getElementById('ollamaModelName').value;
+            }
+
+            const response = await fetch('/api/ai/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned HTML instead of JSON');
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert('success', '✅ AI connection test successful!');
+                updateConnectionStatus('success', result.message);
+            } else {
+                showAlert('danger', '❌ AI connection test failed: ' + result.message);
+                updateConnectionStatus('error', result.message);
+            }
+            
+        } catch (error) {
+            console.error('Error testing connection:', error);
+            showAlert('danger', 'Failed to test connection: ' + error.message);
+            updateConnectionStatus('error', error.message);
+        } finally {
+            setLoading(testBtn, false);
+            testBtn.innerHTML = '<i class="fas fa-check-circle"></i> Test Connection';
+        }
+    }
+
+    async function generateSample() {
+        const generateBtn = document.querySelector('[onclick="generateSample()"]');
+        setLoading(generateBtn, true);
+        
+        try {
+            const provider = document.getElementById('providerName').value;
+            const response = await fetch('/api/ai/generate-sample', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ provider_name: provider })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const textResponse = await response.text();
+                throw new Error('Server returned HTML instead of JSON. Check if all APIs are working correctly.');
+            }
+
+            const result = await response.json();
+
+            const previewElement = document.getElementById('responsePreview');
+            if (result.success && result.sample_response) {
+                // Format the AI analysis nicely
+                let formattedResponse = '';
+                const analysis = result.sample_response;
+                
+                if (typeof analysis === 'object') {
+                    // Handle structured analysis
+                    Object.keys(analysis).forEach(key => {
+                        if (key !== 'llm_provider' && analysis[key]) {
+                            const content = typeof analysis[key] === 'object' ? analysis[key].content : analysis[key];
+                            formattedResponse += `**${key}:**\n${content}\n\n`;
+                        }
+                    });
+                    
+                    if (analysis.llm_provider) {
+                        formattedResponse += `\n*Generated by: ${analysis.llm_provider}*`;
+                    }
+                } else {
+                    formattedResponse = analysis;
+                }
+                
+                previewElement.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${formattedResponse}</pre>`;
+                previewElement.style.color = 'var(--text-dark)';
+            } else {
+                previewElement.innerHTML = `<span style="color: #dc3545;">Error: ${result.error || 'Failed to generate sample'}</span>`;
+            }
+            
+        } catch (error) {
+            console.error('Error generating sample:', error);
+            const previewElement = document.getElementById('responsePreview');
+            previewElement.innerHTML = `<span style="color: #dc3545;">Error: ${error.message}</span>`;
+        } finally {
+            setLoading(generateBtn, false);
+            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate Sample';
+        }
+    }
+
+    function updateConnectionStatus(type, message) {
+        const statusElement = document.getElementById('connectionStatus');
+        const iconMap = {
+            'success': 'fa-check-circle',
+            'error': 'fa-exclamation-triangle',
+            'warning': 'fa-exclamation-triangle'
+        };
+        
+        statusElement.innerHTML = `
+            <div class="connection-status ${type}">
+                <i class="fas ${iconMap[type]}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+    }
+
+    async function updateStatus() {
+        try {
+            const config = currentConfig;
+            const provider = config.provider_name?.value || 'Not configured';
+            const enabled = config.enabled?.value === 'true' ? 'Enabled' : 'Disabled';
+            const model = config.model_name?.value || 'Not set';
+            const hasCustomPrompt = config.system_prompt?.value && config.system_prompt.value.trim() !== '';
+            const promptStatus = hasCustomPrompt ? 'Custom' : 'Default';
+            
+            const statusElement = document.getElementById('statusInfo');
+            statusElement.innerHTML = `
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-server text-primary me-2"></i>
+                            <div>
+                                <div class="fw-bold">Provider</div>
+                                <div class="text-muted small">${provider}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-toggle-${enabled === 'Enabled' ? 'on text-success' : 'off text-danger'} me-2"></i>
+                            <div>
+                                <div class="fw-bold">Status</div>
+                                <div class="text-muted small">${enabled}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-robot text-info me-2"></i>
+                            <div>
+                                <div class="fw-bold">Model</div>
+                                <div class="text-muted small">${model}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-alt ${hasCustomPrompt ? 'text-warning' : 'text-secondary'} me-2"></i>
+                            <div>
+                                <div class="fw-bold">System Prompt</div>
+                                <div class="text-muted small">${promptStatus}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
+    }
+
+    async function refreshOllamaModels() {
+        try {
+            const response = await fetch('/api/ollama/models');
+            const data = await response.json();
+            
+            const container = document.getElementById('ollamaModels');
+            if (!container) return;
+            
+            // Get suggested models first
+            const suggestedResponse = await fetch('/api/ai/models');
+            const suggestedModels = await suggestedResponse.json();
+            const suggested = suggestedModels.ollama || [];
+            
+            if (data.success && data.models.length > 0) {
+                // Show downloaded models first, then suggested
+                const downloadedModels = data.models;
+                const allModels = [...new Set([...downloadedModels, ...suggested])];
+                
+                container.innerHTML = allModels.map(model => {
+                    const isDownloaded = downloadedModels.includes(model);
+                    const className = isDownloaded ? 'model-chip downloaded' : 'model-chip';
+                    return `<span class="${className}" onclick="selectModel('ollama', '${model}')">${model}</span>`;
+                }).join('');
+            } else {
+                // Show only suggested models if Ollama is not connected
+                container.innerHTML = suggested.map(model => 
+                    `<span class="model-chip" onclick="selectModel('ollama', '${model}')">${model}</span>`
+                ).join('');
+            }
+        } catch (error) {
+            console.error('Error refreshing Ollama models:', error);
+        }
+    }
+
+    async function checkModelStatus() {
+        const modelName = document.getElementById('ollamaModelName').value;
+        if (!modelName) return;
+        
+        try {
+            const response = await fetch(`/api/ollama/status?model_name=${encodeURIComponent(modelName)}`);
+            const data = await response.json();
+            
+            const statusText = document.getElementById('statusText');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            
+            if (data.available) {
+                statusText.textContent = '✅ Model downloaded and ready';
+                statusText.className = 'status-text downloaded';
+                downloadBtn.style.display = 'none';
+                progressContainer.style.display = 'none';
+                if (downloadCheckInterval) {
+                    clearInterval(downloadCheckInterval);
+                    downloadCheckInterval = null;
+                }
+            } else if (data.status === 'ollama_unavailable') {
+                statusText.textContent = '⚠️ Ollama not running';
+                statusText.className = 'status-text not-available';
+                downloadBtn.style.display = 'none';
+                progressContainer.style.display = 'none';
+            } else {
+                // Check if download is in progress
+                await checkDownloadProgress(modelName);
+            }
+        } catch (error) {
+            console.error('Error checking model status:', error);
+            document.getElementById('statusText').textContent = '❓ Status unknown';
+            document.getElementById('statusText').className = 'status-text not-available';
+        }
+    }
+
+    async function checkDownloadProgress(modelName) {
+        try {
+            const response = await fetch(`/api/ollama/download-progress?model_name=${encodeURIComponent(modelName)}`);
+            const data = await response.json();
+            
+            const statusText = document.getElementById('statusText');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            
+            if (data.status === 'completed') {
+                statusText.textContent = '✅ Model downloaded and ready';
+                statusText.className = 'status-text downloaded';
+                downloadBtn.style.display = 'none';
+                progressContainer.style.display = 'none';
+                refreshOllamaModels();
+            } else if (data.status === 'downloading') {
+                statusText.textContent = '📥 Model is downloading...';
+                statusText.className = 'status-text downloading';
+                downloadBtn.style.display = 'none';
+                progressContainer.style.display = 'block';
+                
+                if (data.progress === -1) {
+                    progressBar.style.width = '50%';
+                    progressBar.textContent = 'Downloading...';
+                    progressBar.style.animation = 'pulse 2s infinite';
+                } else {
+                    progressBar.style.width = data.progress + '%';
+                    progressBar.textContent = Math.round(data.progress) + '%';
+                    progressBar.style.animation = 'none';
+                }
+                
+                if (!downloadCheckInterval) {
+                    startDownloadCheck(modelName);
+                }
+            } else {
+                statusText.textContent = '❌ Model not downloaded';
+                statusText.className = 'status-text not-available';
+                downloadBtn.style.display = 'inline-flex';
+                progressContainer.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error checking download progress:', error);
+            document.getElementById('statusText').textContent = '❓ Status unknown';
+            document.getElementById('statusText').className = 'status-text not-available';
+        }
+    }
+
+    async function downloadModel() {
+        const modelName = document.getElementById('ollamaModelName').value;
+        if (!modelName) return;
+        
+        const downloadBtn = document.getElementById('downloadBtn');
+        setLoading(downloadBtn, true);
+        
+        try {
+            const response = await fetch('/api/ollama/pull', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ model_name: modelName })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('statusText').textContent = '📥 Download started...';
+                document.getElementById('statusText').className = 'status-text downloading';
+                downloadBtn.style.display = 'none';
+                document.getElementById('progressContainer').style.display = 'block';
+                
+                startDownloadCheck(modelName);
+            } else {
+                throw new Error(result.error || 'Failed to start download');
+            }
+        } catch (error) {
+            console.error('Error downloading model:', error);
+            showAlert('danger', 'Failed to download model: ' + error.message);
+        } finally {
+            setLoading(downloadBtn, false);
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Model';
+        }
+    }
+
+    function startDownloadCheck(modelName) {
+        if (downloadCheckInterval) {
+            clearInterval(downloadCheckInterval);
+        }
+        
+        downloadCheckInterval = setInterval(() => {
+            checkDownloadProgress(modelName);
+        }, 2000);
+    }
+
+    async function resetSystemPrompt() {
+        try {
+            const response = await fetch('/api/ai/system-prompt/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned HTML instead of JSON');
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('systemPrompt').value = '';
+                showAlert('success', '✅ System prompt reset to default!');
+                
+                // Show a preview of the default prompt
+                const previewElement = document.getElementById('responsePreview');
+                previewElement.innerHTML = `<div style="color: var(--text-dark);"><strong>Default System Prompt:</strong><br><pre style="white-space: pre-wrap; font-family: inherit; margin-top: 0.5rem;">${result.default_prompt}</pre></div>`;
+            } else {
+                showAlert('danger', '❌ Failed to reset system prompt: ' + result.error);
+            }
+            
+        } catch (error) {
+            console.error('Error resetting system prompt:', error);
+            showAlert('danger', 'Failed to reset system prompt: ' + error.message);
+        }
+    }
+
+    function previewCurrentPrompt() {
+        const systemPrompt = document.getElementById('systemPrompt').value;
+        const previewElement = document.getElementById('responsePreview');
+        
+        if (systemPrompt.trim()) {
+            previewElement.innerHTML = `<div style="color: var(--text-dark);"><strong>Current Custom Prompt:</strong><br><pre style="white-space: pre-wrap; font-family: inherit; margin-top: 0.5rem;">${systemPrompt}</pre></div>`;
+        } else {
+            previewElement.innerHTML = `<div style="color: var(--text-light);"><strong>Using Default Prompt</strong><br><em>Click "Reset to Default" to see the default prompt, or save a custom prompt to preview it here.</em></div>`;
+        }
+    }
+</script>
+{% endblock %}

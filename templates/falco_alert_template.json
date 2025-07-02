@@ -1,0 +1,76 @@
+{
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "🚨 Falco Security Alert",
+        "emoji": true
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Rule:*\n{{rule}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Priority:*\n{{priority}} {{urgency_emoji}}"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Command:*\n`{{falco_command}}`"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Time:*\n{{time}}"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Details:*\n{{output}}"
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🤖 AI Analysis ({{llm_provider}}):*"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🛡️ Security Impact:*\n{{explanation_sections.Security_Impact.content}}"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🔍 Next Steps:*\n{{explanation_sections.Next_Steps.content}}"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*🔧 Remediation Steps:*\n{{explanation_sections.Remediation_Steps.content}}"
+      }
+    }
+  ]
+}

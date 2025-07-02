@@ -1,0 +1,69 @@
+# Falco Configuration for AI Alert System Integration
+# Place this in your Falco configuration directory
+
+# Basic Falco settings
+json_output: true
+json_include_output_property: true
+json_include_tags_property: true
+
+# HTTP output configuration for webhook
+http_output:
+  enabled: true
+  url: "http://localhost:8080/falco-webhook"  # Change to your server IP if needed
+  user_agent: "falco-webhook"
+
+# Alternative: If running Falco in Docker and the AI system is on host
+# http_output:
+#   enabled: true  
+#   url: "http://host.docker.internal:8080/falco-webhook"
+
+# Alternative: If both Falco and AI system are in same Docker network
+# http_output:
+#   enabled: true
+#   url: "http://falco-ai-alerts:8080/falco-webhook"
+
+# Log level and output settings
+log_level: info
+log_stderr: true
+log_syslog: false
+
+# Priority threshold - only send alerts at or above this level
+priority: warning  # Options: emergency, alert, critical, error, warning, notice, info, debug
+
+# Output format settings
+time_format_iso_8601: true
+output_timeout: 2000
+
+# Buffered output settings
+buffered_outputs: false
+
+# Rules settings
+rules_file:
+  - /etc/falco/falco_rules.yaml
+  - /etc/falco/falco_rules.local.yaml
+  - /etc/falco/k8s_audit_rules.yaml
+
+# Syscall settings
+syscall_event_drops:
+  actions:
+    - log
+    - alert
+  rate: .03333
+  max_burst: 1000
+
+# Performance settings
+syscall_event_timeouts:
+  max_consecutives: 1000
+
+# Metadata enrichment
+metadata:
+  - k8s
+  - container
+
+# Modern eBPF driver (recommended)
+modern_bpf:
+  enabled: true
+
+# WebUI integration hints
+webserver:
+  enabled: false  # We use our own web UI 

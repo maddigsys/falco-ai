@@ -1,0 +1,71 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: falco-ai-alerts-development
+
+resources:
+  - ../../base
+
+namespace: falco-ai-alerts-dev
+
+namePrefix: dev-
+
+commonLabels:
+  environment: development
+  app.kubernetes.io/version: dev
+
+patches:
+  # Reduce replicas for development
+  - target:
+      kind: Deployment
+      name: falco-ai-alerts
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  
+  # Use NodePort for easy local access
+  - target:
+      kind: Service
+      name: falco-ai-alerts
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30080
+      - op: add
+        path: /spec/ports/1/nodePort
+        value: 30081
+
+  # Reduce resource requests for development
+  - target:
+      kind: Deployment
+      name: falco-ai-alerts
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "128Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "256Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "200m"
+
+configMapGenerator:
+  - name: falco-ai-alerts-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=DEBUG
+      - MIN_PRIORITY=informational
+      - ALERT_RETENTION_DAYS=7
+
+images:
+  - name: falco-ai-alerts
+    newTag: dev 

@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falco AI Alert System - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .stats-card:hover {
+            transform: scale(1.02);
+        }
+
+        .stats-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stats-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .alert-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .alert-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .alert-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .alert-item.selected {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .alert-rule {
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .alert-priority {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: white;
+            display: inline-block;
+        }
+
+        .priority-critical { background: #dc3545; }
+        .priority-error { background: #fd7e14; }
+        .priority-warning { background: #ffc107; color: #000; }
+        .priority-notice { background: #17a2b8; }
+        .priority-informational { background: #6c757d; }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            background: white;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            color: #4CAF50;
+            border-bottom-color: #4CAF50;
+            background: #f8f9fa;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alert-detail-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .alert-detail-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .alert-detail-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .alert-detail-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .alert-output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border-left: 4px solid #007bff;
+            margin: 15px 0;
+        }
+
+        .ai-analysis-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-radius: 10px;
+            border: 1px solid #d4edda;
+        }
+
+        .ai-analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        .analysis-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .analysis-section h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analysis-section p {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .commands-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .command-block {
+            background: #2c3e50;
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .chat-header h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-status {
+            font-size: 14px;
+            color: #28a745;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-height: calc(100vh - 200px);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user .message-content {
+            background: #007bff;
+            color: white;
+            margin-left: 60px;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            margin-right: 60px;
+            border-radius: 18px 18px 18px 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message.ai .message-time {
+            text-align: left;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-questions {
+            margin-bottom: 15px;
+        }
+
+        .quick-question {
+            display: block;
+            width: 100%;
+            background: none;
+            border: 1px solid #e0e0e0;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .quick-question:hover {
+            background: #f8f9fa;
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-online {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .analytics-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #666;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 280px 1fr 350px;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px auto 1fr;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                max-height: 300px;
+            }
+            
+            .chat-panel {
+                border-left: none;
+                border-top: 1px solid rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                🛡️ Falco AI Alert System
+            </h1>
+            <div class="header-actions">
+                <button class="btn secondary" onclick="exportAnalysis()">📤 Export Analysis</button>
+                <button class="btn" onclick="refreshDashboard()">🔄 Refresh</button>
+                <a href="/deployment" class="btn">🚀 Deploy</a>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>📊 Quick Stats</h3>
+                <div class="stats-card">
+                    <div class="stats-number" id="totalAlerts">-</div>
+                    <div class="stats-label">Total Alerts</div>
+                </div>
+                <div class="stats-card" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52);">
+                    <div class="stats-number" id="criticalAlerts">-</div>
+                    <div class="stats-label">Critical Alerts</div>
+                </div>
+                <div class="stats-card" style="background: linear-gradient(135deg, #4ecdc4, #44a08d);">
+                    <div class="stats-number" id="recentAlerts">-</div>
+                    <div class="stats-label">Last Hour</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>🔍 Filters</h3>
+                <div class="filter-group">
+                    <label for="timeRange">Time Range</label>
+                    <select id="timeRange" onchange="applyFilters()">
+                        <option value="all">All Time</option>
+                        <option value="1h">Last Hour</option>
+                        <option value="24h" selected>Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="priorityFilter">Priority</label>
+                    <select id="priorityFilter" onchange="applyFilters()">
+                        <option value="all">All Priorities</option>
+                        <option value="critical">Critical</option>
+                        <option value="error">Error</option>
+                        <option value="warning">Warning</option>
+                        <option value="notice">Notice</option>
+                        <option value="informational">Informational</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="ruleFilter">Rule</label>
+                    <select id="ruleFilter" onchange="applyFilters()">
+                        <option value="all">All Rules</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>🚨 Recent Alerts</h3>
+                <div class="alert-list" id="alertList">
+                    <div class="empty-state">
+                        <p>Loading alerts...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-tabs">
+                <button class="tab-button active" onclick="switchTab('overview')">📋 Overview</button>
+                <button class="tab-button" onclick="switchTab('details')">🔍 Alert Details</button>
+                <button class="tab-button" onclick="switchTab('analytics')">📈 Analytics</button>
+            </div>
+
+            <div id="overview-tab" class="tab-content active">
+                <div class="empty-state">
+                    <h3>Welcome to Falco AI Alert System</h3>
+                    <p>Select an alert from the sidebar to view details, or explore the analytics tab for insights.</p>
+                    <br>
+                    <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                        <h4>🚀 Getting Started:</h4>
+                        <ul style="margin: 15px 0; padding-left: 20px;">
+                            <li>Configure Falco to send webhooks to <code>http://your-server:8080/falco-webhook</code></li>
+                            <li>Set up your AI provider (OpenAI, Gemini, or Ollama) in the environment</li>
+                            <li>Configure Slack notifications for real-time alerts</li>
+                            <li>Use the chat panel to ask questions about your security posture</li>
+                        </ul>
+                        
+                        <h4>🔧 Key Features:</h4>
+                        <ul style="margin: 15px 0; padding-left: 20px;">
+                            <li>Real-time security alert monitoring</li>
+                            <li>AI-powered security analysis and recommendations</li>
+                            <li>Interactive chat interface for security insights</li>
+                            <li>Comprehensive analytics and trend analysis</li>
+                            <li>One-click deployment to production</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="details-tab" class="tab-content">
+                <div id="alertDetails" class="empty-state">
+                    <h3>No Alert Selected</h3>
+                    <p>Select an alert from the sidebar to view detailed analysis.</p>
+                </div>
+            </div>
+
+            <div id="analytics-tab" class="tab-content">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4>📊 Priority Distribution</h4>
+                        <div class="chart-container">
+                            Priority chart will be displayed here
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>📈 Alert Trends (24h)</h4>
+                        <div class="chart-container">
+                            Timeline chart will be displayed here
+                        </div>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h4>🔝 Top Alert Rules</h4>
+                    <div id="topRules" class="chart-container">
+                        Loading rule frequency data...
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="chat-panel">
+            <div class="chat-header">
+                <h3>🤖 AI Security Assistant</h3>
+                <div class="chat-status">
+                    <span class="status-indicator status-online"></span>
+                    Ready to help
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-content">
+                        👋 Hello! I'm your AI security assistant. I can help you understand your alerts, analyze trends, and provide security recommendations. 
+                        
+                        Try asking me:
+                        • "What are my most critical alerts?"
+                        • "Show me recent security trends"
+                        • "What should I investigate first?"
+                        • "How can I improve my security posture?"
+                    </div>
+                    <div class="message-time">System</div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="quick-questions">
+                    <button class="quick-question" onclick="sendQuickQuestion('What are my most critical alerts?')">
+                        🚨 What are my most critical alerts?
+                    </button>
+                    <button class="quick-question" onclick="sendQuickQuestion('Show me security trends')">
+                        📈 Show me security trends
+                    </button>
+                    <button class="quick-question" onclick="sendQuickQuestion('What should I focus on today?')">
+                        🎯 What should I focus on today?
+                    </button>
+                </div>
+                
+                <div class="chat-input-container">
+                    <textarea 
+                        id="chatInput" 
+                        class="chat-input" 
+                        placeholder="Ask me about your security alerts..."
+                        onkeypress="handleChatKeypress(event)"
+                        rows="1"
+                    ></textarea>
+                    <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                        ➤
+                    </button>
+                </div>
+                
+                <div class="loading-indicator" id="chatLoading">
+                    <div class="loading-spinner"></div>
+                    AI is thinking...
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Global state
+        let currentAlerts = [];
+        let currentStats = {};
+        let selectedAlert = null;
+        let currentFilters = {
+            time_range: '24h',
+            priority: 'all',
+            rule: 'all'
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            loadChatHistory();
+            setupAutoRefresh();
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                await Promise.all([
+                    loadStats(),
+                    loadAlerts(),
+                    loadRules()
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Failed to load dashboard data. Please refresh the page.');
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                currentStats = stats;
+                
+                document.getElementById('totalAlerts').textContent = stats.total_alerts || 0;
+                document.getElementById('criticalAlerts').textContent = stats.critical_alerts || 0;
+                document.getElementById('recentAlerts').textContent = stats.recent_alerts || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load alerts with filters
+        async function loadAlerts() {
+            try {
+                const params = new URLSearchParams(currentFilters);
+                const response = await fetch(`/api/alerts?${params}`);
+                const alerts = await response.json();
+                currentAlerts = alerts;
+                
+                renderAlertList(alerts);
+                updateAnalytics(alerts);
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        // Load rules for filter dropdown
+        async function loadRules() {
+            try {
+                const response = await fetch('/api/rules');
+                const rules = await response.json();
+                
+                const ruleFilter = document.getElementById('ruleFilter');
+                ruleFilter.innerHTML = '<option value="all">All Rules</option>';
+                
+                rules.forEach(rule => {
+                    const option = document.createElement('option');
+                    option.value = rule;
+                    option.textContent = rule;
+                    ruleFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading rules:', error);
+            }
+        }
+
+        // Render alert list
+        function renderAlertList(alerts) {
+            const alertList = document.getElementById('alertList');
+            
+            if (alerts.length === 0) {
+                alertList.innerHTML = '<div class="empty-state"><p>No alerts found</p></div>';
+                return;
+            }
+
+            alertList.innerHTML = alerts.map(alert => `
+                <div class="alert-item" onclick="selectAlert('${alert.id}')" data-alert-id="${alert.id}">
+                    <div class="alert-rule">${alert.rule}</div>
+                    <div class="alert-time">${formatTime(alert.timestamp)}</div>
+                    <span class="alert-priority priority-${alert.priority}">${alert.priority}</span>
+                </div>
+            `).join('');
+        }
+
+        // Select alert
+        function selectAlert(alertId) {
+            const alert = currentAlerts.find(a => a.id == alertId);
+            if (!alert) return;
+
+            selectedAlert = alert;
+            
+            // Update UI selection
+            document.querySelectorAll('.alert-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-alert-id="${alertId}"]`).classList.add('selected');
+            
+            // Show alert details
+        function showAlertDetails(alert) {
+            const detailsContainer = document.getElementById('alertDetails');
+            
+            const aiAnalysis = alert.ai_analysis;
+            const hasAnalysis = aiAnalysis && !aiAnalysis.error;
+            
+            detailsContainer.innerHTML = `
+                <div class="alert-detail-card">
+                    <div class="alert-detail-header">
+                        <div>
+                            <div class="alert-detail-title">${alert.rule}</div>
+                            <div class="alert-detail-meta">
+                                <div class="meta-item">
+                                    <span>⏰</span>
+                                    <span>${formatTime(alert.timestamp)}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>📦</span>
+                                    <span>${alert.source}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="alert-priority priority-${alert.priority}">${alert.priority.toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-output">
+                        <strong>Alert Details:</strong><br>
+                        ${alert.output}
+                    </div>
+                    
+                    ${alert.fields && alert.fields['proc.cmdline'] ? `
+                        <div class="alert-output">
+                            <strong>Command:</strong><br>
+                            <code>${alert.fields['proc.cmdline']}</code>
+                        </div>
+                    ` : ''}
+                    
+                    ${hasAnalysis ? `
+                        <div class="ai-analysis-section">
+                            <div class="ai-analysis-header">
+                                🤖 AI Security Analysis
+                                <span style="font-size: 12px; font-weight: normal; opacity: 0.8;">
+                                    by ${aiAnalysis.llm_provider || 'AI Assistant'}
+                                </span>
+                            </div>
+                            
+                            ${aiAnalysis['Security Impact'] ? `
+                                <div class="analysis-section">
+                                    <h4>🛡️ Security Impact</h4>
+                                    <p>${aiAnalysis['Security Impact'].content || aiAnalysis['Security Impact']}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${aiAnalysis['Next Steps'] ? `
+                                <div class="analysis-section">
+                                    <h4>🔍 Next Steps</h4>
+                                    <p>${aiAnalysis['Next Steps'].content || aiAnalysis['Next Steps']}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${aiAnalysis['Remediation Steps'] ? `
+                                <div class="analysis-section">
+                                    <h4>🔧 Remediation Steps</h4>
+                                    <p>${aiAnalysis['Remediation Steps'].content || aiAnalysis['Remediation Steps']}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${aiAnalysis['Suggested Commands'] && aiAnalysis['Suggested Commands'].content ? `
+                                <div class="commands-section">
+                                    <h4>💻 Suggested Commands</h4>
+                                    <div class="command-block">
+                                        <button class="copy-btn" onclick="copyToClipboard('${aiAnalysis['Suggested Commands'].content.replace(/'/g, "\\'")}')">📋</button>
+                                        ${aiAnalysis['Suggested Commands'].content}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : `
+                        <div class="ai-analysis-section">
+                            <div class="ai-analysis-header">
+                                ⚠️ AI Analysis Unavailable
+                            </div>
+                            <p>AI analysis failed or is not available for this alert. This could be due to:</p>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>AI service configuration issues</li>
+                                <li>Network connectivity problems</li>
+                                <li>Alert processing errors</li>
+                            </ul>
+                            <button class="btn" onclick="retryAnalysis('${alert.id}')">🔄 Retry Analysis</button>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // Update analytics
+        function updateAnalytics(alerts) {
+            if (document.getElementById('analytics-tab').classList.contains('active')) {
+                renderAnalytics(alerts);
+            }
+        }
+
+        // Render analytics
+        function renderAnalytics(alerts) {
+            // Priority distribution
+            const priorities = {};
+            alerts.forEach(alert => {
+                priorities[alert.priority] = (priorities[alert.priority] || 0) + 1;
+            });
+
+            // Top rules
+            const rules = {};
+            alerts.forEach(alert => {
+                rules[alert.rule] = (rules[alert.rule] || 0) + 1;
+            });
+
+            const sortedRules = Object.entries(rules)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            document.getElementById('topRules').innerHTML = `
+                <div style="text-align: left; padding: 20px;">
+                    ${sortedRules.map(([rule, count]) => `
+                        <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="flex: 1; font-size: 14px;">${rule}</span>
+                            <span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
+                                ${count}
+                            </span>
+                        </div>
+                    `).join('')}
+                    ${sortedRules.length === 0 ? '<p>No alert data available</p>' : ''}
+                </div>
+            `;
+        }
+
+        // Apply filters
+        function applyFilters() {
+            currentFilters.time_range = document.getElementById('timeRange').value;
+            currentFilters.priority = document.getElementById('priorityFilter').value;
+            currentFilters.rule = document.getElementById('ruleFilter').value;
+            
+            loadAlerts();
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load analytics if switching to analytics tab
+            if (tabName === 'analytics') {
+                renderAnalytics(currentAlerts);
+            }
+        }
+
+        // Chat functionality
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            input.value = '';
+            addChatMessage('user', message);
+            
+            try {
+                showChatLoading(true);
+                
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: {
+                            selected_alert: selectedAlert,
+                            current_filters: currentFilters,
+                            stats: currentStats
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    addChatMessage('ai', `Sorry, I encountered an error: ${data.error}`);
+                } else {
+                    addChatMessage('ai', data.response);
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addChatMessage('ai', 'Sorry, I\'m having trouble connecting. Please try again.');
+            } finally {
+                showChatLoading(false);
+            }
+        }
+
+        // Add chat message
+        function addChatMessage(type, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${formatTime(new Date().toISOString())}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Send quick question
+        function sendQuickQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+
+        // Handle chat keypress
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Show/hide chat loading
+        function showChatLoading(show) {
+            const loading = document.getElementById('chatLoading');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            loading.style.display = show ? 'block' : 'none';
+            sendBtn.disabled = show;
+        }
+
+        // Load chat history
+        async function loadChatHistory() {
+            try {
+                const response = await fetch('/api/chat/history');
+                const messages = await response.json();
+                
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                
+                // Add welcome message if no history
+                if (messages.length === 0) {
+                    addChatMessage('ai', '👋 Hello! I\'m your AI security assistant. I can help you understand your alerts, analyze trends, and provide security recommendations.\n\nTry asking me:\n• "What are my most critical alerts?"\n• "Show me recent security trends"\n• "What should I investigate first?"\n• "How can I improve my security posture?"');
+                    return;
+                }
+                
+                // Load existing messages
+                messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${msg.type}`;
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-content">${msg.content}</div>
+                        <div class="message-time">${formatTime(msg.timestamp)}</div>
+                    `;
+                    
+                    messagesContainer.appendChild(messageDiv);
+                });
+                
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        }
+
+        // Utility functions
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show temporary feedback
+                const event = new CustomEvent('show-toast', {
+                    detail: { message: 'Copied to clipboard!', type: 'success' }
+                });
+                document.dispatchEvent(event);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // Dashboard actions
+        function refreshDashboard() {
+            loadDashboardData();
+            loadChatHistory();
+        }
+
+        async function exportAnalysis() {
+            try {
+                const response = await fetch('/api/export');
+                const data = await response.json();
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: 'application/json'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `falco-analysis-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                addChatMessage('ai', '📤 Analysis exported successfully! The file contains comprehensive security insights, trends, and recommendations for your deployment.');
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Failed to export analysis. Please try again.');
+            }
+        }
+
+        async function retryAnalysis(alertId) {
+            try {
+                // This would typically trigger a re-analysis of the alert
+                addChatMessage('ai', `🔄 Retrying analysis for alert ${alertId}. This feature requires backend integration to re-process the alert with the AI provider.`);
+            } catch (error) {
+                console.error('Retry analysis error:', error);
+            }
+        }
+
+        function showError(message) {
+            addChatMessage('ai', `❌ ${message}`);
+        }
+
+        // Auto-refresh setup
+        function setupAutoRefresh() {
+            // Refresh stats every 30 seconds
+            setInterval(() => {
+                loadStats();
+            }, 30000);
+            
+            // Refresh alerts every 60 seconds
+            setInterval(() => {
+                loadAlerts();
+            }, 60000);
+        }
+
+        // Toast notification system
+        document.addEventListener('show-toast', function(event) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideInToast 0.3s ease-out;
+            `;
+            toast.textContent = event.detail.message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutToast 0.3s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        });
+
+        // Add toast animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInToast {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOutToast {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+    </script>
+</body>
+</html>
+        //     showAlertDetails(alert);
+            
+        //     // Switch to details tab if not already there
+        //     if (!document.getElementById('details-tab').classList.contains('active')) {
+        //         switchTab('details');
+        //     }
+        // }
+
+        // // Show alert details

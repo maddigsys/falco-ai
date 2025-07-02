@@ -1,0 +1,485 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Slack Configuration{% endblock %}
+{% block page_icon %}<i class="fab fa-slack"></i>{% endblock %}
+{% block page_title %}Slack Integration{% endblock %}
+{% block page_description %}Configure Slack notifications for your Falco AI Alert System{% endblock %}
+
+{% block content %}
+<!-- Connection Status -->
+<div id="connectionStatus"></div>
+
+<!-- Current Status Summary -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-info-circle"></i>
+            Current Status Summary
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div id="statusInfo" class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading status...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Connection Settings -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-link"></i>
+            Connection Settings
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="botToken" class="form-label">
+                        <i class="fas fa-key"></i>
+                        Slack Bot Token *
+                    </label>
+                    <input type="password" class="form-control" id="botToken" placeholder="xoxb-your-bot-token-here">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Get your bot token from Slack App settings. Requires chat:write permissions.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="channelName" class="form-label">
+                        <i class="fas fa-hashtag"></i>
+                        Channel Name *
+                    </label>
+                    <input type="text" class="form-control" id="channelName" placeholder="#security-alerts">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Channel where alerts will be sent. Bot must be invited to private channels.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="slackEnabled" checked>
+                        <label class="form-check-label" for="slackEnabled">
+                            <i class="fab fa-slack"></i>
+                            Enable Slack Notifications
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Enable or disable Slack notification delivery
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Settings -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-comment-dots"></i>
+            Message Configuration
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user"></i>
+                        Bot Display Name
+                    </label>
+                    <input type="text" class="form-control" id="username" value="Falco AI Alerts">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Name that appears as the message sender
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="iconEmoji" class="form-label">
+                        <i class="fas fa-smile"></i>
+                        Bot Icon Emoji
+                    </label>
+                    <input type="text" class="form-control" id="iconEmoji" value=":shield:" placeholder=":shield:">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Emoji icon for the bot (e.g., :shield:, :warning:)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="minPrioritySlack" class="form-label">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Minimum Priority for Slack
+                    </label>
+                    <select class="form-select" id="minPrioritySlack">
+                        <option value="debug">Debug</option>
+                        <option value="informational">Informational</option>
+                        <option value="notice">Notice</option>
+                        <option value="warning" selected>Warning</option>
+                        <option value="error">Error</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Only send alerts of this priority level or higher to Slack
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="templateStyle" class="form-label">
+                        <i class="fas fa-palette"></i>
+                        Message Template Style
+                    </label>
+                    <select class="form-select" id="templateStyle">
+                        <option value="detailed" selected>Detailed (Full AI Analysis)</option>
+                        <option value="basic">Basic (Simple Alert)</option>
+                    </select>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Choose the format for Slack messages
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="includeCommands" checked>
+                        <label class="form-check-label" for="includeCommands">
+                            <i class="fas fa-terminal"></i>
+                            Include Suggested Commands
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Include AI-generated investigation commands in alerts
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="threadAlerts" checked>
+                        <label class="form-check-label" for="threadAlerts">
+                            <i class="fas fa-comments"></i>
+                            Use Threading for Related Alerts
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Group related alerts in Slack threads
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="action-area">
+        <button class="btn btn-success" onclick="testConnection()">
+            <i class="fas fa-check-circle"></i>
+            Test Connection
+        </button>
+        <button class="btn btn-secondary" onclick="previewMessage()">
+            <i class="fas fa-eye"></i>
+            Preview Message
+        </button>
+        <button class="btn btn-primary" onclick="saveConfig()">
+            <i class="fas fa-save"></i>
+            Save Configuration
+        </button>
+    </div>
+</div>
+
+<!-- Status Messages -->
+<div id="status-alert" class="status-alert"></div>
+
+<!-- Message Preview -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-eye"></i>
+            Message Preview
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div id="messagePreview" style="background: var(--bg-light); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace; font-size: 0.875rem; line-height: 1.6; color: var(--text-light);">
+            Click "Preview Message" to see how Slack notifications will appear
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set the current page for sidebar navigation
+    window.page = 'slack';
+    
+    let currentConfig = {};
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        loadConfig();
+        updateStatusSummary();
+    });
+
+    async function loadConfig() {
+        try {
+            const response = await fetch('/api/slack/config');
+            if (!response.ok) throw new Error('Failed to load configuration');
+            
+            const config = await response.json();
+            currentConfig = config;
+            
+            // Populate form fields
+            document.getElementById('botToken').value = config.bot_token?.value || '';
+            document.getElementById('channelName').value = config.channel_name?.value || '#security-alerts';
+            document.getElementById('slackEnabled').checked = config.enabled?.value === 'true';
+            document.getElementById('username').value = config.username?.value || 'Falco AI Alerts';
+            document.getElementById('iconEmoji').value = config.icon_emoji?.value || ':shield:';
+            document.getElementById('templateStyle').value = config.template_style?.value || 'detailed';
+            document.getElementById('minPrioritySlack').value = config.min_priority_slack?.value || 'warning';
+            document.getElementById('includeCommands').checked = config.include_commands?.value === 'true';
+            document.getElementById('threadAlerts').checked = config.thread_alerts?.value === 'false';
+            
+            updateStatusSummary();
+            
+        } catch (error) {
+            console.error('Error loading config:', error);
+            showAlert('danger', 'Failed to load configuration: ' + error.message);
+        }
+    }
+
+    async function saveConfig() {
+        const saveBtn = document.querySelector('[onclick="saveConfig()"]');
+        setLoading(saveBtn, true);
+        
+        try {
+            const config = {
+                bot_token: document.getElementById('botToken').value,
+                channel_name: document.getElementById('channelName').value,
+                enabled: document.getElementById('slackEnabled').checked ? 'true' : 'false',
+                username: document.getElementById('username').value,
+                icon_emoji: document.getElementById('iconEmoji').value,
+                template_style: document.getElementById('templateStyle').value,
+                min_priority_slack: document.getElementById('minPrioritySlack').value,
+                include_commands: document.getElementById('includeCommands').checked ? 'true' : 'false',
+                thread_alerts: document.getElementById('threadAlerts').checked ? 'true' : 'false'
+            };
+
+            const response = await fetch('/api/slack/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to save configuration');
+            }
+            
+            showAlert('success', '✅ Slack configuration saved successfully!');
+            currentConfig = config;
+            updateStatusSummary();
+            
+        } catch (error) {
+            console.error('Error saving config:', error);
+            showAlert('danger', 'Failed to save configuration: ' + error.message);
+        } finally {
+            setLoading(saveBtn, false);
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Configuration';
+        }
+    }
+
+    async function testConnection() {
+        const testBtn = document.querySelector('[onclick="testConnection()"]');
+        setLoading(testBtn, true);
+        
+        try {
+            const botToken = document.getElementById('botToken').value;
+            const channelName = document.getElementById('channelName').value;
+
+            if (!botToken) {
+                throw new Error('Please enter a bot token first');
+            }
+
+            const response = await fetch('/api/slack/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bot_token: botToken,
+                    channel_name: channelName
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert('success', `✅ Connection successful! Bot: ${result.bot_info.user}, Team: ${result.bot_info.team}`);
+                updateConnectionStatus('success', `Connected as ${result.bot_info.user} to ${result.bot_info.team}`);
+            } else {
+                showAlert('danger', '❌ Connection failed: ' + result.error);
+                updateConnectionStatus('error', result.error);
+            }
+            
+        } catch (error) {
+            console.error('Error testing connection:', error);
+            showAlert('danger', 'Failed to test connection: ' + error.message);
+            updateConnectionStatus('error', error.message);
+        } finally {
+            setLoading(testBtn, false);
+            testBtn.innerHTML = '<i class="fas fa-check-circle"></i> Test Connection';
+        }
+    }
+
+    async function previewMessage() {
+        const previewBtn = document.querySelector('[onclick="previewMessage()"]');
+        setLoading(previewBtn, true);
+        
+        try {
+            const config = {
+                template_style: document.getElementById('templateStyle').value,
+                username: document.getElementById('username').value,
+                icon_emoji: document.getElementById('iconEmoji').value,
+                include_commands: document.getElementById('includeCommands').checked
+            };
+
+            const response = await fetch('/api/slack/preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            const result = await response.json();
+            
+            const previewElement = document.getElementById('messagePreview');
+            if (result.success) {
+                previewElement.innerHTML = `
+                    <div style="margin-bottom: 1rem; font-weight: 600; color: var(--text-dark);">Sample Slack Message:</div>
+                    <div style="background: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; font-family: inherit;">
+                        ${result.preview.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            } else {
+                previewElement.textContent = `Error generating preview: ${result.error}`;
+            }
+            
+        } catch (error) {
+            console.error('Error generating preview:', error);
+            document.getElementById('messagePreview').textContent = `Error: ${error.message}`;
+        } finally {
+            setLoading(previewBtn, false);
+            previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview Message';
+        }
+    }
+
+    function updateConnectionStatus(type, message) {
+        const statusElement = document.getElementById('connectionStatus');
+        const iconMap = {
+            'success': 'fa-check-circle',
+            'error': 'fa-exclamation-triangle',
+            'warning': 'fa-exclamation-triangle'
+        };
+        
+        statusElement.innerHTML = `
+            <div class="connection-status ${type}">
+                <i class="fas ${iconMap[type]}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+    }
+
+    function updateStatusSummary() {
+        try {
+            const config = currentConfig;
+            const enabled = config.enabled?.value === 'true' ? 'Enabled' : 'Disabled';
+            const channel = config.channel_name?.value || 'Not set';
+            const priority = config.min_priority_slack?.value || 'warning';
+            const style = config.template_style?.value || 'detailed';
+            const hasToken = config.bot_token?.value ? 'Configured' : 'Not set';
+            
+            const statusElement = document.getElementById('statusInfo');
+            statusElement.innerHTML = `
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-toggle-${enabled === 'Enabled' ? 'on text-success' : 'off text-danger'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Status</div>
+                            <div class="text-muted small">${enabled}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-key ${hasToken === 'Configured' ? 'text-success' : 'text-danger'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Bot Token</div>
+                            <div class="text-muted small">${hasToken}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-hashtag text-info me-2"></i>
+                        <div>
+                            <div class="fw-bold">Channel</div>
+                            <div class="text-muted small">${channel}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <div>
+                            <div class="fw-bold">Min Priority</div>
+                            <div class="text-muted small">${priority}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-palette text-primary me-2"></i>
+                        <div>
+                            <div class="fw-bold">Template</div>
+                            <div class="text-muted small">${style}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('Error updating status summary:', error);
+        }
+    }
+</script>
+{% endblock %}

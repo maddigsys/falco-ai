@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: falco-ai-alerts
+  labels:
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: falco-ecosystem 

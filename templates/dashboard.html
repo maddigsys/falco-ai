@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falco AI Alert System - Dashboard</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Brand Colors */
+            --brand-teal: #00AEC7;
+            --brand-cool-grey: #53565A;
+            --brand-black: #000000;
+            --brand-white: #FFFFFF;
+            
+            /* Primary Theme */
+            --primary-gradient: linear-gradient(135deg, #00AEC7 0%, #00899E 100%);
+            --secondary-gradient: linear-gradient(135deg, #53565A 0%, #3A3D41 100%);
+            --success-gradient: linear-gradient(135deg, #00AEC7 0%, #00D4AA 100%);
+            --warning-gradient: linear-gradient(135deg, #FFA726 0%, #FF7043 100%);
+            --danger-gradient: linear-gradient(135deg, #EF5350 0%, #E53935 100%);
+            
+            --primary-color: #00AEC7;
+            --secondary-color: #53565A;
+            --text-dark: #000000;
+            --text-light: #53565A;
+            --border-color: #E0E7EA;
+            --bg-light: #F8FAFB;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        body {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            color: var(--text-dark);
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        /* Sidebar */
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-sidebar.collapsed {
+            width: 70px;
+        }
+
+        .dashboard-sidebar.collapsed .sidebar-title-text,
+        .dashboard-sidebar.collapsed .sidebar-subtitle,
+        .dashboard-sidebar.collapsed .filter-content,
+        .dashboard-sidebar.collapsed .status-stats,
+        .dashboard-sidebar.collapsed .bulk-actions,
+        .dashboard-sidebar.collapsed .status-label {
+            display: none;
+        }
+
+        .dashboard-sidebar.collapsed .filters-header,
+        .dashboard-sidebar.collapsed .alert-status-section h3 {
+            justify-content: center;
+        }
+
+        .dashboard-sidebar.collapsed .section-title {
+            justify-content: center;
+        }
+
+        .dashboard-sidebar.collapsed .section-title .fas {
+            margin: 0;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .sidebar-header-content {
+            flex: 1;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin-top: 0.25rem;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .dashboard-sidebar.collapsed .sidebar-header {
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0.5rem;
+        }
+
+        .dashboard-sidebar.collapsed .sidebar-toggle {
+            margin-top: 1rem;
+        }
+
+        .sidebar-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .falco-logo {
+            width: 2rem;
+            height: 2rem;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+        }
+
+        .sidebar-subtitle {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            margin: 0.5rem 0 0;
+        }
+
+        .stats-section {
+            padding: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .stats-grid-main {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card.status-card.unread {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            color: #dc2626;
+        }
+
+        .stat-card.status-card.read {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            color: #059669;
+        }
+
+        .stat-card.status-card.dismissed {
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+            color: #6b7280;
+        }
+
+        .stat-card {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card.clickable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .stat-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card.clickable:active {
+            transform: translateY(-1px);
+        }
+
+        /* Quick Stats Collapsible */
+        .collapsible-header {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .collapsible-header:hover {
+            background: linear-gradient(135deg, rgba(0, 174, 199, 0.08), rgba(83, 86, 90, 0.08));
+        }
+
+        .quick-stats-toggle-icon {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            color: var(--primary-color);
+            font-size: 0.875rem;
+        }
+
+        .content-card-title {
+            width: 100%;
+        }
+
+        #quickStatsCard.collapsed .quick-stats-content {
+            display: none;
+        }
+
+        #quickStatsCard.collapsed .quick-stats-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        #quickStatsCard.collapsed {
+            margin-bottom: 1rem;
+        }
+
+        .stat-card.danger {
+            background: var(--danger-gradient);
+        }
+
+        .stat-card.success {
+            background: var(--success-gradient);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .filters-section {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .filters-section.collapsed .filter-content {
+            display: none;
+        }
+
+        .filters-header {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .filters-header:hover {
+            background: var(--bg-light);
+            margin: -0.5rem;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+        }
+
+        .collapse-icon {
+            transition: transform 0.2s ease;
+            color: var(--primary-color);
+            margin-left: auto;
+        }
+
+        .filters-section.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .filter-group {
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .filter-group select {
+            width: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+            background: white;
+        }
+
+        .filter-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Main Content */
+        .dashboard-main {
+            flex: 1;
+            background: transparent;
+            overflow-y: auto;
+        }
+
+        .main-header {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            margin: 1.5rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-title {
+            color: var(--text-dark);
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+            color: var(--text-dark);
+        }
+
+        .content-area {
+            padding: 0 1.5rem 2rem;
+        }
+
+        .content-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .content-card-header {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(0, 174, 199, 0.05), rgba(83, 86, 90, 0.05));
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .content-card-title {
+            color: var(--text-dark);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .content-card-body {
+            padding: 2rem;
+        }
+
+        .alert-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .alert-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 174, 199, 0.05);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .alert-item.selected {
+            border-color: var(--primary-color);
+            background: rgba(0, 174, 199, 0.1);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .alert-rule {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.75rem;
+            font-size: 0.925rem;
+            line-height: 1.3;
+        }
+
+        .alert-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .alert-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .alert-meta > div:first-child {
+                width: 100%;
+            }
+            
+            .alert-badge {
+                font-size: 0.6rem;
+                padding: 0.15rem 0.35rem;
+            }
+        }
+
+        .alert-priority {
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.025em;
+        }
+
+        .priority-critical { background: #dc2626; color: white; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3); }
+        .priority-error { background: #ea580c; color: white; box-shadow: 0 2px 4px rgba(234, 88, 12, 0.3); }
+        .priority-warning { background: #b45309; color: white; box-shadow: 0 2px 4px rgba(180, 83, 9, 0.3); }
+        .priority-notice { background: #2563eb; color: white; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3); }
+        .priority-informational { background: #6b7280; color: white; box-shadow: 0 2px 4px rgba(107, 114, 128, 0.3); }
+
+        .alert-badge {
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .badge-ai-analyzed {
+            background: #059669;
+            color: white;
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
+        }
+
+        .badge-ai-pending {
+            background: #d97706;
+            color: white;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+        }
+
+        .badge-ai-error {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+        }
+
+        .badge-provider {
+            background: var(--brand-teal);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 174, 199, 0.3);
+        }
+
+        .badge-source {
+            background: #6b7280;
+            color: white;
+            box-shadow: 0 2px 4px rgba(107, 114, 128, 0.3);
+        }
+
+        /* Alert Status Section */
+        .alert-status-section {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .status-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.75rem;
+            min-width: 2.5rem;
+            justify-content: center;
+        }
+
+        .status-unread {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-read {
+            background: rgba(34, 197, 94, 0.1);
+            color: #059669;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .status-dismissed {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .status-label {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .bulk-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn-bulk {
+            background: linear-gradient(135deg, var(--bg-light), rgba(0, 174, 199, 0.05));
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-bulk:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-bulk:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Alert Item Status Indicators */
+        .alert-item.unread {
+            border-left: 4px solid #dc2626;
+            background: rgba(239, 68, 68, 0.02);
+        }
+
+        .alert-item.read {
+            opacity: 0.8;
+            border-left: 4px solid #059669;
+        }
+
+        .alert-item.dismissed {
+            opacity: 0.6;
+            border-left: 4px solid #6b7280;
+            background: rgba(107, 114, 128, 0.02);
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.25rem;
+            margin-left: auto;
+        }
+
+        .alert-action-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .alert-action-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .alert-action-btn.dismiss:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state h3 {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state ul {
+            text-align: left;
+            margin: 1.5rem 0;
+            color: var(--text-dark);
+        }
+
+        .welcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+        }
+
+        .feature-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .dashboard-sidebar {
+                width: 240px;
+            }
+            
+            .main-header {
+                margin: 1rem;
+                padding: 1.5rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .content-area {
+                padding: 0 1rem 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            
+            .dashboard-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .dashboard-sidebar.collapsed {
+                width: 100%;
+                height: 60px;
+                overflow: hidden;
+            }
+            
+            .dashboard-sidebar.collapsed .sidebar-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.5rem;
+            }
+            
+            .dashboard-sidebar.collapsed .sidebar-toggle {
+                margin-top: 0;
+            }
+            
+            .sidebar-header {
+                padding: 1rem 1.5rem;
+            }
+            
+            .main-header {
+                margin: 0.5rem;
+                padding: 1rem;
+            }
+            
+            .main-title {
+                font-size: 1.5rem;
+            }
+            
+            .content-area {
+                padding: 0 0.5rem 1rem;
+            }
+            
+            .welcome-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .stats-grid-main {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 1rem;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-header-content">
+                    <h1 class="sidebar-title">
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="Falco Logo" class="falco-logo">
+                        <span class="sidebar-title-text">Falco AI</span>
+                    </h1>
+                    <p class="sidebar-subtitle">Security Alert Dashboard</p>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <div class="filters-section collapsed">
+                <div class="filters-header" onclick="toggleFilters()">
+                    <h3 class="section-title">
+                        <i class="fas fa-filter"></i>
+                        Filters
+                        <i class="fas fa-chevron-down collapse-icon"></i>
+                    </h3>
+                </div>
+                <div class="filter-content">
+                    <div class="filter-group">
+                        <label for="timeRange">Time Range</label>
+                        <select id="timeRange" onchange="applyFilters()">
+                            <option value="all">All Time</option>
+                            <option value="1h">Last Hour</option>
+                            <option value="24h" selected>Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="priorityFilter">Priority</label>
+                        <select id="priorityFilter" onchange="applyFilters()">
+                            <option value="all">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="error">Error</option>
+                            <option value="warning">Warning</option>
+                            <option value="notice">Notice</option>
+                            <option value="informational">Informational</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="ruleFilter">Rule</label>
+                        <select id="ruleFilter" onchange="applyFilters()">
+                            <option value="all">All Rules</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="statusFilter">Status</label>
+                        <select id="statusFilter" onchange="applyFilters()">
+                            <option value="all">All Status</option>
+                            <option value="unread">Unread</option>
+                            <option value="read">Read</option>
+                            <option value="dismissed">Dismissed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="limitFilter">Show</label>
+                        <select id="limitFilter" onchange="applyFilters()">
+                            <option value="25">25 alerts</option>
+                            <option value="50">50 alerts</option>
+                            <option value="100">100 alerts</option>
+                            <option value="all">All alerts</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="alert-status-section">
+                <h3 class="section-title">
+                    <i class="fas fa-eye"></i>
+                    Alert Status
+                </h3>
+                <div class="status-stats">
+                    <div class="status-item">
+                        <span class="status-badge status-unread">
+                            <i class="fas fa-circle"></i>
+                            <span id="unreadCount">-</span>
+                        </span>
+                        <span class="status-label">Unread</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-badge status-read">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="readCount">-</span>
+                        </span>
+                        <span class="status-label">Read</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-badge status-dismissed">
+                            <i class="fas fa-times-circle"></i>
+                            <span id="dismissedCount">-</span>
+                        </span>
+                        <span class="status-label">Dismissed</span>
+                    </div>
+                </div>
+                
+                <div class="bulk-actions">
+                    <button class="btn-bulk" onclick="markAllAsRead()" title="Mark all visible alerts as read">
+                        <i class="fas fa-check"></i>
+                        Mark All Read
+                    </button>
+                    <button class="btn-bulk" onclick="dismissAllVisible()" title="Dismiss all visible alerts">
+                        <i class="fas fa-times"></i>
+                        Dismiss All
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <header class="main-header">
+                <h1 class="main-title">
+                    <i class="fas fa-tachometer-alt" style="color: var(--brand-teal);"></i>
+                    Security Dashboard
+                </h1>
+                <div class="header-actions">
+                    <a href="/config/general" class="btn btn-secondary">
+                        <i class="fas fa-cogs"></i>
+                        General Config
+                    </a>
+                    <a href="/config/ai" class="btn btn-secondary">
+                        <i class="fas fa-robot"></i>
+                        AI Config
+                    </a>
+                    <a href="/config/slack" class="btn btn-secondary">
+                        <i class="fab fa-slack"></i>
+                        Slack Config
+                    </a>
+                    <button class="btn btn-primary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync"></i>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Welcome/Overview -->
+                <div class="content-card" id="welcomeCard">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-home"></i>
+                            Welcome to Falco AI Alert System
+                        </h3>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="empty-state">
+                            <p>Your intelligent security monitoring dashboard is ready to help you stay ahead of threats.</p>
+                            
+                            <div class="welcome-grid">
+                                <div class="feature-card">
+                                    <h4><i class="fas fa-shield-alt"></i> Real-time Monitoring</h4>
+                                    <p>Monitor security events from Falco with AI-powered analysis and intelligent alerting.</p>
+                                </div>
+                                <div class="feature-card">
+                                    <h4><i class="fas fa-brain"></i> AI Analysis</h4>
+                                    <p>Get instant security insights and recommendations powered by advanced AI models.</p>
+                                </div>
+                                <div class="feature-card">
+                                    <h4><i class="fab fa-slack"></i> Slack Integration</h4>
+                                    <p>Receive critical alerts directly in Slack with actionable intelligence.</p>
+                                </div>
+                                <div class="feature-card">
+                                    <h4><i class="fas fa-chart-line"></i> Smart Analytics</h4>
+                                    <p>Track trends, identify patterns, and improve your security posture over time.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="content-card" id="quickStatsCard" style="display: none;">
+                    <div class="content-card-header collapsible-header" onclick="toggleQuickStats()">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Quick Stats
+                            <i class="fas fa-chevron-up quick-stats-toggle-icon"></i>
+                        </h3>
+                    </div>
+                    <div class="content-card-body quick-stats-content">
+                        <div class="stats-grid-main">
+                            <div class="stat-card clickable" onclick="applyStatFilter('all', event)" title="Show all alerts">
+                                <div class="stat-number" id="totalAlertsMain">-</div>
+                                <div class="stat-label">Total Alerts</div>
+                            </div>
+                            <div class="stat-card danger clickable" onclick="applyStatFilter('critical', event)" title="Show critical alerts">
+                                <div class="stat-number" id="criticalAlertsMain">-</div>
+                                <div class="stat-label">Critical Alerts</div>
+                            </div>
+                            <div class="stat-card success clickable" onclick="applyStatFilter('recent', event)" title="Show alerts from last hour">
+                                <div class="stat-number" id="recentAlertsMain">-</div>
+                                <div class="stat-label">Last Hour</div>
+                            </div>
+                            <div class="stat-card status-card unread clickable" onclick="applyStatFilter('unread', event)" title="Show unread alerts">
+                                <div class="stat-number" id="unreadCountMain">-</div>
+                                <div class="stat-label">Unread</div>
+                            </div>
+                            <div class="stat-card status-card read clickable" onclick="applyStatFilter('read', event)" title="Show read alerts">
+                                <div class="stat-number" id="readCountMain">-</div>
+                                <div class="stat-label">Read</div>
+                            </div>
+                            <div class="stat-card status-card dismissed clickable" onclick="applyStatFilter('dismissed', event)" title="Show dismissed alerts">
+                                <div class="stat-number" id="dismissedCountMain">-</div>
+                                <div class="stat-label">Dismissed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts List -->
+                <div class="content-card" id="alertsCard" style="display: none;">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Recent Security Alerts
+                        </h3>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="alert-list" id="alertList">
+                            <div class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Loading alerts...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Details -->
+                <div class="content-card" id="alertDetailsCard" style="display: none;">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-search"></i>
+                            Alert Details & AI Analysis
+                        </h3>
+                    </div>
+                    <div class="content-card-body">
+                        <div id="alertDetails">
+                            <div class="empty-state">
+                                <h3>No Alert Selected</h3>
+                                <p>Select an alert from the list above to view detailed analysis.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global state
+        let currentAlerts = [];
+        let currentStats = {};
+        let currentAlertCounts = {};
+        let selectedAlert = null;
+        let currentFilters = {
+            time_range: '24h',
+            priority: 'all',
+            rule: 'all',
+            status: 'all',
+            limit: '25'
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSidebarState();
+            initializeQuickStatsState();
+            loadDashboardData();
+            setupAutoRefresh();
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                await Promise.all([
+                    loadStats().catch(e => console.error('Stats loading failed:', e)),
+                    loadAlerts().catch(e => console.error('Alerts loading failed:', e)),
+                    loadRules().catch(e => console.error('Rules loading failed:', e)),
+                    loadAlertCounts().catch(e => console.error('Alert counts loading failed:', e))
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Dashboard connection error. Check your network and refresh the page.');
+            }
+        }
+
+        // Load alert counts by status
+        async function loadAlertCounts() {
+            try {
+                const response = await fetch('/api/alerts/counts');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Response is not JSON');
+                }
+                
+                const counts = await response.json();
+                currentAlertCounts = counts;
+                
+                // Update sidebar counts
+                document.getElementById('unreadCount').textContent = counts.unread || 0;
+                document.getElementById('readCount').textContent = counts.read || 0;
+                document.getElementById('dismissedCount').textContent = counts.dismissed || 0;
+                
+                // Update main content counts
+                document.getElementById('unreadCountMain').textContent = counts.unread || 0;
+                document.getElementById('readCountMain').textContent = counts.read || 0;
+                document.getElementById('dismissedCountMain').textContent = counts.dismissed || 0;
+            } catch (error) {
+                console.error('Error loading alert counts:', error);
+                // Set default values on error
+                document.getElementById('unreadCount').textContent = '0';
+                document.getElementById('readCount').textContent = '0';
+                document.getElementById('dismissedCount').textContent = '0';
+                document.getElementById('unreadCountMain').textContent = '0';
+                document.getElementById('readCountMain').textContent = '0';
+                document.getElementById('dismissedCountMain').textContent = '0';
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Response is not JSON');
+                }
+                
+                const stats = await response.json();
+                currentStats = stats;
+                
+                // Update main content stats
+                document.getElementById('totalAlertsMain').textContent = stats.total_alerts || 0;
+                document.getElementById('criticalAlertsMain').textContent = stats.critical_alerts || 0;
+                document.getElementById('recentAlertsMain').textContent = stats.recent_alerts || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Set default values on error
+                document.getElementById('totalAlertsMain').textContent = '0';
+                document.getElementById('criticalAlertsMain').textContent = '0';
+                document.getElementById('recentAlertsMain').textContent = '0';
+            }
+        }
+
+        // Load alerts with filters
+        async function loadAlerts() {
+            try {
+                const params = new URLSearchParams(currentFilters);
+                const response = await fetch(`/api/alerts?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Response is not JSON');
+                }
+                
+                const alerts = await response.json();
+                currentAlerts = alerts;
+                
+                renderAlertList(alerts);
+                
+                // Show/hide appropriate cards
+                if (alerts.length > 0) {
+                    document.getElementById('welcomeCard').style.display = 'none';
+                    document.getElementById('quickStatsCard').style.display = 'block';
+                    document.getElementById('alertsCard').style.display = 'block';
+                } else {
+                    document.getElementById('welcomeCard').style.display = 'block';
+                    document.getElementById('quickStatsCard').style.display = 'none';
+                    document.getElementById('alertsCard').style.display = 'none';
+                    document.getElementById('alertDetailsCard').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+                // Show welcome card and hide alerts on error
+                currentAlerts = [];
+                document.getElementById('welcomeCard').style.display = 'block';
+                document.getElementById('quickStatsCard').style.display = 'none';
+                document.getElementById('alertsCard').style.display = 'none';
+                document.getElementById('alertDetailsCard').style.display = 'none';
+            }
+        }
+
+        // Load rules for filter dropdown
+        async function loadRules() {
+            try {
+                const response = await fetch('/api/rules');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Response is not JSON');
+                }
+                
+                const rules = await response.json();
+                
+                const ruleFilter = document.getElementById('ruleFilter');
+                ruleFilter.innerHTML = '<option value="all">All Rules</option>';
+                
+                rules.forEach(rule => {
+                    const option = document.createElement('option');
+                    option.value = rule;
+                    option.textContent = rule;
+                    ruleFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading rules:', error);
+                // Set default dropdown on error
+                const ruleFilter = document.getElementById('ruleFilter');
+                ruleFilter.innerHTML = '<option value="all">All Rules</option>';
+            }
+        }
+
+        // Render alert list
+        function renderAlertList(alerts) {
+            const alertList = document.getElementById('alertList');
+            
+            if (alerts.length === 0) {
+                alertList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Alerts Found</h3>
+                        <p>No security alerts match your current filters. This could mean:</p>
+                        <ul>
+                            <li>Your system is secure and running smoothly</li>
+                            <li>Falco is not yet configured to send webhooks</li>
+                            <li>Your filters are too restrictive</li>
+                        </ul>
+                    </div>
+                `;
+                return;
+            }
+
+            alertList.innerHTML = alerts.map(alert => {
+                // Determine AI analysis status
+                const aiAnalysis = alert.ai_analysis;
+                let aiStatusBadge = '';
+                let providerBadge = '';
+                
+                if (aiAnalysis && !aiAnalysis.error) {
+                    aiStatusBadge = '<span class="alert-badge badge-ai-analyzed"><i class="fas fa-brain"></i> AI Done</span>';
+                    // Extract provider info
+                    const provider = aiAnalysis.llm_provider || '';
+                    if (provider.toLowerCase().includes('ollama')) {
+                        providerBadge = '<span class="alert-badge badge-provider"><i class="fas fa-home"></i> Ollama</span>';
+                    } else if (provider.toLowerCase().includes('openai')) {
+                        providerBadge = '<span class="alert-badge badge-provider"><i class="fas fa-brain"></i> OpenAI</span>';
+                    } else if (provider.toLowerCase().includes('gemini')) {
+                        providerBadge = '<span class="alert-badge badge-provider"><i class="fas fa-gem"></i> Gemini</span>';
+                    } else if (provider) {
+                        providerBadge = '<span class="alert-badge badge-provider"><i class="fas fa-robot"></i> AI</span>';
+                    }
+                } else if (aiAnalysis && aiAnalysis.error) {
+                    aiStatusBadge = '<span class="alert-badge badge-ai-error"><i class="fas fa-exclamation-triangle"></i> AI Error</span>';
+                } else {
+                    aiStatusBadge = '<span class="alert-badge badge-ai-pending"><i class="fas fa-clock"></i> Pending</span>';
+                }
+
+                // Source/container badge
+                const source = alert.source || 'unknown';
+                const sourceBadge = source !== 'unknown' ? 
+                    `<span class="alert-badge badge-source"><i class="fas fa-server"></i> ${escapeHtml(source.length > 12 ? source.substring(0, 12) + '...' : source)}</span>` : '';
+
+                return `
+                    <div class="alert-item ${alert.status || 'unread'}" onclick="selectAlert('${alert.id}')" data-alert-id="${alert.id}">
+                        <div class="alert-rule">${escapeHtml(alert.rule)}</div>
+                        <div class="alert-meta" style="display: flex; flex-wrap: wrap; gap: 0.375rem; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.375rem; align-items: center;">
+                                <span class="alert-priority priority-${alert.priority}">
+                                    <i class="fas fa-flag"></i> ${alert.priority}
+                                </span>
+                                ${aiStatusBadge}
+                                ${providerBadge}
+                                ${sourceBadge}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--text-light); font-size: 0.8rem; white-space: nowrap;">
+                                    ${formatTime(alert.timestamp)}
+                                </span>
+                                <div class="alert-actions" onclick="event.stopPropagation()">
+                                    ${alert.status === 'unread' ? `
+                                        <button class="alert-action-btn" onclick="markAlertAsRead('${alert.id}')" title="Mark as read">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${alert.status !== 'dismissed' ? `
+                                        <button class="alert-action-btn dismiss" onclick="dismissAlert('${alert.id}')" title="Dismiss alert">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${alert.status === 'dismissed' ? `
+                                        <button class="alert-action-btn" onclick="unDismissAlert('${alert.id}')" title="Restore alert">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Select alert
+        async function selectAlert(alertId) {
+            const alert = currentAlerts.find(a => a.id == alertId);
+            if (!alert) return;
+
+            // Toggle functionality - if same alert is already selected, close details
+            if (selectedAlert && selectedAlert.id == alertId) {
+                // Deselect current alert
+                selectedAlert = null;
+                document.querySelectorAll('.alert-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                document.getElementById('alertDetailsCard').style.display = 'none';
+                return;
+            }
+
+            selectedAlert = alert;
+            
+            // Update UI selection
+            document.querySelectorAll('.alert-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-alert-id="${alertId}"]`)?.classList.add('selected');
+            
+            // Auto-mark as read if unread
+            if (alert.status === 'unread') {
+                try {
+                    await fetch(`/api/alerts/${alertId}/status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({status: 'read'})
+                    });
+                    
+                    // Update local state
+                    alert.status = 'read';
+                    
+                    // Update the alert item class
+                    const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+                    if (alertElement) {
+                        alertElement.classList.remove('unread');
+                        alertElement.classList.add('read');
+                    }
+                    
+                    // Refresh counts
+                    loadAlertCounts();
+                } catch (error) {
+                    console.error('Error auto-marking alert as read:', error);
+                }
+            }
+            
+            showAlertDetails(alert);
+            document.getElementById('alertDetailsCard').style.display = 'block';
+        }
+
+        // Show alert details
+        function showAlertDetails(alert) {
+            const detailsContainer = document.getElementById('alertDetails');
+            
+            const aiAnalysis = alert.ai_analysis;
+            const hasAnalysis = aiAnalysis && !aiAnalysis.error;
+            
+            detailsContainer.innerHTML = `
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <h4 class="text-primary mb-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            ${escapeHtml(alert.rule)}
+                        </h4>
+                        <div class="d-flex gap-3 mb-3 flex-wrap justify-content-between align-items-center">
+                            <div class="d-flex gap-3 flex-wrap">
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-clock"></i>
+                                    ${formatTime(alert.timestamp)}
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-server"></i>
+                                    ${escapeHtml(alert.source)}
+                                </span>
+                                <span class="alert-priority priority-${alert.priority}">
+                                    <i class="fas fa-flag"></i>
+                                    ${alert.priority.toUpperCase()}
+                                </span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="reprocessAlert('${alert.id}')" title="Reprocess with AI">
+                                <i class="fas fa-sync"></i>
+                                Reprocess AI
+                            </button>
+                        </div>
+                        <div class="p-3 bg-light border-start border-primary border-4 rounded">
+                            <strong>Alert Output:</strong><br>
+                            <code>${escapeHtml(alert.output)}</code>
+                        </div>
+                    </div>
+                </div>
+                
+                ${hasAnalysis ? `
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="p-4 bg-success bg-opacity-10 border border-success rounded">
+                                <h5 class="text-success mb-3">
+                                    <i class="fas fa-robot"></i>
+                                    AI Security Analysis
+                                    <small class="text-muted">by ${aiAnalysis.llm_provider || 'AI Assistant'}</small>
+                                </h5>
+                                
+                                ${aiAnalysis['Security Impact'] ? `
+                                    <div class="mb-3">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-shield-alt"></i>
+                                            Security Impact
+                                        </h6>
+                                        <p>${escapeHtml(typeof aiAnalysis['Security Impact'] === 'object' ? aiAnalysis['Security Impact'].content : aiAnalysis['Security Impact'])}</p>
+                                    </div>
+                                ` : ''}
+                                
+                                ${aiAnalysis['Next Steps'] ? `
+                                    <div class="mb-3">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-tasks"></i>
+                                            Recommended Next Steps
+                                        </h6>
+                                        <p>${escapeHtml(typeof aiAnalysis['Next Steps'] === 'object' ? aiAnalysis['Next Steps'].content : aiAnalysis['Next Steps'])}</p>
+                                    </div>
+                                ` : ''}
+                                
+                                ${aiAnalysis['Remediation Steps'] ? `
+                                    <div class="mb-3">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-wrench"></i>
+                                            Remediation Steps
+                                        </h6>
+                                        <p>${escapeHtml(typeof aiAnalysis['Remediation Steps'] === 'object' ? aiAnalysis['Remediation Steps'].content : aiAnalysis['Remediation Steps'])}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>No AI Analysis Available</strong><br>
+                                ${aiAnalysis?.error || 'AI analysis was not generated for this alert.'}
+                            </div>
+                        </div>
+                    </div>
+                `}
+            `;
+        }
+
+        // Apply filters
+        function applyFilters() {
+            currentFilters = {
+                time_range: document.getElementById('timeRange').value,
+                priority: document.getElementById('priorityFilter').value,
+                rule: document.getElementById('ruleFilter').value,
+                status: document.getElementById('statusFilter').value,
+                limit: document.getElementById('limitFilter').value
+            };
+            
+            loadAlerts();
+            loadAlertCounts(); // Refresh counts when filters change
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
+            const originalHTML = refreshBtn.innerHTML;
+            
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+            
+            loadDashboardData().finally(() => {
+                refreshBtn.innerHTML = originalHTML;
+                refreshBtn.disabled = false;
+            });
+        }
+
+        // Setup auto refresh
+        function setupAutoRefresh() {
+            setInterval(() => {
+                loadStats();
+                loadAlertCounts();
+                // Only reload alerts if no alert is selected to avoid disrupting user
+                if (!selectedAlert) {
+                    loadAlerts();
+                }
+            }, 30000); // Refresh every 30 seconds
+        }
+
+        // Utility functions
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getPriorityColor(priority) {
+            const colors = {
+                'critical': 'danger',
+                'error': 'warning',
+                'warning': 'warning',
+                'notice': 'info',
+                'informational': 'secondary'
+            };
+            return colors[priority] || 'secondary';
+        }
+
+        function showError(message) {
+            console.error(message);
+            
+            // Create a simple toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--danger-gradient);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-lg);
+                z-index: 1000;
+                max-width: 400px;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; margin-left: auto; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // Toggle filters section
+        function toggleFilters() {
+            const filtersSection = document.querySelector('.filters-section');
+            filtersSection.classList.toggle('collapsed');
+        }
+
+        // Reprocess alert with AI
+        async function reprocessAlert(alertId) {
+            const reprocessBtn = document.querySelector(`[onclick="reprocessAlert('${alertId}')"]`);
+            if (!reprocessBtn) return;
+            
+            const originalHTML = reprocessBtn.innerHTML;
+            reprocessBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            reprocessBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/alerts/${alertId}/reprocess`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned HTML instead of JSON');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showError('✅ Alert reprocessed successfully! Refreshing data...');
+                    
+                    // Refresh the alerts to get updated data
+                    await loadAlerts();
+                    
+                    // If this alert is still selected, refresh its details
+                    if (selectedAlert && selectedAlert.id == alertId) {
+                        const updatedAlert = currentAlerts.find(a => a.id == alertId);
+                        if (updatedAlert) {
+                            selectedAlert = updatedAlert;
+                            showAlertDetails(updatedAlert);
+                        }
+                    }
+                } else {
+                    showError('❌ Failed to reprocess alert: ' + (result.error || 'Unknown error'));
+                }
+                
+            } catch (error) {
+                console.error('Error reprocessing alert:', error);
+                showError('❌ Failed to reprocess alert: ' + error.message);
+            } finally {
+                reprocessBtn.innerHTML = originalHTML;
+                reprocessBtn.disabled = false;
+            }
+        }
+
+        // Mark individual alert as read
+        async function markAlertAsRead(alertId) {
+            try {
+                const response = await fetch(`/api/alerts/${alertId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({status: 'read'})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    await loadAlerts();
+                    await loadAlertCounts();
+                } else {
+                    showError('Failed to mark alert as read: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error marking alert as read:', error);
+                showError('Failed to mark alert as read: ' + error.message);
+            }
+        }
+
+        // Dismiss individual alert
+        async function dismissAlert(alertId) {
+            try {
+                const response = await fetch(`/api/alerts/${alertId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({status: 'dismissed'})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    await loadAlerts();
+                    await loadAlertCounts();
+                } else {
+                    showError('Failed to dismiss alert: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error dismissing alert:', error);
+                showError('Failed to dismiss alert: ' + error.message);
+            }
+        }
+
+        // Restore dismissed alert
+        async function unDismissAlert(alertId) {
+            try {
+                const response = await fetch(`/api/alerts/${alertId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({status: 'unread'})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    await loadAlerts();
+                    await loadAlertCounts();
+                } else {
+                    showError('Failed to restore alert: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error restoring alert:', error);
+                showError('Failed to restore alert: ' + error.message);
+            }
+        }
+
+        // Mark all visible alerts as read
+        async function markAllAsRead() {
+            if (currentAlerts.length === 0) {
+                showError('No alerts to mark as read');
+                return;
+            }
+
+            const unreadAlerts = currentAlerts.filter(alert => alert.status === 'unread');
+            if (unreadAlerts.length === 0) {
+                showError('No unread alerts to mark as read');
+                return;
+            }
+
+            const btn = document.querySelector('[onclick="markAllAsRead()"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            try {
+                const alertIds = unreadAlerts.map(alert => alert.id);
+                
+                const response = await fetch('/api/alerts/bulk-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        alert_ids: alertIds,
+                        status: 'read'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    showError(`✅ Marked ${result.updated_count} alerts as read`);
+                    await loadAlerts();
+                    await loadAlertCounts();
+                } else {
+                    showError('Failed to mark alerts as read: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error marking all alerts as read:', error);
+                showError('Failed to mark alerts as read: ' + error.message);
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        // Dismiss all visible alerts
+        async function dismissAllVisible() {
+            if (currentAlerts.length === 0) {
+                showError('No alerts to dismiss');
+                return;
+            }
+
+            const dismissableAlerts = currentAlerts.filter(alert => alert.status !== 'dismissed');
+            if (dismissableAlerts.length === 0) {
+                showError('No alerts to dismiss');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to dismiss ${dismissableAlerts.length} alerts? This action cannot be easily undone.`)) {
+                return;
+            }
+
+            const btn = document.querySelector('[onclick="dismissAllVisible()"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            try {
+                const alertIds = dismissableAlerts.map(alert => alert.id);
+                
+                const response = await fetch('/api/alerts/bulk-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        alert_ids: alertIds,
+                        status: 'dismissed'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    showError(`✅ Dismissed ${result.updated_count} alerts`);
+                    await loadAlerts();
+                    await loadAlertCounts();
+                } else {
+                    showError('Failed to dismiss alerts: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error dismissing alerts:', error);
+                showError('Failed to dismiss alerts: ' + error.message);
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.dashboard-sidebar');
+            sidebar.classList.toggle('collapsed');
+            
+            // Save sidebar state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        // Initialize sidebar state from localStorage
+        function initializeSidebarState() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                document.querySelector('.dashboard-sidebar').classList.add('collapsed');
+            }
+        }
+
+        // Toggle Quick Stats
+        function toggleQuickStats() {
+            const quickStatsCard = document.getElementById('quickStatsCard');
+            quickStatsCard.classList.toggle('collapsed');
+            
+            // Save Quick Stats state to localStorage
+            const isCollapsed = quickStatsCard.classList.contains('collapsed');
+            localStorage.setItem('quickStatsCollapsed', isCollapsed);
+        }
+
+        // Initialize Quick Stats state from localStorage
+        function initializeQuickStatsState() {
+            const isCollapsed = localStorage.getItem('quickStatsCollapsed') === 'true';
+            if (isCollapsed) {
+                document.getElementById('quickStatsCard').classList.add('collapsed');
+            }
+        }
+
+        // Apply filter based on stat card click
+        function applyStatFilter(filterType, event) {
+            // Prevent the Quick Stats collapse toggle
+            if (event) {
+                event.stopPropagation();
+            }
+            
+            const timeRangeSelect = document.getElementById('timeRange');
+            const prioritySelect = document.getElementById('priorityFilter');
+            const statusSelect = document.getElementById('statusFilter');
+            const limitSelect = document.getElementById('limitFilter');
+            
+            // Reset all filters to default
+            timeRangeSelect.value = '24h';
+            prioritySelect.value = 'all';
+            statusSelect.value = 'all';
+            limitSelect.value = '25';
+            
+            // Apply specific filter based on stat card clicked
+            switch(filterType) {
+                case 'all':
+                    // Show all alerts (defaults already set)
+                    break;
+                case 'critical':
+                    prioritySelect.value = 'critical';
+                    break;
+                case 'recent':
+                    timeRangeSelect.value = '1h';
+                    break;
+                case 'unread':
+                    statusSelect.value = 'unread';
+                    break;
+                case 'read':
+                    statusSelect.value = 'read';
+                    break;
+                case 'dismissed':
+                    statusSelect.value = 'dismissed';
+                    break;
+            }
+            
+            // Apply the filters
+            applyFilters();
+            
+            // Visual feedback - highlight the clicked card briefly
+            const clickedCard = event ? event.target.closest('.stat-card') : null;
+            if (clickedCard) {
+                clickedCard.style.transform = 'translateY(-6px)';
+                setTimeout(() => {
+                    clickedCard.style.transform = '';
+                }, 200);
+            }
+        }
+
+
+    </script>
+</body>
+</html>

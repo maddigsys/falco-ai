@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: falco-ai-alerts
+  namespace: falco-ai-alerts
+  labels:
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: service
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/health"
+spec:
+  type: ClusterIP
+  ports:
+  - name: webhook
+    port: 8080
+    targetPort: webhook
+    protocol: TCP
+  - name: web-ui
+    port: 8081
+    targetPort: web-ui
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: falco-ai-alerts
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: falco-ai-alerts-webhook
+  namespace: falco-ai-alerts
+  labels:
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: webhook
+spec:
+  type: ClusterIP
+  ports:
+  - name: webhook
+    port: 80
+    targetPort: webhook
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: falco-ai-alerts 

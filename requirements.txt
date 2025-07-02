@@ -1,0 +1,5 @@
+flask==2.3.3
+slack-sdk==3.21.3
+portkey-ai==1.0.0
+requests==2.31.0
+python-dotenv==1.0.0
