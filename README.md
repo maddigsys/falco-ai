@@ -151,7 +151,22 @@ echo "OLLAMA_MODEL_NAME=llama3" >> .env
 
 Complete production-ready Kubernetes deployment with auto-scaling, monitoring, and security hardening:
 
-### Quick Deploy
+### 🚀 Easy Install
+```bash
+# Install development environment
+./k8s/install.sh dev
+
+# Install production environment  
+./k8s/install.sh prod
+
+# Validate configuration only
+./k8s/install.sh dev --validate-only
+
+# Get help with all options
+./k8s/install.sh --help
+```
+
+### Manual Deploy (Alternative)
 ```bash
 # Deploy to development environment
 kubectl apply -k k8s/overlays/development/
@@ -166,7 +181,7 @@ kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-dev
 open http://localhost:8080/dashboard
 ```
 
-### Easy Cleanup
+### 🗑️ Easy Cleanup
 ```bash
 # Clean up development environment (with backup)
 ./k8s/cleanup.sh dev
@@ -182,6 +197,7 @@ open http://localhost:8080/dashboard
 ```
 
 ### Kubernetes Features
+- 🚀 **Easy installation** (Automated install script with validation)
 - 🔄 **Auto-scaling** (HPA with CPU/memory metrics)
 - 🔒 **Security-hardened** (RBAC, Network Policies, Security Contexts)
 - 📊 **Monitoring ready** (Prometheus integration, health checks)

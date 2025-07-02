@@ -79,10 +79,17 @@ htmlcov/
 # Backup files
 *.bak
 *.backup
+backups/
+*-backup-*.db
+config-backup-*.yaml
+alerts-backup-*.db
 
 # Kubernetes
 .kube/
 *.kubeconfig
+k8s/backups/
+*.kubectl-output
+kustomize-output/
 
 # Docker
 .docker/
@@ -92,7 +99,32 @@ data/
 uploads/
 certificates/
 secrets/
+alerts.db
 
 # Temporary files
 tmp/
 temp/
+
+# Installation/deployment artifacts
+*.pid
+*.lock
+port-forward.log
+
+# AI/ML models (large files)
+models/
+*.model
+*.pkl
+*.bin
+
+# Chat/conversation history
+chat_history/
+conversations/
+
+# Export files
+exports/
+reports/
+*.export.json
+
+# Test artifacts
+test-results/
+coverage-reports/

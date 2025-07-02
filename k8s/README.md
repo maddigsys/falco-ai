@@ -24,7 +24,26 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 
 ## 🚀 Quick Start
 
-### 1. Clone and Build
+### ⚡ **Automated Installation (Recommended)**
+
+```bash
+# Install development environment
+./install.sh dev
+
+# Install production environment  
+./install.sh prod
+
+# The script will automatically:
+# 1. Check prerequisites (kubectl, cluster access)
+# 2. Validate configuration
+# 3. Deploy all resources
+# 4. Wait for readiness
+# 5. Show access instructions and next steps
+```
+
+### 📋 **Manual Installation (Alternative)**
+
+#### 1. Clone and Build
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -38,7 +57,7 @@ docker build -t your-registry/falco-ai-alerts:latest ..
 docker push your-registry/falco-ai-alerts:latest
 ```
 
-### 2. Configure Secrets
+#### 2. Configure Secrets
 ```bash
 # Create the namespace first
 kubectl apply -f base/namespace.yaml
@@ -55,7 +74,7 @@ kubectl create secret generic falco-ai-alerts-secrets \
 # Note: For Ollama (default), no API keys needed - it runs locally in the cluster!
 ```
 
-### 3. Deploy Development Environment
+#### 3. Deploy Development Environment
 ```bash
 # Deploy to development
 kubectl apply -k overlays/development/
@@ -69,7 +88,7 @@ kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-dev
 # Open http://localhost:8080/dashboard
 ```
 
-### 4. Deploy Production Environment
+#### 4. Deploy Production Environment
 ```bash
 # Update image reference in production overlay
 sed -i 's|newTag: "1.0.0"|newTag: "your-version"|' overlays/production/kustomization.yaml
@@ -355,9 +374,35 @@ kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-alerts
 
 ## 🗑️ Uninstall and Cleanup
 
-### 🚀 **Quick Option: Use the Cleanup Script**
+### 🚀 **Quick Install: Use the Installation Script**
 
-We provide an automated cleanup script for easy uninstallation:
+We provide an automated installation script for easy deployment:
+
+```bash
+# Install development environment
+./install.sh dev
+
+# Install production environment  
+./install.sh prod
+
+# Validate configuration only
+./install.sh dev --validate-only
+
+# Get help with all options
+./install.sh --help
+```
+
+The script provides:
+- ✅ **Prerequisite checking** (kubectl, cluster access, kustomize)
+- ✅ **Configuration validation** (syntax and dependency checks)
+- ✅ **Automated deployment** (applies manifests and waits for readiness)
+- ✅ **Secret setup guidance** (shows commands for API keys)
+- ✅ **Access instructions** (port-forward commands and URLs)
+- ✅ **Post-install guidance** (configuration and testing steps)
+
+## 🗑️ **Quick Cleanup: Use the Cleanup Script**
+
+We also provide an automated cleanup script for easy uninstallation:
 
 ```bash
 # Clean up development environment (with backup)
