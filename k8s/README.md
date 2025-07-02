@@ -48,7 +48,11 @@ kubectl create secret generic falco-ai-alerts-secrets \
   --from-literal=SLACK_BOT_TOKEN="xoxb-your-actual-slack-token" \
   --from-literal=PORTKEY_API_KEY="your-portkey-api-key" \
   --from-literal=OPENAI_VIRTUAL_KEY="your-openai-virtual-key" \
+  --from-literal=GEMINI_VIRTUAL_KEY="your-gemini-virtual-key" \
+  --from-literal=DB_ENCRYPTION_KEY="$(openssl rand -base64 32)" \
   --namespace falco-ai-alerts
+
+# Note: For Ollama (default), no API keys needed - it runs locally in the cluster!
 ```
 
 ### 3. Deploy Development Environment
@@ -91,6 +95,8 @@ k8s/
 │   ├── deployment.yaml          # Main application deployment
 │   ├── service.yaml             # Service definitions
 │   ├── ingress.yaml             # External access configuration
+│   ├── ollama-deployment.yaml   # Local AI provider (Ollama)
+│   ├── ollama-init-job.yaml     # Model initialization job
 │   └── kustomization.yaml       # Base kustomization
 ├── overlays/
 │   ├── development/             # Development environment
@@ -112,6 +118,7 @@ k8s/
 - **Service Type**: NodePort (easy local access)
 - **Log Level**: DEBUG
 - **Storage**: 1Gi
+- **AI Provider**: Ollama (local)
 
 #### Production Environment
 - **Replicas**: 3 (with HPA scaling 3-10)
@@ -121,6 +128,31 @@ k8s/
 - **Storage**: 10Gi
 - **Network Policies**: Enabled
 - **TLS**: Enabled via Ingress
+- **AI Provider**: Configurable (Ollama/OpenAI/Gemini)
+
+### AI Provider Options
+
+The deployment includes **three AI provider options**:
+
+#### 🤖 Ollama (Default - Included)
+- **Deployment**: Automatically deployed in cluster
+- **Model**: `jimscard/whiterabbit-neo:latest`
+- **Storage**: 20Gi for models
+- **Resources**: 2-4Gi memory, 1-2 CPU cores
+- **API Keys**: None required (local deployment)
+- **Advantages**: Privacy, no external dependencies, cost-effective
+
+#### ☁️ OpenAI (Cloud)
+- **Configuration**: Requires Portkey + OpenAI Virtual Key
+- **Models**: GPT-3.5-turbo, GPT-4, etc.
+- **API Keys**: `PORTKEY_API_KEY` + `OPENAI_VIRTUAL_KEY`
+- **Advantages**: High-quality responses, latest models
+
+#### 🧠 Gemini (Cloud)
+- **Configuration**: Requires Portkey + Gemini Virtual Key  
+- **Models**: Gemini-pro, Gemini-ultra, etc.
+- **API Keys**: `PORTKEY_API_KEY` + `GEMINI_VIRTUAL_KEY`
+- **Advantages**: Google's advanced AI, competitive pricing
 
 ### Customizing Configurations
 

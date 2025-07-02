@@ -13,6 +13,8 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+  - ollama-deployment.yaml
+  - ollama-init-job.yaml
 
 commonLabels:
   app.kubernetes.io/name: falco-ai-alerts
