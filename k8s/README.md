@@ -17,20 +17,21 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 - **Memory**: 8GB available RAM (6GB for Ollama 7B model + 2GB for app)
 - **CPU**: 2 cores minimum
 - **Storage**: 15GB available storage
-- **Model**: `llama3.1:7b` (smaller, faster)
+- **Model**: `llama3.1:7b` (default, fast, reliable)
 
 #### **Production Environment** (Multi-node cluster)
-- **Memory**: 18GB available RAM (16GB for Ollama 13B model + 2GB for app)
+- **Memory**: 10GB available RAM (8GB for Ollama 7B model + 2GB for app)
 - **CPU**: 4 cores minimum
-- **Storage**: 30GB available storage
-- **Model**: `jimscard/whiterabbit-neo:latest` (13B, optimized for security)
-- **Note**: ⚠️ 13B model has slower inference (15-30s), consider 7B for high-volume
+- **Storage**: 20GB available storage
+- **Model**: `llama3.1:7b` (default for reliability)
+- **Cybersecurity Upgrade**: `jimscard/whiterabbit-neo:latest` (optional, requires 18GB RAM)
 
-#### **Enterprise Environment** (High-performance)
-- **Memory**: 24GB+ available RAM (for 30B+ models)
+#### **Enterprise Environment** (High-performance cybersecurity)
+- **Memory**: 18GB+ available RAM (for cybersecurity-specialized models)
 - **CPU**: 8+ cores
-- **Storage**: 50GB+ available storage
-- **Model**: `llama3.1:70b` or similar large models
+- **Storage**: 30GB+ available storage
+- **Model**: `jimscard/whiterabbit-neo:latest` (cybersecurity-optimized 13B model)
+- **Note**: Slower inference (15-30s) but superior security analysis
 
 📖 **See [OLLAMA_MODELS.md](OLLAMA_MODELS.md) for detailed model selection and resource planning guide.**
 
@@ -211,9 +212,10 @@ The deployment includes **three AI provider options**:
 
 #### 🤖 Ollama (Default - Included)
 - **Deployment**: Automatically deployed in cluster
-- **Model**: `jimscard/whiterabbit-neo:latest`
-- **Storage**: 20Gi for models
-- **Resources**: 2-4Gi memory, 1-2 CPU cores
+- **Default Model**: `llama3.1:7b` (fast, reliable, 4GB)
+- **Cybersecurity Upgrade**: `jimscard/whiterabbit-neo:latest` (13B, specialized for security analysis)
+- **Storage**: 15Gi for default model (30Gi for cybersecurity model)
+- **Resources**: 6-8Gi memory for 7B (14-16Gi for 13B cybersecurity model)
 - **API Keys**: None required (local deployment)
 - **Advantages**: Privacy, no external dependencies, cost-effective
 

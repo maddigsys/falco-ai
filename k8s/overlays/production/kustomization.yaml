@@ -85,16 +85,18 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/command/2
         value: |
-          echo "Pulling default model: jimscard/whiterabbit-neo:latest"
+          echo "Pulling default model: llama3.1:7b"
           curl -X POST http://prod-ollama:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "jimscard/whiterabbit-neo:latest"}' \
+            -d '{"name": "llama3.1:7b"}' \
             --max-time 1800
           
           echo "Verifying model was pulled..."
-          curl -s http://prod-ollama:11434/api/tags | grep -q "jimscard/whiterabbit-neo" || exit 1
+          curl -s http://prod-ollama:11434/api/tags | grep -q "llama3.1" || exit 1
           
           echo "Model initialization complete!"
+          echo "NOTE: For enhanced cybersecurity analysis, consider upgrading to jimscard/whiterabbit-neo:latest"
+          echo "      via the AI Configuration dashboard after deployment."
 
 images:
   - name: maddigsys/falco-ai-alerts

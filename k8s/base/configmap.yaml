@@ -26,15 +26,15 @@ data:
   
   # AI Configuration
   PROVIDER_NAME: "ollama"
-  MODEL_NAME: "jimscard/whiterabbit-neo:latest"
+  MODEL_NAME: "llama3.1:7b"
   OLLAMA_API_URL: "http://ollama:11434/api/generate"
-  OLLAMA_MODEL_NAME: "jimscard/whiterabbit-neo:latest"
+  OLLAMA_MODEL_NAME: "llama3.1:7b"
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
-  # Timeout configuration (increased for 13B models like whiterabbit-neo)
-  OLLAMA_TIMEOUT: "90"  # seconds - adjust based on model size: 7B=30s, 13B=90s, 30B+=120s
-  AI_REQUEST_TIMEOUT: "90"  # seconds - application-level timeout
+  # Timeout configuration (optimized for 7B models for faster, more reliable responses)
+  OLLAMA_TIMEOUT: "30"  # seconds - adjusted for 7B model: 7B=30s, 13B=90s, 30B+=120s
+  AI_REQUEST_TIMEOUT: "30"  # seconds - application-level timeout
   
   # Slack Configuration
   SLACK_ENABLED: "true"
