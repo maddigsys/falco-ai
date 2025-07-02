@@ -99,27 +99,129 @@ validate_config() {
     print_success "Configuration validated"
 }
 
+# Function to validate secrets
+validate_secrets() {
+    local environment=$1
+    local namespace=$2
+    local skip_validation=$3
+    
+    print_step "Validating secrets for $environment environment..."
+    
+    # Skip validation if requested
+    if [ "$skip_validation" = "true" ]; then
+        print_warning "Skipping secret validation (--skip-secrets enabled)"
+        return 0
+    fi
+    
+    local secret_name="${environment}-falco-ai-alerts-secrets"
+    
+    # Check if namespace exists first
+    if ! kubectl get namespace "$namespace" &> /dev/null; then
+        print_info "Namespace '$namespace' doesn't exist yet (will be created during installation)"
+        print_error "Secrets must be created after namespace creation"
+        show_secret_creation_instructions "$environment" "$namespace"
+        exit 1
+    fi
+    
+    # Check if secrets exist
+    if ! kubectl get secret "$secret_name" -n "$namespace" &> /dev/null; then
+        print_error "Required secrets not found: $secret_name"
+        echo ""
+        print_info "Secrets are required for the application to function properly."
+        show_secret_creation_instructions "$environment" "$namespace"
+        exit 1
+    fi
+    
+    # Validate secret has required keys
+    print_info "Checking secret content..."
+    local missing_keys=()
+    local required_keys=("SLACK_BOT_TOKEN" "OPENAI_API_KEY" "GEMINI_API_KEY")
+    
+    for key in "${required_keys[@]}"; do
+        if ! kubectl get secret "$secret_name" -n "$namespace" -o jsonpath="{.data.$key}" &> /dev/null; then
+            missing_keys+=("$key")
+        fi
+    done
+    
+    if [ ${#missing_keys[@]} -gt 0 ]; then
+        print_error "Secret exists but missing required keys: ${missing_keys[*]}"
+        echo ""
+        print_info "Update your secret with all required keys:"
+        show_secret_update_instructions "$environment" "$namespace"
+        exit 1
+    fi
+    
+    print_success "Secrets validation passed"
+}
+
+# Function to show secret creation instructions
+show_secret_creation_instructions() {
+    local environment=$1
+    local namespace=$2
+    local secret_name="${environment}-falco-ai-alerts-secrets"
+    
+    echo ""
+    print_info "🔑 REQUIRED: Create secrets before installation"
+    echo ""
+    echo "1. First, ensure the namespace exists:"
+    echo "   kubectl create namespace $namespace"
+    echo ""
+    echo "2. Create the required secrets:"
+    echo "   kubectl create secret generic $secret_name -n $namespace \\"
+    echo "     --from-literal=SLACK_BOT_TOKEN=\"xoxb-your-slack-bot-token\" \\"
+    echo "     --from-literal=SLACK_APP_TOKEN=\"xapp-your-slack-app-token\" \\"
+    echo "     --from-literal=OPENAI_API_KEY=\"your-openai-api-key\" \\"
+    echo "     --from-literal=GEMINI_API_KEY=\"your-gemini-api-key\""
+    echo ""
+    print_info "📝 AI Provider Configuration:"
+    echo "   • Slack: Get tokens from https://api.slack.com/apps"
+    echo "   • OpenAI: Get API key from https://platform.openai.com/api-keys"
+    echo "   • Gemini: Get API key from https://ai.google.dev/"
+    echo "   • Ollama: No API key needed (runs locally in cluster)"
+    echo ""
+    print_info "🔄 After creating secrets, run the installation again:"
+    echo "   ./install.sh $environment"
+    echo ""
+    print_info "⚠️  To skip secret validation (not recommended):"
+    echo "   ./install.sh $environment --skip-secrets"
+}
+
+# Function to show secret update instructions
+show_secret_update_instructions() {
+    local environment=$1
+    local namespace=$2
+    local secret_name="${environment}-falco-ai-alerts-secrets"
+    
+    echo ""
+    echo "Delete and recreate the secret with all required keys:"
+    echo "   kubectl delete secret $secret_name -n $namespace"
+    echo "   kubectl create secret generic $secret_name -n $namespace \\"
+    echo "     --from-literal=SLACK_BOT_TOKEN=\"xoxb-your-slack-bot-token\" \\"
+    echo "     --from-literal=SLACK_APP_TOKEN=\"xapp-your-slack-app-token\" \\"
+    echo "     --from-literal=OPENAI_API_KEY=\"your-openai-api-key\" \\"
+    echo "     --from-literal=GEMINI_API_KEY=\"your-gemini-api-key\""
+    echo ""
+    print_info "Or update existing secret by adding missing keys:"
+    echo "   kubectl patch secret $secret_name -n $namespace \\"
+    echo "     --type='merge' -p='{\"data\":{\"MISSING_KEY\":\"base64-encoded-value\"}}'"
+}
+
 # Function to setup secrets
 setup_secrets() {
     local environment=$1
     local namespace=$2
     
-    print_step "Setting up secrets for $environment..."
+    print_step "Verifying secrets for $environment..."
     
     # Check if secrets already exist
     if kubectl get secret "${environment}-falco-ai-alerts-secrets" -n "$namespace" &> /dev/null; then
-        print_warning "Secrets already exist. Skipping secret creation."
-        print_info "To update secrets, delete them first: kubectl delete secret ${environment}-falco-ai-alerts-secrets -n $namespace"
+        print_success "Secrets found and ready to use"
         return 0
     fi
     
-    print_info "Secrets not found. You'll need to create them manually after installation."
-    print_info "Example commands:"
-    echo "kubectl create secret generic ${environment}-falco-ai-alerts-secrets -n $namespace \\"
-    echo "  --from-literal=SLACK_BOT_TOKEN=xoxb-your-token \\"
-    echo "  --from-literal=OPENAI_API_KEY=your-openai-key \\"
-    echo "  --from-literal=GEMINI_API_KEY=your-gemini-key"
-    echo ""
+    print_error "Secrets not found. This should not happen after validation."
+    print_info "Please run the installation again to re-validate secrets."
+    exit 1
 }
 
 # Function to install environment
@@ -273,36 +375,22 @@ show_post_install() {
     print_step "Post-Installation Steps:"
     echo ""
     
-    print_info "1. Configure Secrets (if not done already):"
-    case $environment in
-        development)
-            echo "   kubectl create secret generic dev-falco-ai-alerts-secrets -n falco-ai-alerts-dev \\"
-            ;;
-        production)
-            echo "   kubectl create secret generic prod-falco-ai-alerts-secrets -n falco-ai-alerts \\"
-            ;;
-    esac
-    echo "     --from-literal=SLACK_BOT_TOKEN=xoxb-your-token \\"
-    echo "     --from-literal=OPENAI_API_KEY=your-openai-key \\"
-    echo "     --from-literal=GEMINI_API_KEY=your-gemini-key"
-    echo ""
-    
-    print_info "2. Configure Falco to send alerts:"
+    print_info "1. Configure Falco to send alerts:"
     echo "   Edit falco.yaml and add webhook URL to your dashboard"
     echo ""
     
-    print_info "3. Test the webhook:"
+    print_info "2. Test the webhook:"
     echo "   curl -X POST http://localhost:8080/falco-webhook \\"
     echo "     -H 'Content-Type: application/json' \\"
     echo "     -d '{\"rule\": \"Test Alert\", \"priority\": \"warning\", \"output\": \"Test message\"}'"
     echo ""
     
-    print_info "4. Monitor the system:"
+    print_info "3. Monitor the system:"
     echo "   kubectl get events -n falco-ai-alerts --sort-by='.lastTimestamp'"
     echo ""
     
     if [ "$environment" = "production" ]; then
-        print_info "5. Production considerations:"
+        print_info "4. Production considerations:"
         echo "   • Configure Ingress for external access"
         echo "   • Set up monitoring and alerting"
         echo "   • Configure backup schedules"
@@ -515,6 +603,7 @@ ENVIRONMENTS:
 OPTIONS:
     --validate-only     - Only validate configuration, don't install
     --skip-wait         - Skip waiting for deployments to be ready
+    --skip-secrets      - Skip secret validation (not recommended)
     --help, -h          - Show this help message
 
 EXAMPLES:
@@ -522,11 +611,12 @@ EXAMPLES:
     $0 prod                   # Install production environment
     $0 dev --validate-only    # Just validate development config
     $0 prod --skip-wait       # Install production without waiting
+    $0 dev --skip-secrets     # Install without secret validation
 
  FEATURES:
      - ✅ Automated prerequisite checking
-     - ✅ Configuration validation
-     - ✅ Secret setup guidance
+     - ✅ Configuration validation  
+     - ✅ Required secret validation
      - ✅ Deployment status monitoring
      - ✅ Real-time Ollama model download progress
      - ✅ Access instructions
@@ -546,6 +636,7 @@ main() {
     ENVIRONMENT=""
     VALIDATE_ONLY="false"
     SKIP_WAIT="false"
+    SKIP_SECRETS="false"
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -555,6 +646,10 @@ main() {
                 ;;
             --skip-wait)
                 SKIP_WAIT="true"
+                shift
+                ;;
+            --skip-secrets)
+                SKIP_SECRETS="true"
                 shift
                 ;;
             --help|-h)
@@ -592,6 +687,20 @@ main() {
     
     # Validate configuration
     validate_config "$ENVIRONMENT"
+    
+    # Determine namespace based on environment
+    local namespace=""
+    case $ENVIRONMENT in
+        development)
+            namespace="falco-ai-alerts-dev"
+            ;;
+        production)
+            namespace="falco-ai-alerts"
+            ;;
+    esac
+    
+    # Validate secrets before installation
+    validate_secrets "$ENVIRONMENT" "$namespace" "$SKIP_SECRETS"
     
     if [ "$VALIDATE_ONLY" = "true" ]; then
         print_success "Configuration validation completed!"
