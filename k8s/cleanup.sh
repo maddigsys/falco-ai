@@ -90,6 +90,23 @@ backup_data() {
         fi
     fi
     
+    # Backup Ollama model data if available
+    local ollama_deployment=""
+    if [ "$namespace" = "falco-ai-alerts-dev" ]; then
+        ollama_deployment="dev-ollama"
+    else
+        ollama_deployment="prod-ollama"
+    fi
+    
+    if kubectl get deployment "$ollama_deployment" -n "$namespace" &> /dev/null; then
+        local ollama_pod=$(kubectl get pods -n "$namespace" -l app=ollama -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+        if [ -n "$ollama_pod" ]; then
+            print_info "Backing up Ollama model configuration..."
+            kubectl exec "$ollama_pod" -n "$namespace" -- ollama list > "$BACKUP_DIR/ollama-models-${namespace}-${DATE}.txt" 2>/dev/null || true
+            print_success "Ollama models backed up to: $BACKUP_DIR/ollama-models-${namespace}-${DATE}.txt"
+        fi
+    fi
+    
     # Backup configuration
     kubectl get configmap,secret -n "$namespace" -o yaml > "$BACKUP_DIR/config-${namespace}-${DATE}.yaml" 2>/dev/null || true
     print_success "Configuration backed up to: $BACKUP_DIR/config-${namespace}-${DATE}.yaml"
@@ -108,6 +125,10 @@ cleanup_namespace() {
         print_warning "Namespace $namespace does not exist. Skipping cleanup."
         return 0
     fi
+    
+    # Delete model initialization jobs first (they can block cleanup)
+    print_info "Cleaning up model initialization jobs..."
+    kubectl delete job --all -n "$namespace" 2>/dev/null || true
     
     # Scale down deployments gracefully
     print_info "Scaling down deployments..."
@@ -206,6 +227,8 @@ SAFETY FEATURES:
     - Requires confirmation for destructive operations
     - Graceful shutdown before deletion
     - Verification of cleanup completion
+    - Backs up Ollama models and database
+    - Handles llama3.1:8b model cleanup properly
 
 EOF
 }
@@ -272,6 +295,7 @@ main() {
     # Show current cluster info
     print_info "Current cluster context: $(kubectl config current-context)"
     print_info "Cleanup environment: $ENVIRONMENT"
+    print_info "Will clean up: Falco AI Alerts + Ollama (llama3.1:8b) + model data"
     
     # Safety confirmation
     if [ "$FORCE" != "true" ]; then

@@ -197,6 +197,17 @@ show_secret_creation_instructions() {
     echo "   • Gemini: Get virtual key from Portkey dashboard (after adding Gemini)"
     echo "   • Ollama: No API key needed (runs locally in cluster)"
     echo ""
+    print_info "🤖 Default AI Model: llama3.1:8b"
+    echo "   • Size: ~4.9GB download, 6-8GB RAM required"
+    echo "   • Performance: Fast inference (2-5 seconds)"
+    echo "   • Use case: Reliable default for all environments"
+    echo ""
+    print_info "🛡️ Cybersecurity Model Upgrade (Optional):"
+    echo "   • Model: jimscard/whiterabbit-neo:latest (13B)"
+    echo "   • Enhanced security analysis capabilities"
+    echo "   • Requires: 14-16GB RAM, 30Gi storage"
+    echo "   • Upgrade via dashboard after deployment"
+    echo ""
     print_info "🔄 After creating secrets, run the installation again:"
     echo "   ./install.sh $environment"
     echo ""
@@ -324,7 +335,7 @@ install_environment() {
         print_info "Skipping Ollama progress monitoring (--skip-wait enabled)"
         print_info "Model download started. Check progress with: kubectl logs job/$job_name -n $namespace -f"
     else
-        print_info "Downloading AI model (this may take several minutes for large models)..."
+        print_info "Downloading llama3.1:8b model (~4.9GB, optimized for reliability)..."
         monitor_ollama_progress "$job_name" "$namespace"
     fi
     
@@ -394,7 +405,8 @@ show_access_instructions() {
         echo "  • Network policies for enhanced security"
         echo "  • Resource limits and Prometheus monitoring"
         echo "  • Ingress support for external access"
-        echo "  • Optimized timeouts for large AI models (90s)"
+        echo "  • Optimized for llama3.1:8b model (30s response time)"
+        echo "  • Optional cybersecurity model upgrade available"
     fi
 }
 
@@ -433,8 +445,14 @@ show_post_install() {
         echo "   • Set up monitoring (Prometheus metrics available)"
         echo "   • Configure backup schedules for persistent data"
         echo "   • Review and customize network security policies"
-        echo "   • Adjust AI model timeouts based on your model size"
+        echo "   • Consider upgrading to cybersecurity model (jimscard/whiterabbit-neo)"
         echo "   • Consider setting up external AI providers for redundancy"
+        echo ""
+        print_info "5. 🛡️ Cybersecurity Model Upgrade:"
+        echo "   • Default: llama3.1:8b (reliable, fast, 8GB RAM)"
+        echo "   • Upgrade: jimscard/whiterabbit-neo:latest (specialized, 16GB RAM)"
+        echo "   • Upgrade via: http://localhost:8080/config/ai"
+        echo "   • See k8s/OLLAMA_MODELS.md for detailed upgrade instructions"
     fi
 }
 
@@ -442,7 +460,7 @@ show_post_install() {
 monitor_ollama_progress() {
     local job_name=$1
     local namespace=$2
-    local timeout=900  # 15 minutes timeout
+    local timeout=600  # 10 minutes timeout (optimized for 8B model downloads)
     local start_time=$(date +%s)
     local last_percentage=0
     local download_complete=false
@@ -662,6 +680,8 @@ EXAMPLES:
      - ✅ Clean webhook URLs (dedicated service on port 80)
      - ✅ Comprehensive dashboard with Falco integration setup
      - ✅ Access instructions and post-installation guidance
+     - ✅ Default llama3.1:8b model (fast, reliable, 8GB RAM)
+     - ✅ Optional cybersecurity model upgrade (jimscard/whiterabbit-neo)
 
 REQUIREMENTS:
     - kubectl (v1.14+)
@@ -756,9 +776,12 @@ main() {
     if [ "$ENVIRONMENT" = "development" ]; then
         print_info "Namespace: falco-ai-alerts-dev"
         print_info "Features: Single replica, NodePort access, debug logging"
+        print_info "AI Model: llama3.1:8b (default, 8GB RAM, fast inference)"
     else
         print_info "Namespace: falco-ai-alerts"
         print_info "Features: 3 replicas, HPA auto-scaling, security hardening"
+        print_info "AI Model: llama3.1:8b (default, 8GB RAM, fast inference)"
+        print_info "Upgrade: jimscard/whiterabbit-neo available for enhanced security"
     fi
     echo ""
     
