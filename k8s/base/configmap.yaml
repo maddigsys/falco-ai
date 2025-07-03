@@ -27,7 +27,7 @@ data:
   # AI Configuration
   PROVIDER_NAME: "ollama"
   MODEL_NAME: "llama3.1:8b"
-  OLLAMA_API_URL: "http://ollama:11434/api/generate"
+  OLLAMA_API_URL: "http://prod-ollama:11434/api/generate"
   OLLAMA_MODEL_NAME: "llama3.1:8b"
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
