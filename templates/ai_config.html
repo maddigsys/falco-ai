@@ -203,6 +203,60 @@
         border: 1px solid #f6ad55;
     }
 
+    /* Sticky action bar styles */
+    .sticky-action-bar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: var(--bg-primary);
+        border-bottom: 2px solid var(--border-color);
+        padding: 1rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .sticky-action-bar .btn {
+        margin-right: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .sticky-action-bar .btn-lg {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .save-status {
+        font-style: italic;
+    }
+
+    .config-card .action-area {
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        background: var(--bg-light);
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+        margin-bottom: -1.5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .section-save-btn {
+        float: right;
+        margin-top: 1rem;
+    }
+
+    /* Update save status based on changes */
+    .save-needed {
+        color: var(--warning-color) !important;
+    }
+
+    .save-complete {
+        color: var(--success-color) !important;
+    }
+
     @media (max-width: 768px) {
         .provider-tabs {
             flex-direction: column;
@@ -649,6 +703,88 @@
     </div>
 </div>
 
+<!-- AI Security Chat Configuration (Collapsed by default) -->
+<div class="config-card collapsed">
+    <div class="config-card-header collapsible-header" onclick="toggleSection(this)">
+        <h3 class="config-card-title">
+            <i class="fas fa-comments"></i>
+            AI Security Chat Settings
+            <i class="fas fa-chevron-down collapse-icon"></i>
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="config-info">
+            <strong><i class="fas fa-comments"></i> Interactive AI Chat Configuration</strong><br>
+            Configure settings for the AI Security Chat feature. Chat with AI about security alerts in real-time.
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="chatEnabled" checked>
+                        <label class="form-check-label" for="chatEnabled">
+                            <i class="fas fa-comments"></i>
+                            Enable AI Security Chat
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Allow users to chat with AI about security alerts
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatMaxHistory" class="form-label">
+                        <i class="fas fa-history"></i>
+                        Chat History Limit
+                    </label>
+                    <input type="number" class="form-control" id="chatMaxHistory" value="50" min="10" max="200">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Maximum chat messages to keep in history
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatSessionTimeout" class="form-label">
+                        <i class="fas fa-clock"></i>
+                        Session Timeout (minutes)
+                    </label>
+                    <input type="number" class="form-control" id="chatSessionTimeout" value="30" min="5" max="120">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Auto-clear chat after inactivity
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatContextAlerts" class="form-label">
+                        <i class="fas fa-list"></i>
+                        Alert Context Limit
+                    </label>
+                    <input type="number" class="form-control" id="chatContextAlerts" value="10" min="1" max="50">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Number of recent alerts to include as context
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-lightbulb"></i>
+            <strong>Quick Access:</strong> AI Security Chat is now available directly from the dashboard! Look for the teal chat button in the header.
+        </div>
+    </div>
+</div>
+
 <!-- AI Response Preview -->
 <div class="config-card">
     <div class="config-card-header">
@@ -674,62 +810,7 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.sticky-action-bar {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: var(--bg-primary);
-    border-bottom: 2px solid var(--border-color);
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
 
-.sticky-action-bar .btn {
-    margin-right: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.sticky-action-bar .btn-lg {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.save-status {
-    font-style: italic;
-}
-
-.config-card .action-area {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1.5rem;
-    margin-top: 1.5rem;
-    background: var(--bg-light);
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    margin-bottom: -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-bottom: 1.5rem;
-}
-
-.section-save-btn {
-    float: right;
-    margin-top: 1rem;
-}
-
-/* Update save status based on changes */
-.save-needed {
-    color: var(--warning-color) !important;
-}
-
-.save-complete {
-    color: var(--success-color) !important;
-}
-</style>
-{% endblock %}
 
 {% block extra_js %}
 <script>
