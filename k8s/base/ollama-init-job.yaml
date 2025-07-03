@@ -35,20 +35,20 @@ spec:
         - sh
         - -c
         - |
-          echo "Pulling default model: phi3:mini"
+          echo "Pulling ultra-fast model: tinyllama"
           curl -X POST http://OLLAMA_SERVICE_NAME:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "phi3:mini"}' \
+            -d '{"name": "tinyllama"}' \
             --max-time 1800
           
           echo "Verifying model was pulled..."
-          curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "phi3" || exit 1
+          curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "tinyllama" || exit 1
           
           echo "Warming up model with test inference..."
           curl -X POST http://OLLAMA_SERVICE_NAME:11434/api/generate \
             -H "Content-Type: application/json" \
-            -d '{"model": "phi3:mini", "prompt": "Hello, test", "stream": false}' \
-            --max-time 180
+            -d '{"model": "tinyllama", "prompt": "Hello, test", "stream": false}' \
+            --max-time 60
           
           echo "Model initialization and warm-up complete!"
         resources:

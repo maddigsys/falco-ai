@@ -26,15 +26,15 @@ data:
   
   # AI Configuration
   PROVIDER_NAME: "ollama"
-  MODEL_NAME: "phi3:mini"
+  MODEL_NAME: "tinyllama"
   OLLAMA_API_URL: "http://prod-ollama:11434/api/generate"
-  OLLAMA_MODEL_NAME: "phi3:mini"
+  OLLAMA_MODEL_NAME: "tinyllama"
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
-  # Timeout configuration (increased for CPU-based inference, phi3:mini will be much faster)
-  OLLAMA_TIMEOUT: "90"  # seconds - conservative timeout, phi3:mini typically responds in 5-15s
-  AI_REQUEST_TIMEOUT: "90"  # seconds - application-level timeout
+  # Timeout configuration (optimized for ultra-fast tinyllama model)
+  OLLAMA_TIMEOUT: "30"  # seconds - tinyllama should respond in 3-10s on CPU
+  AI_REQUEST_TIMEOUT: "30"  # seconds - application-level timeout
   
   # Slack Configuration
   SLACK_ENABLED: "true"
