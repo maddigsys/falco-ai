@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create templates directory
-RUN mkdir -p templates
+# Create required directories
+RUN mkdir -p templates data
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash falco && \

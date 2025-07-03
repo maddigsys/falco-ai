@@ -4,9 +4,10 @@ services:
   # Main Falco AI Alert System
   falco-ai-alerts:
     # Option 1: Use published image (recommended for production)
-    image: maddigsys/falco-ai-alerts:latest
+    # image: maddigsys/falco-ai-alerts:latest
     # Option 2: Build locally (uncomment for development)
-    # build: .
+    build: .
+    image: maddigsys/falco-ai-alerts:latest
     ports:
       - "8080:8080"  # Main webhook and Web UI port
     environment:
@@ -17,7 +18,7 @@ services:
       
       # AI Provider Configuration (defaults to Ollama for local testing)
       - PROVIDER_NAME=${PROVIDER_NAME:-ollama}
-      - MODEL_NAME=${MODEL_NAME:-jimscard/whiterabbit-neo:latest}
+      - MODEL_NAME=${MODEL_NAME:-tinyllama}
       
       # Cloud AI Providers (optional)
       - PORTKEY_API_KEY=${PORTKEY_API_KEY:-}
@@ -26,7 +27,7 @@ services:
       
       # Ollama Configuration (for local testing)
       - OLLAMA_API_URL=http://ollama:11434/api/generate
-      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME:-jimscard/whiterabbit-neo:latest}
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME:-tinyllama}
       
       # Slack Configuration (optional)
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN:-}
@@ -37,8 +38,7 @@ services:
       - IGNORE_OLDER=${IGNORE_OLDER:-1}
     volumes:
       - ./templates:/app/templates:ro
-      - ./alerts.db:/app/alerts.db  # Persist database locally
-      - alerts_data:/app/data  # Additional persistent storage
+      - alerts_data:/app/data  # Persistent storage for database and other data
     depends_on:
       - ollama
     restart: unless-stopped
@@ -76,9 +76,9 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - ADMINER_DEFAULT_SERVER=sqlite:///app/alerts.db
+      - ADMINER_DEFAULT_SERVER=sqlite:///app/data/alerts.db
     volumes:
-      - ./alerts.db:/app/alerts.db:ro
+      - alerts_data:/app/data:ro
     profiles:
       - dev
     networks:
