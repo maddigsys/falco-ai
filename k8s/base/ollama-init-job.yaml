@@ -44,7 +44,13 @@ spec:
           echo "Verifying model was pulled..."
           curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "llama3.1" || exit 1
           
-          echo "Model initialization complete!"
+          echo "Warming up model with test inference..."
+          curl -X POST http://OLLAMA_SERVICE_NAME:11434/api/generate \
+            -H "Content-Type: application/json" \
+            -d '{"model": "llama3.1:8b", "prompt": "Hello, test", "stream": false}' \
+            --max-time 180
+          
+          echo "Model initialization and warm-up complete!"
         resources:
           requests:
             memory: "64Mi"

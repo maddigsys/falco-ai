@@ -32,9 +32,9 @@ data:
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
-  # Timeout configuration (optimized for 8B models for faster, more reliable responses)
-  OLLAMA_TIMEOUT: "30"  # seconds - adjusted for 8B model: 8B=30s, 13B=90s, 30B+=120s
-  AI_REQUEST_TIMEOUT: "30"  # seconds - application-level timeout
+  # Timeout configuration (increased for CPU-based 8B model inference)
+  OLLAMA_TIMEOUT: "90"  # seconds - increased for CPU inference: CPU=90s, GPU=30s
+  AI_REQUEST_TIMEOUT: "90"  # seconds - application-level timeout
   
   # Slack Configuration
   SLACK_ENABLED: "true"

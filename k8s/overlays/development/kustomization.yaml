@@ -80,10 +80,10 @@ patches:
         value: "notice"
       - op: replace
         path: /data/OLLAMA_TIMEOUT
-        value: "45"
+        value: "90"
       - op: replace
         path: /data/AI_REQUEST_TIMEOUT  
-        value: "45"
+        value: "90"
       - op: add
         path: /data/ALERT_RETENTION_DAYS
         value: "7"
@@ -114,7 +114,13 @@ patches:
           echo "Verifying model was pulled..."
           curl -s http://dev-ollama:11434/api/tags | grep -q "llama3.1" || exit 1
           
-          echo "Model initialization complete!"
+          echo "Warming up model with test inference..."
+          curl -X POST http://dev-ollama:11434/api/generate \
+            -H "Content-Type: application/json" \
+            -d '{"model": "llama3.1:8b", "prompt": "Hello, test", "stream": false}' \
+            --max-time 180
+          
+          echo "Model initialization and warm-up complete!"
 
   # Development Ollama resource optimization  
   # Use smaller 8B model for development to reduce resource requirements
