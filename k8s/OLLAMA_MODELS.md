@@ -5,29 +5,28 @@ This guide helps you choose the right Ollama model for your environment and unde
 ## Model Recommendations by Use Case
 
 ### Development/Testing ✅ **DEFAULT**
-**Recommended Model**: `llama3.1:8b`
-- **Memory Required**: 6-8GB RAM
-- **Storage**: ~4.5GB
-- **Response Quality**: Good for testing and development
-- **Speed**: Fast inference (2-5 seconds)
-- **Use Case**: Default for all environments
+**Recommended Model**: `phi3:mini`
+- **Memory Required**: 3-4GB RAM (very efficient)
+- **Storage**: ~2.3GB
+- **Response Quality**: Excellent for general security analysis
+- **Speed**: Ultra-fast inference (2-8 seconds)
+- **Use Case**: Default for all environments, fastest option
 
-### Production (Balanced) ✅ **RECOMMENDED**
-**Default Model**: `llama3.1:8b`
+### Production (Balanced Performance) ⚡ **UPGRADE OPTION**
+**Performance Model**: `llama3.1:8b`
 - **Memory Required**: 6-8GB RAM
-- **Storage**: ~4.5GB
-- **Response Quality**: Good general security analysis
-- **Speed**: Fast inference (2-5 seconds)
-- **Reliability**: Excellent uptime and responsiveness
+- **Storage**: ~4.9GB
+- **Response Quality**: Enhanced analysis with larger context
+- **Speed**: Fast inference (5-15 seconds)
+- **Reliability**: Excellent balance of speed and capability
 
-### Production (Cybersecurity-Specialized) 🛡️ **UPGRADE OPTION**
+### Production (Cybersecurity-Specialized) 🛡️ **PREMIUM OPTION**
 **Cybersecurity Model**: `jimscard/whiterabbit-neo:latest` (13B)
 - **Memory Required**: 14-16GB RAM
-- **Storage**: ~9GB
-- **Response Quality**: Excellent cybersecurity analysis
-- **Speed**: Slower inference (15-30 seconds)
-- **Specialization**: Specifically tuned for cybersecurity contexts
-- **Trade-off**: Better analysis quality but slower response times
+- **Storage**: ~13GB
+- **Response Quality**: Specialized cybersecurity analysis
+- **Speed**: Moderate inference (15-45 seconds)
+- **Use Case**: Maximum security analysis capability
 
 ### High-Performance Production
 **Expert Model**: `llama3.1:70b` (if resources allow)
@@ -97,13 +96,15 @@ Our production overlay uses:
 - **Storage**: 30GB PVC
 - **Replicas**: 1
 
-## Upgrading to Cybersecurity Model
+## Model Upgrade Path
 
 ### Via Dashboard (Recommended)
-1. **Deploy with default 7B model** first for fast, reliable setup
+1. **Deploy with default phi3:mini** first for fastest, most reliable setup
 2. **Access AI Configuration**: Go to `http://localhost:8080/config/ai`
-3. **Change Model**: Update "Ollama Model Name" to `jimscard/whiterabbit-neo:latest`
-4. **Increase Resources**: Update Kubernetes deployment resources:
+3. **Choose Upgrade Path**:
+   - **Performance**: `llama3.1:8b` (better analysis, still fast)
+   - **Cybersecurity**: `jimscard/whiterabbit-neo:latest` (specialized)
+4. **Increase Resources** (if upgrading to cybersecurity model):
    ```bash
    kubectl patch deployment prod-ollama -n falco-ai-alerts --patch '
    spec:

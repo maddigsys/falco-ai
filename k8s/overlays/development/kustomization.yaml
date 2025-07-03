@@ -105,19 +105,19 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/command/2
         value: |
-          echo "Pulling default model: llama3.1:8b"
+          echo "Pulling default model: phi3:mini"
           curl -X POST http://dev-ollama:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "llama3.1:8b"}' \
+            -d '{"name": "phi3:mini"}' \
             --max-time 1800
           
           echo "Verifying model was pulled..."
-          curl -s http://dev-ollama:11434/api/tags | grep -q "llama3.1" || exit 1
+          curl -s http://dev-ollama:11434/api/tags | grep -q "phi3" || exit 1
           
           echo "Warming up model with test inference..."
           curl -X POST http://dev-ollama:11434/api/generate \
             -H "Content-Type: application/json" \
-            -d '{"model": "llama3.1:8b", "prompt": "Hello, test", "stream": false}' \
+            -d '{"model": "phi3:mini", "prompt": "Hello, test", "stream": false}' \
             --max-time 180
           
           echo "Model initialization and warm-up complete!"

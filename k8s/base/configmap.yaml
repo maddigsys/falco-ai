@@ -26,14 +26,14 @@ data:
   
   # AI Configuration
   PROVIDER_NAME: "ollama"
-  MODEL_NAME: "llama3.1:8b"
+  MODEL_NAME: "phi3:mini"
   OLLAMA_API_URL: "http://prod-ollama:11434/api/generate"
-  OLLAMA_MODEL_NAME: "llama3.1:8b"
+  OLLAMA_MODEL_NAME: "phi3:mini"
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
-  # Timeout configuration (increased for CPU-based 8B model inference)
-  OLLAMA_TIMEOUT: "90"  # seconds - increased for CPU inference: CPU=90s, GPU=30s
+  # Timeout configuration (increased for CPU-based inference, phi3:mini will be much faster)
+  OLLAMA_TIMEOUT: "90"  # seconds - conservative timeout, phi3:mini typically responds in 5-15s
   AI_REQUEST_TIMEOUT: "90"  # seconds - application-level timeout
   
   # Slack Configuration
