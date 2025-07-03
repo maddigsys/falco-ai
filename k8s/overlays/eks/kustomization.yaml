@@ -1,0 +1,99 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: falco-ai-alerts-eks
+
+resources:
+  - ../../base
+  - hpa.yaml
+
+namespace: falco-ai-alerts
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+  platform: eks
+  app.kubernetes.io/version: "1.0.0"
+
+patches:
+  # EKS-specific storage class
+  - target:
+      kind: PersistentVolumeClaim
+    patch: |-
+      - op: add
+        path: /spec/storageClassName
+        value: "gp3"
+  
+  # AWS Load Balancer Controller instead of nginx
+  - target:
+      kind: Ingress
+      name: falco-ai-alerts-ingress
+    patch: |-
+      - op: replace
+        path: /metadata/annotations
+        value:
+          kubernetes.io/ingress.class: "alb"
+          alb.ingress.kubernetes.io/scheme: "internet-facing"
+          alb.ingress.kubernetes.io/target-type: "ip"
+          alb.ingress.kubernetes.io/load-balancer-name: "falco-ai-alerts-alb"
+          alb.ingress.kubernetes.io/ssl-redirect: "443"
+          alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:region:account:certificate/cert-id"
+      - op: remove
+        path: /spec/ingressClassName
+      - op: remove
+        path: /spec/tls
+  
+  # Optimize for EKS node types
+  - target:
+      kind: Deployment
+      name: ollama
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "6Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "8Gi"
+  
+  # Production scaling
+  - target:
+      kind: Deployment
+      name: falco-ai-alerts
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "1Gi"
+  
+  # EKS-specific node selector (optional)
+  - target:
+      kind: Deployment
+      name: ollama
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          kubernetes.io/arch: "amd64"
+          node.kubernetes.io/instance-type: "t3.xlarge"
+  
+  # Remove NetworkPolicy for EKS (use Security Groups instead)
+  - target:
+      kind: NetworkPolicy
+      name: falco-ai-alerts-network-policy
+    patch: |-
+      - op: replace
+        path: /metadata/annotations
+        value:
+          note: "Replaced by AWS Security Groups for Pods"
+
+images:
+  - name: falco-ai-alerts
+    newName: maddigsys/falco-ai-alerts
+    newTag: latest 

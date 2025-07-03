@@ -11,6 +11,9 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 - **Ingress Controller**: NGINX Ingress Controller (recommended)
 - **DNS**: CoreDNS or kube-dns
 
+### ☁️ **Cloud Deployment**
+For cloud-specific deployments (EKS, GKE, AKS), see the **[Cloud Deployment Guide](CLOUD_DEPLOYMENT_GUIDE.md)** for platform-specific constraints and solutions.
+
 ### 🔧 **Resource Requirements**
 
 #### **Development Environment** (Single-node testing)
