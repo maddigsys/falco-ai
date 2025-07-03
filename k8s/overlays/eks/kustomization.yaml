@@ -56,6 +56,12 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/resources/limits/memory
         value: "8Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: "45"  # EKS timeout for cloud infrastructure
+      - op: replace
+        path: /spec/template/spec/containers/0/env/2/value
+        value: "8m"  # Balanced memory retention for cloud nodes
   
   # Production scaling
   - target:
@@ -71,6 +77,18 @@ patches:
       - op: replace
         path: /spec/template/spec/containers/0/resources/limits/memory
         value: "1Gi"
+  
+  # EKS ConfigMap timeout configuration
+  - target:
+      kind: ConfigMap
+      name: falco-ai-alerts-config
+    patch: |-
+      - op: replace
+        path: /data/OLLAMA_TIMEOUT
+        value: "45"  # EKS cloud timeout
+      - op: replace
+        path: /data/AI_REQUEST_TIMEOUT
+        value: "45"  # Match Ollama timeout
   
   # EKS-specific node selector (optional)
   - target:

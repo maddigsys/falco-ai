@@ -258,6 +258,8 @@ OLLAMA_TIMEOUT: "60"  # Increase for larger models
 AI_REQUEST_TIMEOUT: "45"  # Application-level timeout
 ```
 
+📖 **See [OLLAMA_TIMEOUT_GUIDE.md](OLLAMA_TIMEOUT_GUIDE.md) for comprehensive timeout configuration guide.**
+
 ## Best Practices
 
 1. **Start Small**: Begin with 7B models for testing

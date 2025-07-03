@@ -32,9 +32,10 @@ data:
   MAX_TOKENS: "500"
   TEMPERATURE: "0.7"
   AI_ENABLED: "true"
-  # Timeout configuration (optimized for ultra-fast tinyllama model)
-  OLLAMA_TIMEOUT: "30"  # seconds - tinyllama should respond in 3-10s on CPU
-  AI_REQUEST_TIMEOUT: "30"  # seconds - application-level timeout
+  # Timeout configuration (model-specific - adjust based on model size)
+  # tinyllama: 30s | phi3:mini: 45s | llama3.1:8b: 60s | cybersecurity models: 90s
+  OLLAMA_TIMEOUT: "30"  # seconds - application timeout for AI requests
+  AI_REQUEST_TIMEOUT: "30"  # seconds - overall request timeout
   
   # Slack Configuration
   SLACK_ENABLED: "true"

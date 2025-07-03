@@ -30,6 +30,13 @@ spec:
         env:
         - name: OLLAMA_HOST
           value: "0.0.0.0"
+        # Configurable timeout settings for different models
+        - name: OLLAMA_REQUEST_TIMEOUT
+          value: "30"  # Default for tinyllama (3-10s response)
+        - name: OLLAMA_KEEP_ALIVE
+          value: "5m"  # Keep model in memory for 5 minutes
+        - name: OLLAMA_NUM_PARALLEL
+          value: "1"   # Number of parallel requests (adjust based on resources)
         volumeMounts:
         - name: ollama-data
           mountPath: /root/.ollama

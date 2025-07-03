@@ -39,6 +39,7 @@ For cloud-specific deployments (EKS, GKE, AKS), see the **[Cloud Deployment Guid
 - **Note**: Slower inference (15-30s) but superior security analysis
 
 📖 **See [OLLAMA_MODELS.md](OLLAMA_MODELS.md) for detailed model selection and resource planning guide.**
+📖 **See [OLLAMA_TIMEOUT_GUIDE.md](OLLAMA_TIMEOUT_GUIDE.md) for configuring timeouts based on model size and environment.**
 
 ### Required Cluster Add-ons
 - **Metrics Server**: For HPA functionality

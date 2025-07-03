@@ -67,6 +67,12 @@ patches:
       - op: replace
         path: /data/OLLAMA_API_URL
         value: "http://prod-ollama:11434/api/generate"
+      - op: replace
+        path: /data/OLLAMA_TIMEOUT
+        value: "60"  # Production timeout for model upgrades (llama3.1:8b+)
+      - op: replace
+        path: /data/AI_REQUEST_TIMEOUT
+        value: "60"  # Allow longer inference for complex models
 
   # Keep larger storage for production Ollama (30Gi vs 15Gi base)
   - target:
@@ -76,6 +82,18 @@ patches:
       - op: replace
         path: /spec/resources/requests/storage
         value: "30Gi"
+  
+  # Production Ollama timeout configuration (for larger models)
+  - target:
+      kind: Deployment
+      name: ollama
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: "60"  # Extended timeout for production models
+      - op: replace
+        path: /spec/template/spec/containers/0/env/2/value
+        value: "10m"  # Keep larger models in memory longer
 
   # Fix Ollama service name in init job
   - target:
