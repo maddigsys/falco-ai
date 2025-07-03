@@ -808,6 +808,24 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card.clickable {
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(0, 174, 199, 0.05), rgba(0, 212, 170, 0.05));
+        }
+
+        .feature-card.clickable:active {
+            transform: translateY(-2px);
         }
 
         .feature-card h4 {
@@ -816,6 +834,26 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+
+        .feature-action {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .feature-card.clickable:hover .feature-action {
+            background: linear-gradient(135deg, #00D4AA 0%, #00AEC7 100%);
+            transform: scale(1.05);
         }
 
         /* Loading States */
@@ -1072,6 +1110,10 @@
                         <i class="fab fa-slack"></i>
                         Slack Config
                     </a>
+                    <a href="/chat" class="btn btn-primary" style="background: linear-gradient(135deg, #00D4AA 0%, #00AEC7 100%);">
+                        <i class="fas fa-comments"></i>
+                        AI Security Chat
+                    </a>
                     <button class="btn btn-primary" onclick="refreshDashboard()">
                         <i class="fas fa-sync"></i>
                         Refresh
@@ -1101,6 +1143,13 @@
                                 <div class="feature-card">
                                     <h4><i class="fas fa-shield-alt"></i> Real-time Monitoring</h4>
                                     <p>Monitor security events from Falco with AI-powered analysis and intelligent alerting.</p>
+                                </div>
+                                <div class="feature-card clickable" onclick="window.location.href='/chat'">
+                                    <h4><i class="fas fa-comments"></i> AI Security Chat</h4>
+                                    <p>Chat with AI about security alerts in real-time. Ask questions, get insights, and understand threats better.</p>
+                                    <div class="feature-action">
+                                        <i class="fas fa-arrow-right"></i> Start Chatting
+                                    </div>
                                 </div>
                                 <div class="feature-card">
                                     <h4><i class="fas fa-brain"></i> AI Analysis</h4>
