@@ -831,6 +831,16 @@
             document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || envDefaults.ollamaUrl;
             document.getElementById('ollamaModelName').value = config.ollama_model_name?.value || 'tinyllama';
             
+            // Load provider-specific model names
+            const provider = config.provider_name?.value || 'openai';
+            if (provider === 'openai') {
+                document.getElementById('openaiModelName').value = config.openai_model_name?.value || config.model_name?.value || 'gpt-3.5-turbo';
+            } else if (provider === 'gemini') {
+                document.getElementById('geminiModelName').value = config.gemini_model_name?.value || config.model_name?.value || 'gemini-pro';
+            } else if (provider === 'ollama') {
+                // Ollama model is already set above
+            }
+            
             // Load timeout configuration
             document.getElementById('ollamaTimeout').value = config.ollama_timeout?.value || '30';
             document.getElementById('ollamaKeepAlive').value = config.ollama_keep_alive?.value || '10';
@@ -950,10 +960,13 @@
                 ollama_parallel: document.getElementById('ollamaParallel').value,
                 max_tokens: document.getElementById('maxTokens').value,
                 temperature: document.getElementById('temperature').value,
-                system_prompt: document.getElementById('systemPrompt').value
+                system_prompt: document.getElementById('systemPrompt').value,
+                // Save provider-specific model names
+                openai_model_name: document.getElementById('openaiModelName').value,
+                gemini_model_name: document.getElementById('geminiModelName').value
             };
 
-            // Set model name based on provider
+            // Set model name based on current provider
             const provider = config.provider_name;
             if (provider === 'openai') {
                 config.model_name = document.getElementById('openaiModelName').value;

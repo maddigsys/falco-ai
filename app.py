@@ -144,6 +144,8 @@ def init_database():
         VALUES 
         ('provider_name', 'ollama', 'select', 'AI Provider (openai, gemini, ollama)'),
         ('model_name', 'tinyllama', 'string', 'Model Name'),
+        ('openai_model_name', 'gpt-3.5-turbo', 'string', 'OpenAI Model Name'),
+        ('gemini_model_name', 'gemini-pro', 'string', 'Gemini Model Name'),
         ('portkey_api_key', '', 'password', 'Portkey API Key (Security Layer for Cloud AI)'),
         ('openai_virtual_key', '', 'password', 'OpenAI Virtual Key (Portkey)'),
         ('gemini_virtual_key', '', 'password', 'Gemini Virtual Key (Portkey)'),
@@ -761,18 +763,62 @@ def index():
 
 @app.route('/api/alerts')
 def api_alerts():
-    """API endpoint to get alerts with filters."""
-    if not WEB_UI_ENABLED:
-        return jsonify({"error": "Web UI disabled"}), 404
+    """Return alerts as JSON for dashboard."""
+    try:
+        # Get filters from request args
+        filters = {
+            'time_range': request.args.get('time_range', 'all'),
+            'priority': request.args.get('priority', 'all'), 
+            'rule': request.args.get('rule', 'all'),
+            'status': request.args.get('status', 'all'),
+            'limit': request.args.get('limit', '100')
+        }
         
-    filters = {
-        'time_range': request.args.get('time_range', 'all'),
-        'priority': request.args.get('priority', 'all'),
-        'rule': request.args.get('rule', 'all')
-    }
-    
-    alerts = get_alerts(filters)
-    return jsonify(alerts)
+        alerts = get_alerts(filters)
+        return jsonify(alerts)
+    except Exception as e:
+        logging.error(f"Error fetching alerts: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/alerts/<uuid>')
+def api_get_alert(uuid):
+    """Get a specific alert by UUID."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Try to find alert by UUID in the output or rule name
+        cursor.execute('''
+            SELECT * FROM alerts 
+            WHERE output LIKE ? OR rule LIKE ?
+            ORDER BY timestamp DESC LIMIT 1
+        ''', (f'%{uuid}%', f'%{uuid}%'))
+        
+        alert = cursor.fetchone()
+        conn.close()
+        
+        if not alert:
+            return jsonify({"error": "Alert not found"}), 404
+        
+        # Convert to dictionary format
+        alert_dict = {
+            'id': alert[0],
+            'uuid': uuid,  # Include the requested UUID
+            'time': alert[1],
+            'rule': alert[2],
+            'priority': alert[3],
+            'output': alert[4],
+            'source': alert[5] or 'unknown',
+            'output_fields': json.loads(alert[6]) if alert[6] else {},
+            'ai_analysis': json.loads(alert[7]) if alert[7] else None,
+            'processed': bool(alert[8])
+        }
+        
+        return jsonify(alert_dict)
+        
+    except Exception as e:
+        logging.error(f"Error fetching alert {uuid}: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/stats')
 def api_stats():
@@ -1208,10 +1254,13 @@ def api_slack_channels():
 # --- AI Configuration Routes ---
 @app.route('/config/ai')
 def ai_config_ui():
-    """AI configuration page."""
-    if not WEB_UI_ENABLED:
-        return jsonify({"error": "Web UI disabled"}), 404
+    """Serve the AI configuration UI."""
     return render_template('ai_config.html', page='ai')
+
+@app.route('/chat')
+def chat_ui():
+    """Serve the AI Chat UI."""
+    return render_template('chat.html', page='chat')
 
 @app.route('/api/ai/config')
 def api_ai_config():
@@ -1233,10 +1282,10 @@ def api_update_ai_config():
         return jsonify({"error": "No data provided"}), 400
     
     try:
-        valid_settings = ['provider_name', 'model_name', 'portkey_api_key', 'openai_virtual_key', 
-                         'gemini_virtual_key', 'ollama_api_url', 'ollama_model_name',
-                         'ollama_timeout', 'ollama_keep_alive', 'ollama_parallel',
-                         'max_tokens', 'temperature', 'enabled', 'system_prompt']
+        valid_settings = ['provider_name', 'model_name', 'openai_model_name', 'gemini_model_name', 
+                         'portkey_api_key', 'openai_virtual_key', 'gemini_virtual_key', 'ollama_api_url', 
+                         'ollama_model_name', 'max_tokens', 'temperature', 'enabled', 'system_prompt', 
+                         'ollama_timeout', 'ollama_keep_alive', 'ollama_parallel']
         
         for setting_name, setting_value in data.items():
             if setting_name in valid_settings:
@@ -1332,6 +1381,143 @@ def api_generate_sample():
             'success': False,
             'error': f'Sample generation failed: {str(e)}'
         }), 500
+
+@app.route('/api/ai/chat', methods=['POST'])
+def api_ai_chat():
+    """Handle AI chat requests about specific alerts."""
+    try:
+        data = request.json or {}
+        message = data.get('message', '').strip()
+        alert = data.get('alert', {})
+        chat_history = data.get('chat_history', [])
+        
+        if not message:
+            return jsonify({"success": False, "error": "Message is required"}), 400
+        
+        if not alert:
+            return jsonify({"success": False, "error": "Alert context is required"}), 400
+        
+        # Get AI configuration
+        ai_config = get_ai_config()
+        
+        # Check if AI is enabled
+        if ai_config.get('enabled', {}).get('value') != 'true':
+            return jsonify({"success": False, "error": "AI analysis is disabled"}), 400
+        
+        provider_name = ai_config.get('provider_name', {}).get('value', 'openai').lower()
+        model_name = ai_config.get('model_name', {}).get('value')
+        max_tokens = int(ai_config.get('max_tokens', {}).get('value', '500'))
+        temperature = float(ai_config.get('temperature', {}).get('value', '0.7'))
+        
+        # Build context-aware prompt
+        system_prompt = f"""You are a cybersecurity expert assistant helping analyze Falco security alerts. 
+
+Current Alert Context:
+- Rule: {alert.get('rule', 'N/A')}
+- Priority: {alert.get('priority', 'N/A')}
+- Description: {alert.get('output', 'N/A')}
+- Time: {alert.get('time', 'N/A')}
+
+Additional Fields:
+{json.dumps(alert.get('output_fields', {}), indent=2)}
+
+Please provide helpful, accurate information about this security alert. Keep responses concise and actionable."""
+
+        # Build conversation history
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Add previous chat history
+        for hist in chat_history[-5:]:  # Last 5 exchanges
+            messages.append({"role": "user", "content": hist.get('user', '')})
+            messages.append({"role": "assistant", "content": hist.get('ai', '')})
+        
+        # Add current message
+        messages.append({"role": "user", "content": message})
+        
+        # Generate response based on provider
+        response_text = ""
+        
+        if provider_name == "openai":
+            portkey_api_key = ai_config.get('portkey_api_key', {}).get('value', '')
+            openai_virtual_key = ai_config.get('openai_virtual_key', {}).get('value', '')
+            
+            if not portkey_api_key or not openai_virtual_key:
+                return jsonify({"success": False, "error": "OpenAI configuration incomplete"}), 400
+            
+            from portkey_ai import Portkey
+            client = Portkey(api_key=portkey_api_key, virtual_key=openai_virtual_key)
+            
+            response = client.chat.completions.create(
+                model=model_name or "gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            
+            response_text = response.choices[0].message.content
+            
+        elif provider_name == "gemini":
+            portkey_api_key = ai_config.get('portkey_api_key', {}).get('value', '')
+            gemini_virtual_key = ai_config.get('gemini_virtual_key', {}).get('value', '')
+            
+            if not portkey_api_key or not gemini_virtual_key:
+                return jsonify({"success": False, "error": "Gemini configuration incomplete"}), 400
+            
+            from portkey_ai import Portkey
+            client = Portkey(api_key=portkey_api_key, virtual_key=gemini_virtual_key)
+            
+            response = client.chat.completions.create(
+                model=model_name or "gemini-pro",
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            
+            response_text = response.choices[0].message.content
+            
+        elif provider_name == "ollama":
+            ollama_api_url = ai_config.get('ollama_api_url', {}).get('value', 'http://ollama:11434/api/generate')
+            ollama_model_name = ai_config.get('ollama_model_name', {}).get('value', 'tinyllama')
+            ollama_timeout = int(ai_config.get('ollama_timeout', {}).get('value', '30'))
+            
+            # Convert messages to single prompt for Ollama
+            conversation = "\n\n".join([f"{msg['role']}: {msg['content']}" for msg in messages])
+            
+            ollama_payload = {
+                "model": ollama_model_name,
+                "prompt": conversation,
+                "stream": False,
+                "options": {
+                    "num_predict": max_tokens,
+                    "temperature": temperature
+                }
+            }
+            
+            response = requests.post(ollama_api_url, json=ollama_payload, timeout=ollama_timeout)
+            response.raise_for_status()
+            
+            response_data = response.json()
+            response_text = response_data.get('response', '')
+            
+        else:
+            return jsonify({"success": False, "error": f"Unsupported provider: {provider_name}"}), 400
+        
+        if not response_text:
+            return jsonify({"success": False, "error": "Empty response from AI"}), 400
+        
+        return jsonify({
+            "success": True,
+            "response": response_text,
+            "provider": provider_name,
+            "model": model_name
+        })
+        
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Network error in AI chat: {e}")
+        return jsonify({"success": False, "error": f"Network error: {e}"}), 500
+    except Exception as e:
+        logging.error(f"Error in AI chat: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/ollama/models')
 def api_ollama_models():
