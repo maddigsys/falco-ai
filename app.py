@@ -143,12 +143,15 @@ def init_database():
         INSERT OR IGNORE INTO ai_config (setting_name, setting_value, setting_type, description)
         VALUES 
         ('provider_name', 'ollama', 'select', 'AI Provider (openai, gemini, ollama)'),
-        ('model_name', 'jimscard/whiterabbit-neo:latest', 'string', 'Model Name'),
+        ('model_name', 'tinyllama', 'string', 'Model Name'),
         ('portkey_api_key', '', 'password', 'Portkey API Key (Security Layer for Cloud AI)'),
         ('openai_virtual_key', '', 'password', 'OpenAI Virtual Key (Portkey)'),
         ('gemini_virtual_key', '', 'password', 'Gemini Virtual Key (Portkey)'),
-        ('ollama_api_url', 'http://ollama:11434/api/generate', 'string', 'Ollama API URL'),
-        ('ollama_model_name', 'jimscard/whiterabbit-neo:latest', 'string', 'Ollama Model Name'),
+        ('ollama_api_url', 'http://prod-ollama:11434/api/generate', 'string', 'Ollama API URL'),
+        ('ollama_model_name', 'tinyllama', 'string', 'Ollama Model Name'),
+        ('ollama_timeout', '30', 'number', 'Ollama Request Timeout (seconds)'),
+        ('ollama_keep_alive', '10', 'number', 'Ollama Keep Alive (minutes)'),
+        ('ollama_parallel', '1', 'number', 'Ollama Parallel Requests'),
         ('max_tokens', '500', 'number', 'Maximum Response Tokens'),
         ('temperature', '0.7', 'number', 'Response Temperature (0.0-1.0)'),
         ('enabled', 'true', 'boolean', 'Enable AI Analysis'),
@@ -484,8 +487,8 @@ Command: {alert_payload.get('output_fields', {}).get('proc.cmdline', 'N/A')}"""
                 }
             }
 
-            # Get configurable timeout (default 90s for 13B models)
-            ollama_timeout = int(os.environ.get("OLLAMA_TIMEOUT", "90"))
+            # Get configurable timeout from database configuration
+            ollama_timeout = int(ai_config.get('ollama_timeout', {}).get('value', '30'))
             response = requests.post(ollama_api_url, json=ollama_payload, timeout=ollama_timeout)
             response.raise_for_status()
             
@@ -1231,7 +1234,8 @@ def api_update_ai_config():
     
     try:
         valid_settings = ['provider_name', 'model_name', 'portkey_api_key', 'openai_virtual_key', 
-                         'gemini_virtual_key', 'ollama_api_url', 'ollama_model_name', 
+                         'gemini_virtual_key', 'ollama_api_url', 'ollama_model_name',
+                         'ollama_timeout', 'ollama_keep_alive', 'ollama_parallel',
                          'max_tokens', 'temperature', 'enabled', 'system_prompt']
         
         for setting_name, setting_value in data.items():
@@ -1792,8 +1796,8 @@ def test_ai_connection(provider_name, config_data):
                     }
                 }
                 
-                # Get configurable timeout (default 90s for 13B models)
-                ollama_timeout = int(os.environ.get("OLLAMA_TIMEOUT", "90"))
+                # Get configurable timeout from provided config
+                ollama_timeout = int(config_data.get('ollama_timeout', '30'))
                 response = requests.post(ollama_api_url, json=ollama_payload, timeout=ollama_timeout)
                 response.raise_for_status()
                 

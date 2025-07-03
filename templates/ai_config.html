@@ -448,7 +448,7 @@
                             <i class="fas fa-link"></i>
                             Ollama API URL *
                         </label>
-                        <input type="text" class="form-control" id="ollamaApiUrl" value="http://ollama:11434/api/generate">
+                        <input type="text" class="form-control" id="ollamaApiUrl" value="http://prod-ollama:11434/api/generate">
                         <div class="form-text">
                             <i class="fas fa-info-circle"></i>
                             Local Ollama server endpoint
@@ -461,10 +461,69 @@
                             <i class="fas fa-robot"></i>
                             Model Name
                         </label>
-                        <input type="text" class="form-control" id="ollamaModelName" value="jimscard/whiterabbit-neo:latest">
+                        <input type="text" class="form-control" id="ollamaModelName" value="tinyllama">
                         <div class="form-text">
                             <i class="fas fa-info-circle"></i>
                             Selected model name
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeout Configuration -->
+            <div class="row" style="margin-top: 1rem;">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="ollamaTimeout" class="form-label">
+                            <i class="fas fa-clock"></i>
+                            Request Timeout (seconds)
+                        </label>
+                        <select class="form-control" id="ollamaTimeout">
+                            <option value="30">30s - tinyllama (ultra-fast)</option>
+                            <option value="45">45s - phi3:mini (balanced)</option>
+                            <option value="60">60s - llama3.1:8b (production)</option>
+                            <option value="90">90s - cybersecurity models</option>
+                            <option value="120">120s - large models</option>
+                            <option value="300">300s - enterprise models</option>
+                        </select>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Timeout based on model size
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="ollamaKeepAlive" class="form-label">
+                            <i class="fas fa-memory"></i>
+                            Keep Alive (minutes)
+                        </label>
+                        <select class="form-control" id="ollamaKeepAlive">
+                            <option value="5">5 min - Development</option>
+                            <option value="10">10 min - Production</option>
+                            <option value="15">15 min - High Performance</option>
+                            <option value="30">30 min - Enterprise</option>
+                        </select>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            How long to keep model in memory
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="ollamaParallel" class="form-label">
+                            <i class="fas fa-stream"></i>
+                            Parallel Requests
+                        </label>
+                        <select class="form-control" id="ollamaParallel">
+                            <option value="1">1 - Single (recommended)</option>
+                            <option value="2">2 - Dual (high-memory)</option>
+                            <option value="3">3 - Triple (enterprise)</option>
+                        </select>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i>
+                            Concurrent requests (requires more memory)
                         </div>
                     </div>
                 </div>
@@ -629,8 +688,13 @@
             document.getElementById('geminiVirtualKey').value = config.gemini_virtual_key?.value || '';
             document.getElementById('geminiModelName').value = config.model_name?.value || 'gemini-pro';
             
-            document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || 'http://ollama:11434/api/generate';
-            document.getElementById('ollamaModelName').value = config.ollama_model_name?.value || 'jimscard/whiterabbit-neo:latest';
+            document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || 'http://prod-ollama:11434/api/generate';
+            document.getElementById('ollamaModelName').value = config.ollama_model_name?.value || 'tinyllama';
+            
+            // Load timeout configuration
+            document.getElementById('ollamaTimeout').value = config.ollama_timeout?.value || '30';
+            document.getElementById('ollamaKeepAlive').value = config.ollama_keep_alive?.value || '10';
+            document.getElementById('ollamaParallel').value = config.ollama_parallel?.value || '1';
             
             document.getElementById('maxTokens').value = config.max_tokens?.value || '500';
             document.getElementById('temperature').value = config.temperature?.value || '0.7';
@@ -741,6 +805,9 @@
                 gemini_virtual_key: document.getElementById('geminiVirtualKey').value,
                 ollama_api_url: document.getElementById('ollamaApiUrl').value,
                 ollama_model_name: document.getElementById('ollamaModelName').value,
+                ollama_timeout: document.getElementById('ollamaTimeout').value,
+                ollama_keep_alive: document.getElementById('ollamaKeepAlive').value,
+                ollama_parallel: document.getElementById('ollamaParallel').value,
                 max_tokens: document.getElementById('maxTokens').value,
                 temperature: document.getElementById('temperature').value,
                 system_prompt: document.getElementById('systemPrompt').value
@@ -804,7 +871,10 @@
                 openai_virtual_key: document.getElementById('openaiVirtualKey').value,
                 gemini_virtual_key: document.getElementById('geminiVirtualKey').value,
                 ollama_api_url: document.getElementById('ollamaApiUrl').value,
-                ollama_model_name: document.getElementById('ollamaModelName').value
+                ollama_model_name: document.getElementById('ollamaModelName').value,
+                ollama_timeout: document.getElementById('ollamaTimeout').value,
+                ollama_keep_alive: document.getElementById('ollamaKeepAlive').value,
+                ollama_parallel: document.getElementById('ollamaParallel').value
             };
 
             if (provider === 'openai') {
