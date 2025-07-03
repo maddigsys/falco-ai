@@ -14,6 +14,8 @@ This guide provides comprehensive instructions for deploying the Falco AI Alert 
 ### ☁️ **Cloud Deployment**
 For cloud-specific deployments (EKS, GKE, AKS), see the **[Cloud Deployment Guide](CLOUD_DEPLOYMENT_GUIDE.md)** for platform-specific constraints and solutions.
 
+> **⚠️ CRITICAL**: Cloud deployments require minimum **8GB RAM nodes** and **SSD storage classes**. Standard/small nodes will cause deployment failures.
+
 ### 🔧 **Resource Requirements**
 
 #### **Development Environment** (Single-node testing)

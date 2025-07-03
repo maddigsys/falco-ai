@@ -206,30 +206,68 @@ az aks nodepool add \
 
 ## 📊 **Resource Planning by Cloud Provider**
 
+### **⚠️ CRITICAL: Minimum Resource Requirements**
+
+**For AI Model Inference (Ollama):**
+- **Memory**: 6-8GB RAM (tinyllama) to 16GB+ (cybersecurity models)
+- **CPU**: 2+ cores (4+ recommended for production)
+- **Storage**: 15-30GB SSD (fast I/O required for model loading)
+
+**Node types below these specifications will result in deployment failures.**
+
 ### **Recommended Node Configurations**
 
 #### **AWS EKS**
-| Use Case | Instance Type | vCPU | RAM | Storage | Cost/Month* |
-|----------|---------------|------|-----|---------|-------------|
-| Development | t3.large | 2 | 8GB | 50GB | ~$60 |
-| Production | t3.xlarge | 4 | 16GB | 100GB | ~$120 |
-| AI-Optimized | c5.2xlarge | 8 | 16GB | 100GB | ~$250 |
+| Use Case | Instance Type | vCPU | RAM | Storage | Cost/Month* | AI Model Support |
+|----------|---------------|------|-----|---------|-------------|------------------|
+| Development | t3.large | 2 | 8GB | 50GB | ~$60 | ✅ tinyllama only |
+| Production | t3.xlarge | 4 | 16GB | 100GB | ~$120 | ✅ All models |
+| AI-Optimized | c5.2xlarge | 8 | 16GB | 100GB | ~$250 | ✅ All + fast inference |
 
 #### **Google GKE**
-| Use Case | Machine Type | vCPU | RAM | Storage | Cost/Month* |
-|----------|--------------|------|-----|---------|-------------|
-| Development | n1-standard-2 | 2 | 7.5GB | 50GB | ~$55 |
-| Production | n1-standard-4 | 4 | 15GB | 100GB | ~$110 |
-| AI-Optimized | n1-highmem-4 | 4 | 26GB | 100GB | ~$160 |
+| Use Case | Machine Type | vCPU | RAM | Storage | Cost/Month* | AI Model Support |
+|----------|--------------|------|-----|---------|-------------|------------------|
+| Development | n1-standard-2 | 2 | 7.5GB | 50GB | ~$55 | ⚠️ Insufficient RAM |
+| Production | n1-standard-4 | 4 | 15GB | 100GB | ~$110 | ✅ All models |
+| AI-Optimized | n1-highmem-4 | 4 | 26GB | 100GB | ~$160 | ✅ All + fast inference |
 
 #### **Azure AKS**
-| Use Case | VM Size | vCPU | RAM | Storage | Cost/Month* |
-|----------|---------|------|-----|---------|-------------|
-| Development | Standard_D2s_v3 | 2 | 8GB | 50GB | ~$65 |
-| Production | Standard_D4s_v3 | 4 | 16GB | 100GB | ~$130 |
-| AI-Optimized | Standard_D4s_v4 | 4 | 16GB | 100GB | ~$125 |
+| Use Case | VM Size | vCPU | RAM | Storage | Cost/Month* | AI Model Support |
+|----------|---------|------|-----|---------|-------------|------------------|
+| Development | Standard_D2s_v3 | 2 | 8GB | 50GB | ~$65 | ✅ tinyllama only |
+| Production | Standard_D4s_v3 | 4 | 16GB | 100GB | ~$130 | ✅ All models |
+| AI-Optimized | Standard_D4s_v4 | 4 | 16GB | 100GB | ~$125 | ✅ All + fast inference |
 
 *Approximate costs in US regions, subject to change*
+
+### **🚨 Resource Validation Before Deployment**
+
+**Always validate your cluster resources before deployment:**
+
+```bash
+# Check available cluster resources
+kubectl top nodes
+kubectl describe nodes | grep -A5 "Allocated resources"
+
+# Verify storage classes
+kubectl get storageclass
+```
+
+**Signs of Insufficient Resources:**
+- ❌ **Pods stuck in Pending**: `kubectl get pods -n falco-ai-alerts`
+- ❌ **OOMKilled events**: `kubectl get events --sort-by='.lastTimestamp'`
+- ❌ **Model download timeouts**: Check init container logs
+- ❌ **Slow AI inference** (>60s): Indicates CPU starvation
+
+**Resource Failure Recovery:**
+```bash
+# Scale up node groups (platform-specific)
+# AWS EKS
+eksctl scale nodegroup --cluster=<name> --name=<nodegroup> --nodes=<count>
+
+# Upgrade node types
+eksctl create nodegroup --cluster=<name> --node-type=t3.xlarge
+```
 
 ---
 
