@@ -15,10 +15,10 @@ if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
         echo "❌ No models downloaded yet"
         echo ""
         echo "🔄 To download the default model, run:"
-        echo "curl -X POST http://localhost:11434/api/pull -H 'Content-Type: application/json' -d '{\"name\": \"jimscard/whiterabbit-neo:latest\"}'"
+        echo "curl -X POST http://localhost:11434/api/pull -H 'Content-Type: application/json' -d '{\"name\": \"tinyllama\"}'"
         echo ""
-        echo "📊 Or use a smaller model for testing:"
-        echo "curl -X POST http://localhost:11434/api/pull -H 'Content-Type: application/json' -d '{\"name\": \"llama3\"}'"
+        echo "🔒 Or use cybersecurity model for advanced analysis:"
+        echo "curl -X POST http://localhost:11434/api/pull -H 'Content-Type: application/json' -d '{\"name\": \"jimscard/whiterabbit-neo:latest\"}'"
     else
         echo "✅ Downloaded models:"
         echo "$MODELS" | while read -r model; do

@@ -128,7 +128,7 @@ patches:
             --max-time 60
           
           echo "Model initialization and warm-up complete!"
-          echo "NOTE: For better analysis, consider upgrading to phi3:mini, llama3.1:8b or jimscard/whiterabbit-neo:latest"
+          echo "NOTE: For better analysis, consider upgrading to phi3:mini or jimscard/whiterabbit-neo:latest"
           echo "      via the AI Configuration dashboard after deployment."
 
 images:

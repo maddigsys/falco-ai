@@ -228,7 +228,7 @@ SAFETY FEATURES:
     - Graceful shutdown before deletion
     - Verification of cleanup completion
     - Backs up Ollama models and database
-    - Handles llama3.1:8b model cleanup properly
+    - Handles tinyllama model cleanup properly
 
 EOF
 }
@@ -295,7 +295,7 @@ main() {
     # Show current cluster info
     print_info "Current cluster context: $(kubectl config current-context)"
     print_info "Cleanup environment: $ENVIRONMENT"
-    print_info "Will clean up: Falco AI Alerts + Ollama (llama3.1:8b) + model data"
+    print_info "Will clean up: Falco AI Alerts + Ollama (tinyllama) + model data"
     
     # Safety confirmation
     if [ "$FORCE" != "true" ]; then

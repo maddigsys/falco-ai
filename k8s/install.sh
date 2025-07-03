@@ -341,7 +341,7 @@ install_environment() {
         print_info "Skipping Ollama progress monitoring (--skip-wait enabled)"
         print_info "Model download started. Check progress with: kubectl logs job/$job_name -n $namespace -f"
     else
-        print_info "Downloading llama3.1:8b model (~4.9GB, optimized for reliability)..."
+        print_info "Downloading tinyllama model (~637MB, optimized for speed)..."
         monitor_ollama_progress "$job_name" "$namespace"
     fi
     
@@ -411,7 +411,7 @@ show_access_instructions() {
         echo "  • Network policies for enhanced security"
         echo "  • Resource limits and Prometheus monitoring"
         echo "  • Ingress support for external access"
-        echo "  • Optimized for llama3.1:8b model (30s response time)"
+        echo "  • Optimized for tinyllama model (3-10s response time)"
         echo "  • Optional cybersecurity model upgrade available"
     fi
 }
@@ -455,7 +455,7 @@ show_post_install() {
         echo "   • Consider setting up external AI providers for redundancy"
         echo ""
         print_info "5. 🛡️ Cybersecurity Model Upgrade:"
-        echo "   • Default: llama3.1:8b (reliable, fast, 8GB RAM)"
+        echo "   • Default: tinyllama (ultra-fast, minimal RAM)"
         echo "   • Upgrade: jimscard/whiterabbit-neo:latest (specialized, 16GB RAM)"
         echo "   • Upgrade via: http://localhost:8080/config/ai"
         echo "   • See k8s/OLLAMA_MODELS.md for detailed upgrade instructions"
@@ -466,7 +466,7 @@ show_post_install() {
 monitor_ollama_progress() {
     local job_name=$1
     local namespace=$2
-    local timeout=600  # 10 minutes timeout (optimized for 8B model downloads)
+    local timeout=300  # 5 minutes timeout (optimized for tinyllama downloads)
     local start_time=$(date +%s)
     local last_percentage=0
     local download_complete=false
@@ -686,7 +686,7 @@ EXAMPLES:
      - ✅ Clean webhook URLs (dedicated service on port 80)
      - ✅ Comprehensive dashboard with Falco integration setup
      - ✅ Access instructions and post-installation guidance
-     - ✅ Default llama3.1:8b model (fast, reliable, 8GB RAM)
+     - ✅ Default tinyllama model (ultra-fast, minimal RAM)
      - ✅ Optional cybersecurity model upgrade (jimscard/whiterabbit-neo)
 
 REQUIREMENTS:
@@ -782,11 +782,11 @@ main() {
     if [ "$ENVIRONMENT" = "development" ]; then
         print_info "Namespace: falco-ai-alerts-dev"
         print_info "Features: Single replica, NodePort access, debug logging"
-        print_info "AI Model: llama3.1:8b (default, 8GB RAM, fast inference)"
+        print_info "AI Model: tinyllama (default, minimal RAM, ultra-fast inference)"
     else
         print_info "Namespace: falco-ai-alerts"
         print_info "Features: 3 replicas, HPA auto-scaling, security hardening"
-        print_info "AI Model: llama3.1:8b (default, 8GB RAM, fast inference)"
+        print_info "AI Model: tinyllama (default, minimal RAM, ultra-fast inference)"
         print_info "Upgrade: jimscard/whiterabbit-neo available for enhanced security"
     fi
     echo ""

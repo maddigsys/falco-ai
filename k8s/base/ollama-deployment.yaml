@@ -43,7 +43,8 @@ spec:
         resources:
           # Resource requirements based on model size:
           # - 7B models (llama3.1:7b, mistral:7b): 6-8GB RAM
-          # - 13B models (jimscard/whiterabbit-neo:latest): 14-16GB RAM (recommended for cybersecurity)
+          # - tinyllama: 1-2GB RAM (ultra-fast, minimal requirements - default)
+# - 13B models (jimscard/whiterabbit-neo:latest): 14-16GB RAM (recommended for cybersecurity)
           # - 30B+ models: 20GB+ RAM
           # Current default is optimized for 7B models for reliability and speed
           requests:
