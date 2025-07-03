@@ -36,8 +36,17 @@ patches:
       - op: add
         path: /spec/ports/0/nodePort
         value: 30080
+
+  # Make webhook service also NodePort for development
+  - target:
+      kind: Service
+      name: falco-ai-alerts-webhook
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: NodePort
       - op: add
-        path: /spec/ports/1/nodePort
+        path: /spec/ports/0/nodePort
         value: 30081
 
   # Reduce resource requests for development
