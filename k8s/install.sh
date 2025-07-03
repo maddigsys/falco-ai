@@ -685,6 +685,9 @@ EXAMPLES:
      - ✅ Real-time Ollama model download progress
      - ✅ Clean webhook URLs (dedicated service on port 80)
      - ✅ Comprehensive dashboard with Falco integration setup
+     - ✅ AI Security Chat - Interactive chat with alerts using AI
+     - ✅ Provider-specific model filtering (OpenAI, Gemini, Ollama)
+     - ✅ Configurable timeout settings for all AI providers
      - ✅ Access instructions and post-installation guidance
      - ✅ Default tinyllama model (ultra-fast, minimal RAM)
      - ✅ Optional cybersecurity model upgrade (jimscard/whiterabbit-neo)

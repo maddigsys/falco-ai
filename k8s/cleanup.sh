@@ -229,6 +229,9 @@ SAFETY FEATURES:
     - Verification of cleanup completion
     - Backs up Ollama models and database
     - Handles tinyllama model cleanup properly
+    - Preserves AI Security Chat history in backups
+    - Backs up provider-specific model configurations (OpenAI, Gemini, Ollama)
+    - Saves timeout configuration settings
 
 EOF
 }
