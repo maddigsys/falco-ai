@@ -217,6 +217,32 @@
 {% endblock %}
 
 {% block content %}
+<!-- Sticky Action Bar -->
+<div class="sticky-action-bar">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="action-buttons">
+            <button class="btn btn-primary btn-lg" onclick="saveConfig()">
+                <i class="fas fa-save"></i>
+                Save All Changes
+            </button>
+            <button class="btn btn-success" onclick="testConnection()">
+                <i class="fas fa-check-circle"></i>
+                Test Connection
+            </button>
+            <button class="btn btn-secondary" onclick="generateSample()">
+                <i class="fas fa-magic"></i>
+                Generate Sample
+            </button>
+        </div>
+        <div class="save-status" id="saveStatus">
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i>
+                Remember to save your changes
+            </small>
+        </div>
+    </div>
+</div>
+
 <!-- Connection Status -->
 <div id="connectionStatus"></div>
 
@@ -648,6 +674,63 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+.sticky-action-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--bg-primary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sticky-action-bar .btn {
+    margin-right: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sticky-action-bar .btn-lg {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.save-status {
+    font-style: italic;
+}
+
+.config-card .action-area {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    background: var(--bg-light);
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    margin-bottom: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.section-save-btn {
+    float: right;
+    margin-top: 1rem;
+}
+
+/* Update save status based on changes */
+.save-needed {
+    color: var(--warning-color) !important;
+}
+
+.save-complete {
+    color: var(--success-color) !important;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
     // Set the current page for sidebar navigation
@@ -655,12 +738,67 @@
     
     let currentConfig = {};
     let downloadCheckInterval = null;
+    let hasUnsavedChanges = false;
 
     document.addEventListener('DOMContentLoaded', function() {
         loadConfig();
         loadModels();
         updateStatus();
+        
+        // Add change detection
+        setupChangeDetection();
     });
+    
+    function setupChangeDetection() {
+        // Add change listeners to all form inputs
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', markUnsavedChanges);
+            input.addEventListener('input', markUnsavedChanges);
+        });
+    }
+    
+    function markUnsavedChanges() {
+        hasUnsavedChanges = true;
+        updateSaveStatus('unsaved');
+    }
+    
+    function markSaved() {
+        hasUnsavedChanges = false;
+        updateSaveStatus('saved');
+    }
+    
+    function updateSaveStatus(status) {
+        const saveStatus = document.getElementById('saveStatus');
+        if (status === 'unsaved') {
+            saveStatus.innerHTML = '<small class="text-warning save-needed"><i class="fas fa-exclamation-triangle"></i> You have unsaved changes</small>';
+        } else if (status === 'saved') {
+            saveStatus.innerHTML = '<small class="text-success save-complete"><i class="fas fa-check"></i> All changes saved</small>';
+            setTimeout(() => {
+                if (!hasUnsavedChanges) {
+                    saveStatus.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle"></i> Remember to save your changes</small>';
+                }
+            }, 3000);
+        }
+    }
+    
+    function getEnvironmentDefaults() {
+        // Detect environment from URL or other indicators
+        const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
+        
+        // Check for development indicators
+        const isDev = hostname.includes('localhost') || 
+                     hostname.includes('127.0.0.1') || 
+                     hostname.includes('dev') ||
+                     pathname.includes('/dev/') ||
+                     document.body.classList.contains('development');
+        
+        return {
+            ollamaUrl: isDev ? 'http://dev-ollama:11434/api/generate' : 'http://prod-ollama:11434/api/generate',
+            environment: isDev ? 'development' : 'production'
+        };
+    }
 
     async function loadConfig() {
         try {
@@ -688,7 +826,9 @@
             document.getElementById('geminiVirtualKey').value = config.gemini_virtual_key?.value || '';
             document.getElementById('geminiModelName').value = config.model_name?.value || 'gemini-pro';
             
-            document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || 'http://prod-ollama:11434/api/generate';
+            // Use environment-specific defaults
+            const envDefaults = getEnvironmentDefaults();
+            document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || envDefaults.ollamaUrl;
             document.getElementById('ollamaModelName').value = config.ollama_model_name?.value || 'tinyllama';
             
             // Load timeout configuration
@@ -849,13 +989,19 @@
             
             showAlert('success', '✅ AI configuration saved successfully!');
             updateStatus();
+            markSaved();
             
         } catch (error) {
             console.error('Error saving config:', error);
             showAlert('danger', 'Failed to save configuration: ' + error.message);
         } finally {
             setLoading(saveBtn, false);
-            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Configuration';
+            // Update all save buttons
+            document.querySelectorAll('[onclick*="saveConfig"]').forEach(btn => {
+                btn.innerHTML = btn.innerHTML.includes('Save All') ? 
+                    '<i class="fas fa-save"></i> Save All Changes' : 
+                    '<i class="fas fa-save"></i> Save Configuration';
+            });
         }
     }
 

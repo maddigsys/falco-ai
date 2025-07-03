@@ -6,6 +6,36 @@
 {% block page_description %}Configure core system settings, alert processing, and data management{% endblock %}
 
 {% block content %}
+<!-- Sticky Action Bar -->
+<div class="sticky-action-bar">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="action-buttons">
+            <button class="btn btn-primary btn-lg" onclick="saveConfiguration()">
+                <i class="fas fa-save"></i>
+                Save All Changes
+            </button>
+            <button class="btn btn-success" onclick="testConfiguration()">
+                <i class="fas fa-check-circle"></i>
+                Test Configuration
+            </button>
+            <button class="btn btn-warning" onclick="resetConfiguration()">
+                <i class="fas fa-undo"></i>
+                Reset to Defaults
+            </button>
+            <button class="btn btn-secondary" onclick="exportConfiguration()">
+                <i class="fas fa-download"></i>
+                Export Settings
+            </button>
+        </div>
+        <div class="save-status" id="saveStatus">
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i>
+                Remember to save your changes
+            </small>
+        </div>
+    </div>
+</div>
+
 <!-- Configuration Summary Card -->
 <div class="config-card">
     <div class="config-card-header">
@@ -246,16 +276,102 @@
 <div id="status-alert" class="status-alert"></div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+.sticky-action-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--bg-primary);
+    border-bottom: 2px solid var(--border-color);
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sticky-action-bar .btn {
+    margin-right: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sticky-action-bar .btn-lg {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.save-status {
+    font-style: italic;
+}
+
+.config-card .action-area {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    background: var(--bg-light);
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    margin-bottom: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.save-needed {
+    color: var(--warning-color) !important;
+}
+
+.save-complete {
+    color: var(--success-color) !important;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
     // Set the current page for sidebar navigation
     window.page = 'general';
+    let hasUnsavedChanges = false;
     
     // Load configuration on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadConfiguration();
         loadConfigurationSummary();
+        setupChangeDetection();
     });
+    
+    function setupChangeDetection() {
+        // Add change listeners to all form inputs
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', markUnsavedChanges);
+            input.addEventListener('input', markUnsavedChanges);
+        });
+    }
+    
+    function markUnsavedChanges() {
+        hasUnsavedChanges = true;
+        updateSaveStatus('unsaved');
+    }
+    
+    function markSaved() {
+        hasUnsavedChanges = false;
+        updateSaveStatus('saved');
+    }
+    
+    function updateSaveStatus(status) {
+        const saveStatus = document.getElementById('saveStatus');
+        if (status === 'unsaved') {
+            saveStatus.innerHTML = '<small class="text-warning save-needed"><i class="fas fa-exclamation-triangle"></i> You have unsaved changes</small>';
+        } else if (status === 'saved') {
+            saveStatus.innerHTML = '<small class="text-success save-complete"><i class="fas fa-check"></i> All changes saved</small>';
+            setTimeout(() => {
+                if (!hasUnsavedChanges) {
+                    saveStatus.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle"></i> Remember to save your changes</small>';
+                }
+            }, 3000);
+        }
+    }
 
     async function loadConfiguration() {
         try {
@@ -319,13 +435,19 @@
             
             showAlert('success', '✅ Configuration saved successfully!');
             loadConfigurationSummary();
+            markSaved();
             
         } catch (error) {
             console.error('Error saving configuration:', error);
             showAlert('danger', 'Failed to save configuration: ' + error.message);
         } finally {
             setLoading(saveBtn, false);
-            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Configuration';
+            // Update all save buttons
+            document.querySelectorAll('[onclick*="saveConfiguration"]').forEach(btn => {
+                btn.innerHTML = btn.innerHTML.includes('Save All') ? 
+                    '<i class="fas fa-save"></i> Save All Changes' : 
+                    '<i class="fas fa-save"></i> Save Configuration';
+            });
         }
     }
 
