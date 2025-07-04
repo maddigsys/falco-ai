@@ -7,6 +7,377 @@
 
 
 
+{% block extra_css %}
+<style>
+    /* Define additional color variables */
+    :root {
+        --primary-10: rgba(0, 174, 199, 0.1);
+        --success-10: rgba(0, 212, 170, 0.1);
+        --warning-10: rgba(255, 167, 38, 0.1);
+        --danger-10: rgba(239, 83, 80, 0.1);
+        --info-10: rgba(66, 153, 225, 0.1);
+        --success-color: #00D4AA;
+        --warning-color: #FFA726;
+        --danger-color: #EF5350;
+        --info-color: #4299E1;
+    }
+
+    /* Provider Tabs Styling */
+    .provider-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0.5rem;
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .provider-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        color: var(--text-light);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .provider-tab:hover {
+        background: var(--primary-10);
+        color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+
+    .provider-tab.active {
+        background: var(--primary-color);
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .provider-tab i {
+        font-size: 1.1rem;
+    }
+
+    /* Provider Config Sections */
+    .provider-config {
+        display: none;
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: var(--bg-light);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .provider-config.active {
+        display: block;
+    }
+
+    .config-info {
+        background: var(--primary-10);
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .config-info strong {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Model Suggestion Chips */
+    .model-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .model-chip {
+        background: white;
+        border: 1px solid var(--border-color);
+        color: var(--text-dark);
+        padding: 0.375rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .model-chip:hover {
+        background: var(--primary-10);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .model-chip.downloaded {
+        background: var(--success-10);
+        border-color: var(--success-color);
+        color: var(--success-color);
+    }
+
+    .model-chip.downloaded:before {
+        content: "✓";
+        font-weight: bold;
+    }
+
+    /* Progress Container */
+    .progress-container {
+        display: none;
+        margin-top: 1rem;
+        background: var(--bg-light);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .progress-bar {
+        height: 2rem;
+        background: var(--primary-gradient);
+        color: white;
+        text-align: center;
+        line-height: 2rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Model Status */
+    .model-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: var(--bg-light);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .status-text {
+        flex: 1;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .status-text.downloaded {
+        color: var(--success-color);
+    }
+
+    .status-text.downloading {
+        color: var(--warning-color);
+    }
+
+    .status-text.not-available {
+        color: var(--danger-color);
+    }
+
+    /* Connection Status */
+    .connection-status {
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .connection-status.success {
+        background: var(--success-10);
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+    }
+
+    .connection-status.error {
+        background: var(--danger-10);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .connection-status.warning {
+        background: var(--warning-10);
+        color: var(--warning-color);
+        border: 1px solid var(--warning-color);
+    }
+
+    /* Response Preview */
+    .response-preview {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        min-height: 200px;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        max-height: 400px;
+        overflow-y: auto;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .preview-header {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Portkey Info */
+    .portkey-info {
+        background: var(--info-10);
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        border-left: 4px solid var(--info-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .portkey-info strong {
+        color: var(--info-color);
+        font-weight: 600;
+    }
+
+    /* Save Status */
+    .save-needed {
+        animation: pulse 2s infinite;
+    }
+
+    .save-complete {
+        color: var(--success-color) !important;
+    }
+
+    /* Collapsible Sections */
+    .config-card.collapsed .config-card-body {
+        display: none;
+    }
+
+    .collapsible-header {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .collapsible-header:hover {
+        background: var(--bg-light);
+    }
+
+    .collapse-icon {
+        transition: transform 0.3s ease;
+        margin-left: auto;
+    }
+
+    .config-card.collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+
+    /* Button Styling Improvements */
+    .btn.btn-outline {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn.btn-outline:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Sticky Action Bar */
+    .sticky-action-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 1.5rem 1.5rem 0;
+        padding: 1.5rem 2rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .save-status {
+        white-space: nowrap;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .provider-tabs {
+            flex-direction: column;
+        }
+
+        .provider-tab {
+            text-align: center;
+        }
+
+        .model-suggestions {
+            justify-content: center;
+        }
+
+        .sticky-action-bar {
+            position: relative;
+            margin: 0.5rem;
+            padding: 1rem;
+        }
+
+        .sticky-action-bar .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Sticky Action Bar -->
 <div class="sticky-action-bar">
@@ -295,7 +666,7 @@
                             <i class="fas fa-clock"></i>
                             Request Timeout (seconds)
                         </label>
-                        <select class="form-control" id="ollamaTimeout">
+                        <select class="form-select" id="ollamaTimeout">
                             <option value="30">30s - tinyllama (ultra-fast)</option>
                             <option value="45">45s - phi3:mini (balanced)</option>
                             <option value="60">60s - llama3.1:8b (production)</option>
@@ -315,7 +686,7 @@
                             <i class="fas fa-memory"></i>
                             Keep Alive (minutes)
                         </label>
-                        <select class="form-control" id="ollamaKeepAlive">
+                        <select class="form-select" id="ollamaKeepAlive">
                             <option value="5">5 min - Development</option>
                             <option value="10">10 min - Production</option>
                             <option value="15">15 min - High Performance</option>
@@ -333,7 +704,7 @@
                             <i class="fas fa-stream"></i>
                             Parallel Requests
                         </label>
-                        <select class="form-control" id="ollamaParallel">
+                        <select class="form-select" id="ollamaParallel">
                             <option value="1">1 - Single (recommended)</option>
                             <option value="2">2 - Dual (high-memory)</option>
                             <option value="3">3 - Triple (enterprise)</option>
@@ -1247,6 +1618,11 @@
         } else {
             previewElement.innerHTML = `<div style="color: var(--text-light);"><strong>Using Default Prompt</strong><br><em>Click "Reset to Default" to see the default prompt, or save a custom prompt to preview it here.</em></div>`;
         }
+    }
+
+    function toggleSection(header) {
+        const card = header.closest('.config-card');
+        card.classList.toggle('collapsed');
     }
 </script>
 {% endblock %}

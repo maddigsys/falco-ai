@@ -1,0 +1,127 @@
+# Falco Configuration for AI Alerts Integration
+# Save this as falco-config.yaml
+
+# Rules file(s) to load
+rules_file:
+  - /etc/falco/falco_rules.yaml
+  - /etc/falco/falco_rules.local.yaml
+  - /etc/falco/k8s_audit_rules.yaml
+  - /etc/falco/rules.d
+
+# Whether to load rules from rules files
+load_plugins: []
+
+# Logging
+log_stderr: true
+log_syslog: true
+log_level: info
+priority: debug
+
+# Output channels
+# File output
+file_output:
+  enabled: false
+
+# Stdout output  
+stdout_output:
+  enabled: true
+
+# Syslog output
+syslog_output:
+  enabled: true
+
+# HTTP webhook output - THIS IS THE KEY PART FOR YOUR INTEGRATION
+http_output:
+  enabled: true
+  url: "http://falco-ai-alerts:8080/falco-webhook"  # Use service name for Docker Compose
+  # If running Falco outside Docker, use: "http://localhost:8080/falco-webhook"
+  user_agent: "falcosecurity/falco"
+  ca_cert: ""
+  ca_bundle: ""
+  ca_path: /etc/ssl/certs
+  client_cert: ""
+  client_key: ""
+  echo: false
+  insecure: false
+  keep_alive: false
+  custom_headers:
+    - "Content-Type: application/json"
+    - "User-Agent: Falco-Security-Scanner"
+
+# gRPC output
+grpc_output:
+  enabled: false
+
+# gRPC server
+grpc:
+  enabled: false
+  bind_address: "0.0.0.0:5060"
+  threadiness: 0
+
+# JSON output include fields
+json_output: true
+json_include_output_property: true
+json_include_tags_property: true
+
+# Buffered output parameters
+buffered_outputs: false
+outputs:
+  rate: 1
+  max_burst: 1000
+
+# Syscall event drops
+syscall_event_drops:
+  actions:
+    - log
+    - alert
+  rate: 0.03333
+  max_burst: 10
+
+# Syscall event timeouts  
+syscall_event_timeouts:
+  max_consecutives: 1000
+
+# Application event drops
+falco_libs_logger:
+  enabled: false
+
+# Modern BPF probe
+modern_bpf:
+  cpus_for_each_syscall_buffer: 2
+
+# Base syscalls to never drop
+base_syscalls:
+  custom_set: []
+  repair: false
+
+# Watch config file changes
+watch_config_files: true
+
+# Metrics
+metrics:
+  enabled: false
+
+# Webserver for metrics/health
+webserver:
+  enabled: true
+  listen_port: 8765
+  k8s_healthz_endpoint: /healthz
+  ssl_enabled: false
+  ssl_certificate: /etc/falco/certs/server.pem
+
+# Rules matching engine
+engine:
+  kind: kmod
+  kmod:
+    buf_size_preset: 4
+    drop_failed_exit: false
+  bpf:
+    buf_size_preset: 4
+    drop_failed_exit: false
+  modern_bpf:
+    buf_size_preset: 4
+    drop_failed_exit: false
+
+# Log rotation
+log_rotation:
+  enabled: false 

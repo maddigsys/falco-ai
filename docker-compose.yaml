@@ -51,6 +51,29 @@ services:
     networks:
       - falco-network
 
+  # Falco Security Runtime
+  falco:
+    image: falcosecurity/falco:latest
+    container_name: falco
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock:ro
+      - /dev:/host/dev:ro
+      - /proc:/host/proc:ro:shared
+      - /boot:/host/boot:ro
+      - /lib/modules:/host/lib/modules:ro
+      - /usr:/host/usr:ro
+      - /etc:/host/etc:ro
+      - ./falco-config.yaml:/etc/falco/falco.yaml:ro
+    environment:
+      - FALCO_GRPC_ENABLED=false
+    command: ["/usr/bin/falco", "--pidfile=/var/run/falco.pid"]
+    depends_on:
+      - falco-ai-alerts
+    restart: unless-stopped
+    networks:
+      - falco-network
+
   # Ollama Local LLM Service (included by default for local testing)
   ollama:
     image: ollama/ollama:latest

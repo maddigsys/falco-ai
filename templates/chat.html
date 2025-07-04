@@ -4,28 +4,41 @@
 
 {% block extra_css %}
 <style>
+    /* Define missing CSS variables */
+    :root {
+        --bg-primary: white;
+        --bg-secondary: #f8f9fa;
+        --success-color: #00D4AA;
+        --primary-dark: #00899E;
+        --danger-color: #EF5350;
+        --warning-color: #FFA726;
+        --info-color: #4299E1;
+    }
+
     .chat-container {
         max-width: 1200px;
         margin: 0 auto;
         height: calc(100vh - 120px);
         display: flex;
         gap: 1rem;
+        padding: 0 1rem;
     }
 
     .events-panel {
-        width: 300px;
-        background: var(--bg-light);
-        border-radius: 8px;
+        width: 320px;
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
         border: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
+        box-shadow: var(--shadow-lg);
     }
 
     .events-header {
         padding: 1rem;
         border-bottom: 1px solid var(--border-color);
-        background: var(--bg-primary);
-        border-radius: 8px 8px 0 0;
+        background: linear-gradient(135deg, rgba(0, 174, 199, 0.05), rgba(83, 86, 90, 0.05));
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     }
 
     .events-list {
@@ -37,22 +50,26 @@
     .event-item {
         padding: 0.75rem;
         margin: 0.25rem 0;
-        border-radius: 6px;
+        border-radius: var(--radius-md);
         border: 1px solid var(--border-color);
         cursor: pointer;
         transition: all 0.3s ease;
-        background: var(--bg-primary);
+        background: white;
+        box-shadow: var(--shadow-sm);
     }
 
     .event-item:hover {
-        background: var(--bg-secondary);
+        background: var(--bg-light);
         border-color: var(--primary-color);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
     }
 
     .event-item.selected {
         background: var(--primary-color);
         color: white;
         border-color: var(--primary-color);
+        box-shadow: var(--shadow-lg);
     }
 
     .event-priority {
@@ -86,18 +103,19 @@
 
     .chat-panel {
         flex: 1;
-        background: var(--bg-primary);
-        border-radius: 8px;
+        background: var(--bg-card);
+        border-radius: var(--radius-lg);
         border: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
+        box-shadow: var(--shadow-lg);
     }
 
     .chat-header {
         padding: 1rem;
         border-bottom: 1px solid var(--border-color);
-        background: var(--bg-secondary);
-        border-radius: 8px 8px 0 0;
+        background: linear-gradient(135deg, rgba(0, 174, 199, 0.05), rgba(83, 86, 90, 0.05));
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     }
 
     .chat-messages {
@@ -105,12 +123,25 @@
         padding: 1rem;
         overflow-y: auto;
         min-height: 400px;
+        background: var(--bg-light);
     }
 
     .message {
         margin-bottom: 1rem;
         display: flex;
         gap: 0.75rem;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .message.user {
@@ -126,28 +157,31 @@
         justify-content: center;
         font-size: 1.2rem;
         flex-shrink: 0;
+        box-shadow: var(--shadow-md);
     }
 
     .message.user .message-avatar {
-        background: var(--primary-color);
+        background: var(--primary-gradient);
         color: white;
     }
 
     .message.ai .message-avatar {
-        background: var(--success-color);
+        background: var(--success-gradient);
         color: white;
     }
 
     .message-content {
         flex: 1;
-        background: var(--bg-light);
+        background: white;
         padding: 0.75rem 1rem;
-        border-radius: 12px;
+        border-radius: var(--radius-lg);
         border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        line-height: 1.5;
     }
 
     .message.user .message-content {
-        background: var(--primary-color);
+        background: var(--primary-gradient);
         color: white;
         border-color: var(--primary-color);
     }
@@ -156,13 +190,14 @@
         font-size: 0.75rem;
         color: var(--text-light);
         margin-top: 0.25rem;
+        opacity: 0.8;
     }
 
     .chat-input {
         padding: 1rem;
         border-top: 1px solid var(--border-color);
-        background: var(--bg-secondary);
-        border-radius: 0 0 8px 8px;
+        background: var(--bg-light);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
 
     .input-group {
@@ -172,30 +207,51 @@
 
     .chat-input input {
         flex: 1;
-        padding: 0.75rem;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        background: var(--bg-primary);
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: white;
         color: var(--text-dark);
+        font-size: 0.925rem;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .chat-input input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+        outline: none;
+    }
+
+    .chat-input input:disabled {
+        background: var(--bg-light);
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     .chat-input button {
         padding: 0.75rem 1.5rem;
         border: none;
-        border-radius: 6px;
-        background: var(--primary-color);
+        border-radius: var(--radius-md);
+        background: var(--primary-gradient);
         color: white;
         cursor: pointer;
-        transition: background 0.3s ease;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        box-shadow: var(--shadow-md);
     }
 
-    .chat-input button:hover {
-        background: var(--primary-dark);
+    .chat-input button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-lg);
     }
 
     .chat-input button:disabled {
         background: var(--text-light);
         cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+        box-shadow: var(--shadow-sm);
     }
 
     .typing-indicator {
@@ -229,11 +285,31 @@
     }
 
     .event-context {
-        background: var(--bg-secondary);
-        padding: 0.75rem;
-        border-radius: 6px;
+        background: linear-gradient(135deg, rgba(0, 174, 199, 0.05), rgba(83, 86, 90, 0.05));
+        padding: 1rem;
+        border-radius: var(--radius-md);
         margin-bottom: 1rem;
         border-left: 4px solid var(--primary-color);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .event-context h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .event-context > div {
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .event-context > div:last-child {
+        margin-bottom: 0;
     }
 
     .no-events {
@@ -242,10 +318,26 @@
         color: var(--text-light);
     }
 
+    .no-events i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+        opacity: 0.5;
+    }
+
     .chat-welcome {
         text-align: center;
         padding: 2rem;
         color: var(--text-light);
+    }
+
+    .chat-welcome ul {
+        color: var(--text-dark);
+        font-size: 0.925rem;
+    }
+
+    .chat-welcome li {
+        margin-bottom: 0.25rem;
     }
 
     @media (max-width: 768px) {
@@ -342,19 +434,47 @@
     });
 
     async function loadRecentAlerts() {
+        const eventsList = document.getElementById('eventsList');
+        
         try {
+            // Show loading state
+            eventsList.innerHTML = `
+                <div class="no-events">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <div>Loading alerts...</div>
+                </div>
+            `;
+
             const response = await fetch('/api/alerts?limit=50');
-            if (!response.ok) throw new Error('Failed to load alerts');
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Alerts API not found. Please check your configuration.');
+                } else if (response.status >= 500) {
+                    throw new Error('Server error. Please try again later.');
+                } else {
+                    throw new Error(`Failed to load alerts (${response.status})`);
+                }
+            }
             
             const alerts = await response.json();
+            
+            // Validate response
+            if (!Array.isArray(alerts)) {
+                throw new Error('Invalid response format from server');
+            }
+            
             displayAlerts(alerts);
         } catch (error) {
             console.error('Error loading alerts:', error);
-            document.getElementById('eventsList').innerHTML = `
+            eventsList.innerHTML = `
                 <div class="no-events">
                     <i class="fas fa-exclamation-circle"></i>
                     <div>Failed to load alerts</div>
-                    <small>${error.message}</small>
+                    <small style="color: var(--danger-color);">${error.message}</small>
+                    <br>
+                    <button class="btn btn-sm btn-primary mt-2" onclick="loadRecentAlerts()" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
                 </div>
             `;
         }
@@ -375,46 +495,96 @@
         }
 
         eventsList.innerHTML = alerts.map(alert => `
-            <div class="event-item" onclick="selectAlert('${alert.uuid}')">
+            <div class="event-item" data-uuid="${alert.uuid}" onclick="selectAlert('${alert.uuid}', this)">
                 <div class="event-priority priority-${alert.priority.toLowerCase()}">
                     ${alert.priority}
                 </div>
-                <div class="fw-bold">${alert.rule}</div>
+                <div class="fw-bold">${alert.rule || 'Unknown Rule'}</div>
                 <div class="text-muted small mb-2">${formatTime(alert.time)}</div>
-                <div class="small">${truncateText(alert.output, 100)}</div>
+                <div class="small">${truncateText(alert.output || 'No description available', 100)}</div>
             </div>
         `).join('');
     }
 
-    async function selectAlert(uuid) {
+    async function selectAlert(uuid, clickedElement) {
+        // Input validation
+        if (!uuid || uuid === 'undefined' || uuid === 'null') {
+            console.error('Invalid alert UUID:', uuid);
+            showMessage('ai', 'Sorry, this alert has an invalid ID. Please try selecting another one.');
+            return;
+        }
+
         try {
-            // Update UI
+            // Update UI - find the clicked element properly
             document.querySelectorAll('.event-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            event.target.closest('.event-item').classList.add('selected');
+            
+            // Use the passed element or find by uuid
+            const alertElement = clickedElement || document.querySelector(`[data-uuid="${uuid}"]`);
+            if (alertElement) {
+                alertElement.classList.add('selected');
+            }
+
+            // Show loading state
+            const chatSubtitle = document.getElementById('chatSubtitle');
+            chatSubtitle.textContent = 'Loading alert details...';
 
             // Load full alert details
-            const response = await fetch(`/api/alerts/${uuid}`);
-            if (!response.ok) throw new Error('Failed to load alert details');
+            const response = await fetch(`/api/alerts/${encodeURIComponent(uuid)}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Alert not found. It may have been deleted.');
+                } else {
+                    throw new Error(`Failed to load alert details (${response.status})`);
+                }
+            }
             
             selectedAlert = await response.json();
             
+            // Validate alert data
+            if (!selectedAlert || typeof selectedAlert !== 'object') {
+                throw new Error('Invalid alert data received from server');
+            }
+
             // Reset chat
             chatHistory = [];
             displayChatWelcome();
             
             // Enable chat input
-            document.getElementById('messageInput').disabled = false;
-            document.getElementById('sendButton').disabled = false;
-            document.getElementById('messageInput').placeholder = "Ask me anything about this security alert...";
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            messageInput.placeholder = "Ask me anything about this security alert...";
+            messageInput.focus();
             
             // Update subtitle
-            document.getElementById('chatSubtitle').textContent = `Discussing: ${selectedAlert.rule}`;
+            chatSubtitle.textContent = `Discussing: ${selectedAlert.rule || 'Security Alert'}`;
             
         } catch (error) {
             console.error('Error selecting alert:', error);
-            showMessage('ai', 'Sorry, I had trouble loading that alert. Please try selecting another one.');
+            
+            // Reset UI on error
+            document.querySelectorAll('.event-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            selectedAlert = null;
+            document.getElementById('messageInput').disabled = true;
+            document.getElementById('sendButton').disabled = true;
+            document.getElementById('chatSubtitle').textContent = 'Select an alert to start discussing it with AI';
+            
+            // Clear chat and show error
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="chat-welcome">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; color: var(--danger-color);"></i>
+                    <h4>Error Loading Alert</h4>
+                    <p style="color: var(--danger-color);">${error.message}</p>
+                    <p class="text-muted">Please try selecting another alert or refresh the page.</p>
+                </div>
+            `;
         }
     }
 
@@ -422,16 +592,28 @@
         if (!selectedAlert) return;
         
         const messagesContainer = document.getElementById('chatMessages');
+        
+        // Safely extract alert data with fallbacks
+        const rule = selectedAlert.rule || 'Unknown Rule';
+        const priority = selectedAlert.priority || 'unknown';
+        const time = selectedAlert.time || new Date().toISOString();
+        const output = selectedAlert.output || 'No description available';
+        const outputFields = selectedAlert.output_fields || {};
+        
         messagesContainer.innerHTML = `
             <div class="event-context">
                 <h6><i class="fas fa-exclamation-triangle"></i> Alert Context</h6>
-                <div><strong>Rule:</strong> ${selectedAlert.rule}</div>
-                <div><strong>Priority:</strong> <span class="event-priority priority-${selectedAlert.priority.toLowerCase()}">${selectedAlert.priority}</span></div>
-                <div><strong>Time:</strong> ${formatTime(selectedAlert.time)}</div>
-                <div><strong>Description:</strong> ${selectedAlert.output}</div>
-                ${selectedAlert.output_fields ? Object.entries(selectedAlert.output_fields).map(([key, value]) => 
-                    `<div><strong>${key}:</strong> ${value}</div>`
-                ).join('') : ''}
+                <div><strong>Rule:</strong> ${escapeHtml(rule)}</div>
+                <div><strong>Priority:</strong> <span class="event-priority priority-${priority.toLowerCase()}">${priority.toUpperCase()}</span></div>
+                <div><strong>Time:</strong> ${formatTime(time)}</div>
+                <div><strong>Description:</strong> ${escapeHtml(output)}</div>
+                ${Object.keys(outputFields).length > 0 ? 
+                    Object.entries(outputFields)
+                        .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+                        .map(([key, value]) => `<div><strong>${escapeHtml(key)}:</strong> ${escapeHtml(String(value))}</div>`)
+                        .join('') 
+                    : ''
+                }
             </div>
         `;
         
@@ -441,8 +623,17 @@
 • How serious is this threat?
 • What should be the next steps?
 • Are there any related indicators to watch for?
+• How can I prevent similar incidents?
 
 What would you like to know?`);
+    }
+
+    // Helper function to escape HTML and prevent XSS
+    function escapeHtml(text) {
+        if (typeof text !== 'string') return String(text);
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     async function sendMessage() {

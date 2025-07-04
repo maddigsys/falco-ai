@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  falco:
+    image: falcosecurity/falco:latest
+    container_name: falco-security
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock:ro
+      - /dev:/host/dev:ro
+      - /proc:/host/proc:ro:shared
+      - /boot:/host/boot:ro
+      - /lib/modules:/host/lib/modules:ro
+      - /usr:/host/usr:ro
+      - /etc:/host/etc:ro
+      - ./falco-config.yaml:/etc/falco/falco.yaml:ro
+    environment:
+      - FALCO_GRPC_ENABLED=false
+    command: ["/usr/bin/falco", "--pidfile=/var/run/falco.pid"]
+    restart: unless-stopped
+    network_mode: "host"  # Use host network to reach localhost:8080
+    # Alternative: join the same network as your existing containers
+    # networks:
+    #   - falco-rag-ai-gateway_falco-network  # Adjust network name as needed
+
+# If using custom network instead of host mode:
+# networks:
+#   falco-rag-ai-gateway_falco-network:
+#     external: true 

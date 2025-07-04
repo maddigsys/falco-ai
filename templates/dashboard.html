@@ -1017,6 +1017,7 @@
                             <option value="warning">Warning</option>
                             <option value="notice">Notice</option>
                             <option value="informational">Informational</option>
+                            <option value="debug">Debug</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -1121,54 +1122,6 @@
             </header>
 
             <div class="content-area">
-                <!-- Welcome/Overview -->
-                <div class="content-card" id="welcomeCard">
-                    <div class="content-card-header">
-                        <h3 class="content-card-title">
-                            <i class="fas fa-home"></i>
-                            Welcome to Falco AI Alert System
-                        </h3>
-                    </div>
-                    <div class="content-card-body">
-                        <div class="empty-state">
-                            <p>Your intelligent security monitoring dashboard is ready to help you stay ahead of threats.</p>
-                            
-                            <div class="alert alert-primary mb-4">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Getting Started:</strong> Click to expand the <strong>Falco Integration Setup</strong> section below to configure Falco webhooks and start receiving AI-powered security analysis.
-                            </div>
-                            
-                            <div class="welcome-grid">
-                                <div class="feature-card">
-                                    <h4><i class="fas fa-shield-alt"></i> Real-time Monitoring</h4>
-                                    <p>Monitor security events from Falco with AI-powered analysis and intelligent alerting.</p>
-                                </div>
-                                <div class="feature-card clickable" onclick="window.location.href='/chat'">
-                                    <h4><i class="fas fa-comments"></i> AI Security Chat</h4>
-                                    <p>Chat with AI about security alerts in real-time. Ask questions, get insights, and understand threats better.</p>
-                                    <div class="feature-action">
-                                        <i class="fas fa-arrow-right"></i> Start Chatting
-                                    </div>
-                                </div>
-                                <div class="feature-card">
-                                    <h4><i class="fas fa-brain"></i> AI Analysis</h4>
-                                    <p>Get instant security insights and recommendations powered by advanced AI models.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4><i class="fab fa-slack"></i> Slack Integration</h4>
-                                    <p>Receive critical alerts directly in Slack with actionable intelligence.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4><i class="fas fa-chart-line"></i> Smart Analytics</h4>
-                                    <p>Track trends, identify patterns, and improve your security posture over time.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
                 <!-- Falco Configuration -->
                 <div class="content-card collapsed" id="falcoConfigCard" style="display: none;">
                     <div class="content-card-header collapsible-header" onclick="toggleFalcoConfig()">
@@ -1267,6 +1220,55 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Welcome/Overview -->
+                <div class="content-card" id="welcomeCard">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-home"></i>
+                            Welcome to Falco AI Alert System
+                        </h3>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="empty-state">
+                            <p>Your intelligent security monitoring dashboard is ready to help you stay ahead of threats.</p>
+                            
+                            <div class="alert alert-primary mb-4">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Getting Started:</strong> Click to expand the <strong>Falco Integration Setup</strong> section above to configure Falco webhooks and start receiving AI-powered security analysis.
+                            </div>
+                            
+                            <div class="welcome-grid">
+                                <div class="feature-card">
+                                    <h4><i class="fas fa-shield-alt"></i> Real-time Monitoring</h4>
+                                    <p>Monitor security events from Falco with AI-powered analysis and intelligent alerting.</p>
+                                </div>
+                                <div class="feature-card clickable" onclick="window.location.href='/chat'">
+                                    <h4><i class="fas fa-comments"></i> AI Security Chat</h4>
+                                    <p>Chat with AI about security alerts in real-time. Ask questions, get insights, and understand threats better.</p>
+                                    <div class="feature-action">
+                                        <i class="fas fa-arrow-right"></i> Start Chatting
+                                    </div>
+                                </div>
+                                <div class="feature-card">
+                                    <h4><i class="fas fa-brain"></i> AI Analysis</h4>
+                                    <p>Get instant security insights and recommendations powered by advanced AI models.</p>
+                                </div>
+                                <div class="feature-card">
+                                    <h4><i class="fab fa-slack"></i> Slack Integration</h4>
+                                    <p>Receive critical alerts directly in Slack with actionable intelligence.</p>
+                                </div>
+                                <div class="feature-card">
+                                    <h4><i class="fas fa-chart-line"></i> Smart Analytics</h4>
+                                    <p>Track trends, identify patterns, and improve your security posture over time.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
 
                 <!-- Quick Stats -->
                 <div class="content-card" id="quickStatsCard" style="display: none;">

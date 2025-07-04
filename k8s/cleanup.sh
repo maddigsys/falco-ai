@@ -300,6 +300,26 @@ main() {
     print_info "Cleanup environment: $ENVIRONMENT"
     print_info "Will clean up: Falco AI Alerts + Ollama (tinyllama) + model data"
     
+    # Show environment-specific details
+    if [ "$ENVIRONMENT" = "development" ]; then
+        print_info "Development cleanup includes:"
+        echo "   • Image: maddigsys/falco-ai-alerts:latest"
+        echo "   • Namespace: falco-ai-alerts-dev"
+        echo "   • Resources: NodePort services (30080, 30081)"
+        echo "   • Storage: 15Gi ollama-data PVC"
+    elif [ "$ENVIRONMENT" = "production" ]; then
+        print_info "Production cleanup includes:"
+        echo "   • Image: maddigsys/falco-ai-alerts:v1.5.0"
+        echo "   • Namespace: falco-ai-alerts"
+        echo "   • Resources: HPA, Network Policies, Ingress"
+        echo "   • Storage: 30Gi ollama-data PVC"
+    elif [ "$ENVIRONMENT" = "all" ]; then
+        print_info "Full cleanup includes both environments:"
+        echo "   • Development: falco-ai-alerts-dev namespace"
+        echo "   • Production: falco-ai-alerts namespace"
+        echo "   • All PVCs, HPAs, and network policies"
+    fi
+    
     # Safety confirmation
     if [ "$FORCE" != "true" ]; then
         echo ""

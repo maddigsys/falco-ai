@@ -685,6 +685,7 @@
                         <option value="warning">Warning</option>
                         <option value="notice">Notice</option>
                         <option value="informational">Informational</option>
+                        <option value="debug">Debug</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -941,6 +942,10 @@
             document.querySelector(`[data-alert-id="${alertId}"]`).classList.add('selected');
             
             // Show alert details
+            showAlertDetails(alert);
+        }
+
+        // Show alert details
         function showAlertDetails(alert) {
             const detailsContainer = document.getElementById('alertDetails');
             
@@ -1363,12 +1368,3 @@
     </script>
 </body>
 </html>
-        //     showAlertDetails(alert);
-            
-        //     // Switch to details tab if not already there
-        //     if (!document.getElementById('details-tab').classList.contains('active')) {
-        //         switchTab('details');
-        //     }
-        // }
-
-        // // Show alert details

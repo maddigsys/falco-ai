@@ -1,5 +1,8 @@
 # Falco AI Alert System with Integrated Web UI
 
+> ⚠️ **WORK IN PROGRESS DISCLAIMER** ⚠️  
+> **This project is actively under development.** While the core functionality is operational, some features and configurations may not work as expected. We are continuously improving the system and fixing issues as they arise. Please use with caution in production environments and report any issues you encounter.
+
 🚀 **Complete Integration Ready!** A comprehensive security alert system that combines Falco runtime security with AI-powered analysis and an interactive web dashboard.
 
 ## ✨ Features

@@ -159,12 +159,12 @@
                         Minimum Priority for Slack
                     </label>
                     <select class="form-select" id="minPrioritySlack">
-                        <option value="debug">Debug</option>
-                        <option value="informational">Informational</option>
-                        <option value="notice">Notice</option>
-                        <option value="warning" selected>Warning</option>
-                        <option value="error">Error</option>
                         <option value="critical">Critical</option>
+                        <option value="error">Error</option>
+                        <option value="warning" selected>Warning</option>
+                        <option value="notice">Notice</option>
+                        <option value="informational">Informational</option>
+                        <option value="debug">Debug</option>
                     </select>
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i>
@@ -218,6 +218,153 @@
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i>
                         Group related alerts in Slack threads
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Notification Processing -->
+        <div class="row">
+            <div class="col-12">
+                <hr class="my-4">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-cog"></i>
+                    Advanced Notification Processing
+                </h5>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="notification_throttling" class="form-label">
+                        <i class="fas fa-traffic-light"></i>
+                        Notification Throttling
+                    </label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="notification_throttling">
+                        <label class="form-check-label" for="notification_throttling">
+                            Enable Throttling for High-Volume Alerts
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Prevent spam by limiting notifications when many alerts occur rapidly
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="throttle_threshold" class="form-label">
+                        <i class="fas fa-gauge-high"></i>
+                        Throttle Threshold
+                    </label>
+                    <input type="number" class="form-control" id="throttle_threshold" min="5" max="100" value="10">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Trigger throttling after this many alerts in 5 minutes
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="business_hours_only" class="form-label">
+                        <i class="fas fa-business-time"></i>
+                        Business Hours Filtering
+                    </label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="business_hours_only">
+                        <label class="form-check-label" for="business_hours_only">
+                            Send Non-Critical Alerts Only During Business Hours
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Critical alerts always sent; others only during business hours
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="business_hours" class="form-label">
+                        <i class="fas fa-clock"></i>
+                        Business Hours
+                    </label>
+                    <input type="text" class="form-control" id="business_hours" value="09:00-17:00" placeholder="HH:MM-HH:MM">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Format: 09:00-17:00 (24-hour format)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="escalation_enabled" class="form-label">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Alert Escalation
+                    </label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="escalation_enabled">
+                        <label class="form-check-label" for="escalation_enabled">
+                            Enable Escalation for Unresolved Critical Alerts
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Send follow-up notifications for critical alerts not marked as resolved
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="escalation_interval" class="form-label">
+                        <i class="fas fa-history"></i>
+                        Escalation Interval (Minutes)
+                    </label>
+                    <input type="number" class="form-control" id="escalation_interval" min="5" max="1440" value="30">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Send escalation reminders every X minutes for unresolved critical alerts
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="digest_mode_enabled" class="form-label">
+                        <i class="fas fa-newspaper"></i>
+                        Daily Digest Mode
+                    </label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="digest_mode_enabled">
+                        <label class="form-check-label" for="digest_mode_enabled">
+                            Send Daily Summary for Low-Priority Alerts
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Group notice/informational alerts into daily digest instead of real-time
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="digest_time" class="form-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        Digest Delivery Time
+                    </label>
+                    <input type="time" class="form-control" id="digest_time" value="09:00">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Time to send the daily digest (server timezone)
                     </div>
                 </div>
             </div>
@@ -377,6 +524,16 @@
             document.getElementById('includeCommands').checked = config.include_commands?.value === 'true';
             document.getElementById('threadAlerts').checked = config.thread_alerts?.value === 'false';
             
+            // Advanced processing settings
+            document.getElementById('notification_throttling').checked = config.notification_throttling?.value === 'true';
+            document.getElementById('throttle_threshold').value = config.throttle_threshold?.value || '10';
+            document.getElementById('business_hours_only').checked = config.business_hours_only?.value === 'true';
+            document.getElementById('business_hours').value = config.business_hours?.value || '09:00-17:00';
+            document.getElementById('escalation_enabled').checked = config.escalation_enabled?.value === 'true';
+            document.getElementById('escalation_interval').value = config.escalation_interval?.value || '30';
+            document.getElementById('digest_mode_enabled').checked = config.digest_mode_enabled?.value === 'true';
+            document.getElementById('digest_time').value = config.digest_time?.value || '09:00';
+            
             updateStatusSummary();
             
         } catch (error) {
@@ -399,7 +556,15 @@
                 template_style: document.getElementById('templateStyle').value,
                 min_priority_slack: document.getElementById('minPrioritySlack').value,
                 include_commands: document.getElementById('includeCommands').checked ? 'true' : 'false',
-                thread_alerts: document.getElementById('threadAlerts').checked ? 'true' : 'false'
+                thread_alerts: document.getElementById('threadAlerts').checked ? 'true' : 'false',
+                notification_throttling: document.getElementById('notification_throttling').checked ? 'true' : 'false',
+                throttle_threshold: document.getElementById('throttle_threshold').value,
+                business_hours_only: document.getElementById('business_hours_only').checked ? 'true' : 'false',
+                business_hours: document.getElementById('business_hours').value,
+                escalation_enabled: document.getElementById('escalation_enabled').checked ? 'true' : 'false',
+                escalation_interval: document.getElementById('escalation_interval').value,
+                digest_mode_enabled: document.getElementById('digest_mode_enabled').checked ? 'true' : 'false',
+                digest_time: document.getElementById('digest_time').value
             };
 
             const response = await fetch('/api/slack/config', {
@@ -590,6 +755,42 @@
                         <div>
                             <div class="fw-bold">Template</div>
                             <div class="text-muted small">${style}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-traffic-light ${config.notification_throttling?.value === 'true' ? 'text-success' : 'text-muted'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Throttling</div>
+                            <div class="text-muted small">${config.notification_throttling?.value === 'true' ? 'Enabled' : 'Disabled'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-business-time ${config.business_hours_only?.value === 'true' ? 'text-warning' : 'text-muted'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Business Hours</div>
+                            <div class="text-muted small">${config.business_hours_only?.value === 'true' ? config.business_hours?.value || '09:00-17:00' : 'All Hours'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle ${config.escalation_enabled?.value === 'true' ? 'text-danger' : 'text-muted'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Escalation</div>
+                            <div class="text-muted small">${config.escalation_enabled?.value === 'true' ? `Every ${config.escalation_interval?.value || '30'}min` : 'Disabled'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-newspaper ${config.digest_mode_enabled?.value === 'true' ? 'text-info' : 'text-muted'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Daily Digest</div>
+                            <div class="text-muted small">${config.digest_mode_enabled?.value === 'true' ? `At ${config.digest_time?.value || '09:00'}` : 'Disabled'}</div>
                         </div>
                     </div>
                 </div>

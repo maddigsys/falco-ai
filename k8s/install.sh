@@ -75,6 +75,11 @@ check_prerequisites() {
     # Show cluster info
     local cluster_info=$(kubectl config current-context)
     print_info "Target cluster: $cluster_info"
+    
+    # Show image tag information
+    print_info "Image versions per environment:"
+    echo "   • Development: maddigsys/falco-ai-alerts:latest"
+    echo "   • Production: maddigsys/falco-ai-alerts:v1.5.0"
 }
 
 # Function to validate environment config
@@ -219,6 +224,23 @@ show_secret_creation_instructions() {
     echo ""
     print_info "⚠️  To skip secret validation (not recommended):"
     echo "   ./install.sh $environment --skip-secrets"
+    
+    # Add environment-specific resource warnings
+    if [ "$environment" = "production" ]; then
+        echo ""
+        print_warning "Production Environment Resource Requirements:"
+        echo "   • Main App: 512Mi RAM, 500m CPU minimum"
+        echo "   • Ollama: 6-8Gi RAM, 2000m CPU minimum"
+        echo "   • Storage: 30Gi persistent volume"
+        echo "   • Total: ~8-10Gi RAM per node minimum"
+    else
+        echo ""
+        print_info "Development Environment Resource Requirements:"
+        echo "   • Main App: 128Mi RAM, 100m CPU minimum"
+        echo "   • Ollama: 6-8Gi RAM, 1000m CPU minimum"
+        echo "   • Storage: 15Gi persistent volume"
+        echo "   • Total: ~6-8Gi RAM per node minimum"
+    fi
 }
 
 # Function to show secret update instructions

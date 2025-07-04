@@ -124,7 +124,15 @@ def init_database():
         ('template_style', 'detailed', 'select', 'Message Template Style'),
         ('min_priority_slack', 'warning', 'select', 'Minimum Priority for Slack'),
         ('include_commands', 'true', 'boolean', 'Include Suggested Commands'),
-        ('thread_alerts', 'false', 'boolean', 'Use Threading for Related Alerts')
+        ('thread_alerts', 'false', 'boolean', 'Use Threading for Related Alerts'),
+        ('notification_throttling', 'false', 'boolean', 'Enable Notification Throttling'),
+        ('throttle_threshold', '10', 'number', 'Throttle Threshold (alerts per 5 min)'),
+        ('business_hours_only', 'false', 'boolean', 'Business Hours Filtering'),
+        ('business_hours', '09:00-17:00', 'string', 'Business Hours Range'),
+        ('escalation_enabled', 'false', 'boolean', 'Enable Alert Escalation'),
+        ('escalation_interval', '30', 'number', 'Escalation Interval (minutes)'),
+        ('digest_mode_enabled', 'false', 'boolean', 'Enable Daily Digest Mode'),
+        ('digest_time', '09:00', 'string', 'Daily Digest Delivery Time')
     ''')
     
     cursor.execute('''
@@ -184,7 +192,13 @@ def init_database():
         ('deduplication_enabled', 'true', 'boolean', 'Enable Alert Deduplication'),
         ('deduplication_window_minutes', '60', 'number', 'Deduplication Window (minutes)'),
         ('max_alerts_storage', '10000', 'number', 'Maximum Alerts to Store in Database'),
-        ('alert_retention_days', '30', 'number', 'Delete Alerts Older Than (days)')
+        ('alert_retention_days', '30', 'number', 'Delete Alerts Older Than (days)'),
+        ('rate_limit_enabled', 'false', 'boolean', 'Enable Alert Rate Limiting'),
+        ('max_alerts_per_minute', '60', 'number', 'Maximum Alerts Per Minute'),
+        ('batch_processing_enabled', 'false', 'boolean', 'Enable Alert Batching'),
+        ('batch_size', '10', 'number', 'Alert Batch Size'),
+        ('alert_correlation_enabled', 'false', 'boolean', 'Enable Alert Correlation'),
+        ('correlation_window_minutes', '15', 'number', 'Alert Correlation Window (minutes)')
     ''')
     
     conn.commit()
@@ -1145,7 +1159,9 @@ def api_update_slack_config():
     try:
         for setting_name, setting_value in data.items():
             if setting_name in ['bot_token', 'channel_name', 'enabled', 'username', 'icon_emoji', 
-                              'template_style', 'min_priority_slack', 'include_commands', 'thread_alerts']:
+                              'template_style', 'min_priority_slack', 'include_commands', 'thread_alerts',
+                              'notification_throttling', 'throttle_threshold', 'business_hours_only', 'business_hours',
+                              'escalation_enabled', 'escalation_interval', 'digest_mode_enabled', 'digest_time']:
                 update_slack_config(setting_name, setting_value)
         
         return jsonify({"success": True, "message": "Configuration updated successfully"})
@@ -2141,7 +2157,10 @@ def api_test_general_config():
         'falco_ai_port': 'Falco AI Port',
         'deduplication_window_minutes': 'Deduplication Window',
         'max_alerts_storage': 'Max Alerts Storage',
-        'alert_retention_days': 'Alert Retention Days'
+        'alert_retention_days': 'Alert Retention Days',
+        'max_alerts_per_minute': 'Max Alerts Per Minute',
+        'batch_size': 'Batch Size',
+        'correlation_window_minutes': 'Correlation Window Minutes'
     }
     
     for setting_key, setting_label in numeric_settings.items():
@@ -2181,7 +2200,13 @@ def api_reset_general_config():
         'deduplication_enabled': 'true',
         'deduplication_window_minutes': '60',
         'max_alerts_storage': '10000',
-        'alert_retention_days': '30'
+        'alert_retention_days': '30',
+        'rate_limit_enabled': 'false',
+        'max_alerts_per_minute': '60',
+        'batch_processing_enabled': 'false',
+        'batch_size': '10',
+        'alert_correlation_enabled': 'false',
+        'correlation_window_minutes': '15'
     }
     
     for setting_name, setting_value in defaults.items():
