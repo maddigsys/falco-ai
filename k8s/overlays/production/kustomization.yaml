@@ -15,7 +15,7 @@ namePrefix: prod-
 
 commonLabels:
   environment: production
-  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/version: "1.5.1"
 
 patches:
   # Increase replicas for production
