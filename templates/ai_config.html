@@ -1010,25 +1010,17 @@
             
             document.getElementById('portkeyApiKey').value = config.portkey_api_key?.value || '';
             document.getElementById('openaiVirtualKey').value = config.openai_virtual_key?.value || '';
-            document.getElementById('openaiModelName').value = config.model_name?.value || 'gpt-3.5-turbo';
+            
+            // Load provider-specific models properly
+            document.getElementById('openaiModelName').value = config.openai_model_name?.value || config.model_name?.value || 'gpt-3.5-turbo';
             
             document.getElementById('geminiVirtualKey').value = config.gemini_virtual_key?.value || '';
-            document.getElementById('geminiModelName').value = config.model_name?.value || 'gemini-pro';
+            document.getElementById('geminiModelName').value = config.gemini_model_name?.value || config.model_name?.value || 'gemini-pro';
             
             // Use environment-specific defaults
             const envDefaults = getEnvironmentDefaults();
             document.getElementById('ollamaApiUrl').value = config.ollama_api_url?.value || envDefaults.ollamaUrl;
             document.getElementById('ollamaModelName').value = config.ollama_model_name?.value || 'tinyllama';
-            
-            // Load provider-specific model names
-            const provider = config.provider_name?.value || 'openai';
-            if (provider === 'openai') {
-                document.getElementById('openaiModelName').value = config.openai_model_name?.value || config.model_name?.value || 'gpt-3.5-turbo';
-            } else if (provider === 'gemini') {
-                document.getElementById('geminiModelName').value = config.gemini_model_name?.value || config.model_name?.value || 'gemini-pro';
-            } else if (provider === 'ollama') {
-                // Ollama model is already set above
-            }
             
             // Load timeout configuration
             document.getElementById('ollamaTimeout').value = config.ollama_timeout?.value || '30';

@@ -38,6 +38,7 @@ services:
       - IGNORE_OLDER=${IGNORE_OLDER:-1}
     volumes:
       - ./templates:/app/templates:ro
+      - ./app.py:/app/app.py:ro  # Mount updated app.py for fixes
       - alerts_data:/app/data  # Persistent storage for database and other data
     depends_on:
       - ollama
@@ -51,7 +52,7 @@ services:
     networks:
       - falco-network
 
-  # Falco Security Runtime
+  # Falco Security Runtime (Linux only - use profile to enable)
   falco:
     image: falcosecurity/falco:latest
     container_name: falco
@@ -59,7 +60,7 @@ services:
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock:ro
       - /dev:/host/dev:ro
-      - /proc:/host/proc:ro:shared
+      - /proc:/host/proc:ro
       - /boot:/host/boot:ro
       - /lib/modules:/host/lib/modules:ro
       - /usr:/host/usr:ro
@@ -73,6 +74,8 @@ services:
     restart: unless-stopped
     networks:
       - falco-network
+    profiles:
+      - falco-linux  # Only run on Linux systems
 
   # Ollama Local LLM Service (included by default for local testing)
   ollama:

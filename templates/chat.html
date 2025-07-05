@@ -495,21 +495,21 @@
         }
 
         eventsList.innerHTML = alerts.map(alert => `
-            <div class="event-item" data-uuid="${alert.uuid}" onclick="selectAlert('${alert.uuid}', this)">
+            <div class="event-item" data-alert-id="${alert.id}" onclick="selectAlert('${alert.id}', this)">
                 <div class="event-priority priority-${alert.priority.toLowerCase()}">
                     ${alert.priority}
                 </div>
                 <div class="fw-bold">${alert.rule || 'Unknown Rule'}</div>
-                <div class="text-muted small mb-2">${formatTime(alert.time)}</div>
+                <div class="text-muted small mb-2">${formatTime(alert.timestamp)}</div>
                 <div class="small">${truncateText(alert.output || 'No description available', 100)}</div>
             </div>
         `).join('');
     }
 
-    async function selectAlert(uuid, clickedElement) {
+    async function selectAlert(alertId, clickedElement) {
         // Input validation
-        if (!uuid || uuid === 'undefined' || uuid === 'null') {
-            console.error('Invalid alert UUID:', uuid);
+        if (!alertId || alertId === 'undefined' || alertId === 'null') {
+            console.error('Invalid alert ID:', alertId);
             showMessage('ai', 'Sorry, this alert has an invalid ID. Please try selecting another one.');
             return;
         }
@@ -520,8 +520,8 @@
                 item.classList.remove('selected');
             });
             
-            // Use the passed element or find by uuid
-            const alertElement = clickedElement || document.querySelector(`[data-uuid="${uuid}"]`);
+            // Use the passed element or find by alert ID
+            const alertElement = clickedElement || document.querySelector(`[data-alert-id="${alertId}"]`);
             if (alertElement) {
                 alertElement.classList.add('selected');
             }
@@ -530,17 +530,18 @@
             const chatSubtitle = document.getElementById('chatSubtitle');
             chatSubtitle.textContent = 'Loading alert details...';
 
-            // Load full alert details
-            const response = await fetch(`/api/alerts/${encodeURIComponent(uuid)}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error('Alert not found. It may have been deleted.');
-                } else {
-                    throw new Error(`Failed to load alert details (${response.status})`);
-                }
+            // Find the alert from the loaded alerts list instead of making a separate API call
+            const alertsList = await fetch('/api/alerts?limit=100');
+            if (!alertsList.ok) {
+                throw new Error('Failed to load alerts list');
             }
             
-            selectedAlert = await response.json();
+            const allAlerts = await alertsList.json();
+            selectedAlert = allAlerts.find(a => a.id == alertId);
+            
+            if (!selectedAlert) {
+                throw new Error('Alert not found in current alerts list');
+            }
             
             // Validate alert data
             if (!selectedAlert || typeof selectedAlert !== 'object') {
@@ -596,9 +597,9 @@
         // Safely extract alert data with fallbacks
         const rule = selectedAlert.rule || 'Unknown Rule';
         const priority = selectedAlert.priority || 'unknown';
-        const time = selectedAlert.time || new Date().toISOString();
+        const time = selectedAlert.timestamp || new Date().toISOString();
         const output = selectedAlert.output || 'No description available';
-        const outputFields = selectedAlert.output_fields || {};
+        const outputFields = selectedAlert.fields || {};
         
         messagesContainer.innerHTML = `
             <div class="event-context">

@@ -1003,8 +1003,8 @@
                         <select id="timeRange" onchange="applyFilters()">
                             <option value="all">All Time</option>
                             <option value="1h">Last Hour</option>
-                            <option value="24h" selected>Last 24 Hours</option>
-                            <option value="7d">Last 7 Days</option>
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="7d" selected>Last 7 Days</option>
                             <option value="30d">Last 30 Days</option>
                         </select>
                     </div>
@@ -1356,7 +1356,7 @@
         let currentAlertCounts = {};
         let selectedAlert = null;
         let currentFilters = {
-            time_range: '24h',
+            time_range: '7d',  // Show last 7 days instead of 24h to include more alerts
             priority: 'all',
             rule: 'all',
             status: 'all',
@@ -2193,7 +2193,7 @@
             const limitSelect = document.getElementById('limitFilter');
             
             // Reset all filters to default
-            timeRangeSelect.value = '24h';
+            timeRangeSelect.value = '7d';  // Match the default filter
             prioritySelect.value = 'all';
             statusSelect.value = 'all';
             limitSelect.value = '25';

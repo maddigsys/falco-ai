@@ -794,6 +794,40 @@ def api_alerts():
         logging.error(f"Error fetching alerts: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/alerts/<int:alert_id>')
+def api_get_alert_by_id(alert_id):
+    """Get a specific alert by ID."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM alerts WHERE id = ?', (alert_id,))
+        alert = cursor.fetchone()
+        conn.close()
+        
+        if not alert:
+            return jsonify({"error": "Alert not found"}), 404
+        
+        # Convert to dictionary format matching the main alerts endpoint
+        alert_dict = {
+            'id': alert[0],
+            'timestamp': alert[1],
+            'rule': alert[2],
+            'priority': alert[3],
+            'output': alert[4],
+            'source': alert[5] or 'unknown',
+            'fields': json.loads(alert[6]) if alert[6] else {},
+            'ai_analysis': json.loads(alert[7]) if alert[7] else None,
+            'processed': bool(alert[8]),
+            'status': alert[9] if len(alert) > 9 else 'unread'
+        }
+        
+        return jsonify(alert_dict)
+        
+    except Exception as e:
+        logging.error(f"Error fetching alert {alert_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/alerts/<uuid>')
 def api_get_alert(uuid):
     """Get a specific alert by UUID."""
@@ -1470,7 +1504,14 @@ Please provide helpful, accurate information about this security alert. Keep res
                 temperature=temperature
             )
             
-            response_text = response.choices[0].message.content
+            # Handle both object and dictionary response formats
+            message = response.choices[0].message
+            if hasattr(message, 'content'):
+                response_text = message.content
+            elif isinstance(message, dict):
+                response_text = message.get('content', '')
+            else:
+                response_text = str(message)
             
         elif provider_name == "gemini":
             portkey_api_key = ai_config.get('portkey_api_key', {}).get('value', '')
@@ -1489,7 +1530,14 @@ Please provide helpful, accurate information about this security alert. Keep res
                 temperature=temperature
             )
             
-            response_text = response.choices[0].message.content
+            # Handle both object and dictionary response formats
+            message = response.choices[0].message
+            if hasattr(message, 'content'):
+                response_text = message.content
+            elif isinstance(message, dict):
+                response_text = message.get('content', '')
+            else:
+                response_text = str(message)
             
         elif provider_name == "ollama":
             ollama_api_url = ai_config.get('ollama_api_url', {}).get('value', 'http://ollama:11434/api/generate')
