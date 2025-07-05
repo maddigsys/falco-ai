@@ -1,0 +1,477 @@
+{% extends "settings_base.html" %}
+
+{% block title %}AI Chat Configuration{% endblock %}
+{% block page_icon %}<i class="fas fa-comments"></i>{% endblock %}
+{% block page_title %}AI Security Chat Configuration{% endblock %}
+{% block page_description %}Configure AI Security Chat settings, behavior, and session management{% endblock %}
+
+{% block content %}
+<!-- Sticky Action Bar -->
+<div class="sticky-action-bar">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="action-buttons">
+            <button class="btn btn-primary btn-lg" onclick="saveConfig()">
+                <i class="fas fa-save"></i>
+                Save All Changes
+            </button>
+            <button class="btn btn-success" onclick="testChatConnection()">
+                <i class="fas fa-check-circle"></i>
+                Test Chat
+            </button>
+            <a href="/chat" class="btn btn-secondary">
+                <i class="fas fa-comments"></i>
+                Open AI Chat
+            </a>
+        </div>
+        <div class="save-status" id="saveStatus">
+            <small class="text-muted">
+                <i class="fas fa-info-circle"></i>
+                Remember to save your changes
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Connection Status -->
+<div id="connectionStatus"></div>
+
+<!-- Current Status Summary -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-info-circle"></i>
+            Current Status Summary
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div id="statusInfo">
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading status...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Chat Settings -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-comments"></i>
+            AI Security Chat Settings
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="config-info">
+            <strong><i class="fas fa-comments"></i> Interactive AI Chat Configuration</strong><br>
+            Configure settings for the AI Security Chat feature. Chat with AI about security alerts in real-time.
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="chatEnabled" name="chat_enabled" checked>
+                        <label class="form-check-label" for="chatEnabled">
+                            <i class="fas fa-comments"></i>
+                            Enable AI Security Chat
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Allow users to chat with AI about security alerts
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatMaxHistory" class="form-label">
+                        <i class="fas fa-history"></i>
+                        Chat History Limit
+                    </label>
+                    <input type="number" class="form-control" id="chatMaxHistory" name="chat_max_history" value="50" min="10" max="200">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Maximum chat messages to keep in history
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatSessionTimeout" class="form-label">
+                        <i class="fas fa-clock"></i>
+                        Session Timeout (minutes)
+                    </label>
+                    <input type="number" class="form-control" id="chatSessionTimeout" name="chat_session_timeout" value="30" min="5" max="120">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Auto-clear chat after inactivity
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatContextAlerts" class="form-label">
+                        <i class="fas fa-list"></i>
+                        Alert Context Limit
+                    </label>
+                    <input type="number" class="form-control" id="chatContextAlerts" name="chat_context_alerts" value="10" min="1" max="50">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Number of recent alerts to include as context
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Behavior Settings -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-cog"></i>
+            Chat Behavior Settings
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="config-info">
+            <strong><i class="fas fa-cog"></i> Chat Response Configuration</strong><br>
+            Fine-tune how the AI responds in chat conversations about security alerts.
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatResponseLength" class="form-label">
+                        <i class="fas fa-text-width"></i>
+                        Response Length
+                    </label>
+                    <select class="form-select" id="chatResponseLength" name="chat_response_length">
+                        <option value="brief">Brief (1-2 sentences)</option>
+                        <option value="normal" selected>Normal (1-2 paragraphs)</option>
+                        <option value="detailed">Detailed (Full analysis)</option>
+                    </select>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Control how verbose AI responses are
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="chatTone" class="form-label">
+                        <i class="fas fa-user-tie"></i>
+                        Response Tone
+                    </label>
+                    <select class="form-select" id="chatTone" name="chat_tone">
+                        <option value="professional" selected>Professional</option>
+                        <option value="casual">Casual</option>
+                        <option value="technical">Technical</option>
+                        <option value="educational">Educational</option>
+                    </select>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Set the communication style for AI responses
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="chatIncludeRemediation" name="chat_include_remediation" checked>
+                        <label class="form-check-label" for="chatIncludeRemediation">
+                            <i class="fas fa-wrench"></i>
+                            Include Remediation Steps
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Automatically suggest remediation steps in responses
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="chatIncludeContext" name="chat_include_context" checked>
+                        <label class="form-check-label" for="chatIncludeContext">
+                            <i class="fas fa-link"></i>
+                            Include Alert Context
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Reference related alerts in responses
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Access Information -->
+<div class="config-card">
+    <div class="config-card-header">
+        <h3 class="config-card-title">
+            <i class="fas fa-lightbulb"></i>
+            Quick Access & Tips
+        </h3>
+    </div>
+    <div class="config-card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-lightbulb"></i>
+            <strong>Quick Access:</strong> AI Security Chat is available directly from the dashboard! Look for the teal chat button in the header.
+        </div>
+        
+        <div class="alert alert-success">
+            <i class="fas fa-rocket"></i>
+            <strong>Pro Tips:</strong>
+            <ul class="mb-0 mt-2">
+                <li>Select an alert first to get contextual analysis</li>
+                <li>Ask specific questions like "What's the severity of this threat?"</li>
+                <li>Use follow-up questions to dive deeper into analysis</li>
+                <li>Chat sessions auto-clear after the configured timeout</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set the current page for sidebar navigation
+    window.page = 'ai_chat';
+    
+    let hasUnsavedChanges = false;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadConfig();
+        updateStatus();
+        setupChangeDetection();
+    });
+    
+    function setupChangeDetection() {
+        // Add change listeners to all form inputs
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', markUnsavedChanges);
+            input.addEventListener('input', markUnsavedChanges);
+        });
+    }
+    
+    function markUnsavedChanges() {
+        hasUnsavedChanges = true;
+        updateSaveStatus('unsaved');
+    }
+    
+    function markSaved() {
+        hasUnsavedChanges = false;
+        updateSaveStatus('saved');
+    }
+    
+    function updateSaveStatus(status) {
+        const saveStatus = document.getElementById('saveStatus');
+        if (status === 'unsaved') {
+            saveStatus.innerHTML = '<small class="text-warning save-needed"><i class="fas fa-exclamation-triangle"></i> You have unsaved changes</small>';
+        } else if (status === 'saved') {
+            saveStatus.innerHTML = '<small class="text-success save-complete"><i class="fas fa-check"></i> All changes saved</small>';
+            setTimeout(() => {
+                if (!hasUnsavedChanges) {
+                    saveStatus.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle"></i> Remember to save your changes</small>';
+                }
+            }, 3000);
+        }
+    }
+    
+    async function loadConfig() {
+        try {
+            const response = await fetch('/api/ai/chat/config');
+            if (!response.ok) {
+                // If endpoint doesn't exist, use defaults
+                if (response.status === 404) {
+                    console.log('Using default chat configuration');
+                    return;
+                }
+                throw new Error('Failed to load chat configuration');
+            }
+            
+            const config = await response.json();
+            
+            // Populate form fields
+            document.getElementById('chatEnabled').checked = config.chat_enabled?.value !== 'false';
+            document.getElementById('chatMaxHistory').value = config.chat_max_history?.value || '50';
+            document.getElementById('chatSessionTimeout').value = config.chat_session_timeout?.value || '30';
+            document.getElementById('chatContextAlerts').value = config.chat_context_alerts?.value || '10';
+            document.getElementById('chatResponseLength').value = config.chat_response_length?.value || 'normal';
+            document.getElementById('chatTone').value = config.chat_tone?.value || 'professional';
+            document.getElementById('chatIncludeRemediation').checked = config.chat_include_remediation?.value !== 'false';
+            document.getElementById('chatIncludeContext').checked = config.chat_include_context?.value !== 'false';
+            
+        } catch (error) {
+            console.error('Error loading chat config:', error);
+            showAlert('warning', 'Using default chat configuration. Save to persist your settings.');
+        }
+    }
+    
+    async function saveConfig() {
+        const saveBtn = document.querySelector('[onclick="saveConfig()"]');
+        setLoading(saveBtn, true);
+        
+        try {
+            const config = {
+                chat_enabled: document.getElementById('chatEnabled').checked ? 'true' : 'false',
+                chat_max_history: document.getElementById('chatMaxHistory').value,
+                chat_session_timeout: document.getElementById('chatSessionTimeout').value,
+                chat_context_alerts: document.getElementById('chatContextAlerts').value,
+                chat_response_length: document.getElementById('chatResponseLength').value,
+                chat_tone: document.getElementById('chatTone').value,
+                chat_include_remediation: document.getElementById('chatIncludeRemediation').checked ? 'true' : 'false',
+                chat_include_context: document.getElementById('chatIncludeContext').checked ? 'true' : 'false'
+            };
+
+            const response = await fetch('/api/ai/chat/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            showAlert('success', '✅ AI Chat configuration saved successfully!');
+            updateStatus();
+            markSaved();
+            
+        } catch (error) {
+            console.error('Error saving chat config:', error);
+            showAlert('danger', 'Failed to save configuration: ' + error.message);
+        } finally {
+            setLoading(saveBtn, false);
+        }
+    }
+    
+    async function testChatConnection() {
+        const testBtn = document.querySelector('[onclick="testChatConnection()"]');
+        setLoading(testBtn, true);
+        
+        try {
+            const response = await fetch('/api/ai/chat/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert('success', '✅ AI Chat test successful! ' + result.message);
+            } else {
+                showAlert('warning', '⚠️ AI Chat test completed with warnings: ' + result.message);
+            }
+            
+        } catch (error) {
+            console.error('Error testing chat:', error);
+            showAlert('danger', 'Failed to test AI Chat: ' + error.message);
+        } finally {
+            setLoading(testBtn, false);
+        }
+    }
+    
+    function updateStatus() {
+        const statusElement = document.getElementById('statusInfo');
+        const enabled = document.getElementById('chatEnabled').checked;
+        const maxHistory = document.getElementById('chatMaxHistory').value;
+        const sessionTimeout = document.getElementById('chatSessionTimeout').value;
+        const contextAlerts = document.getElementById('chatContextAlerts').value;
+        
+        statusElement.innerHTML = `
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-toggle-${enabled ? 'on text-success' : 'off text-danger'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Chat Status</div>
+                            <div class="text-muted small">${enabled ? 'Enabled' : 'Disabled'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-history text-info me-2"></i>
+                        <div>
+                            <div class="fw-bold">History Limit</div>
+                            <div class="text-muted small">${maxHistory} messages</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clock text-warning me-2"></i>
+                        <div>
+                            <div class="fw-bold">Session Timeout</div>
+                            <div class="text-muted small">${sessionTimeout} minutes</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-list text-primary me-2"></i>
+                        <div>
+                            <div class="fw-bold">Context Alerts</div>
+                            <div class="text-muted small">${contextAlerts} alerts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Generic utility functions
+    function setLoading(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            button.innerHTML = button.innerHTML.replace(/<i class="fas fa-[^"]*"><\/i>/, '<i class="fas fa-spinner fa-spin"></i>');
+        } else {
+            button.disabled = false;
+            button.innerHTML = button.innerHTML.replace(/<i class="fas fa-spinner fa-spin"><\/i>/, '<i class="fas fa-save"></i>');
+        }
+    }
+    
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.getElementById('connectionStatus');
+        container.innerHTML = '';
+        container.appendChild(alertDiv);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+</script>
+{% endblock %} 

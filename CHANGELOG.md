@@ -5,6 +5,87 @@ All notable changes to the Falco AI Alert System project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2025-01-05
+
+### ✨ New Features
+
+#### 🎯 Dedicated AI Chat Configuration
+- **New Configuration Page** - Dedicated AI Chat Settings page at `/config/ai-chat`
+- **Comprehensive Chat Settings** - Chat behavior, session management, and response customization
+- **Enhanced Navigation** - Added "AI Chat Settings" to configuration menu
+- **Advanced Chat Controls**:
+  - Enable/disable AI Security Chat
+  - Configurable chat history limits (10-200 messages)
+  - Session timeout management (5-120 minutes)
+  - Alert context limits (1-50 alerts)
+  - Response length control (brief/normal/detailed)
+  - Response tone selection (professional/casual/technical/educational)
+  - Remediation steps toggle
+  - Alert context inclusion toggle
+
+### 🎨 UI/UX Improvements
+
+#### 🔧 Unified Save Button Experience
+- **Removed Duplicate Buttons** - Eliminated inconsistent save buttons from AI Provider Configuration
+- **Cleaned Slack Configuration** - Removed redundant action buttons from Message Configuration section
+- **Streamlined Interface** - All configuration pages now use consistent sticky action bars
+- **Better User Experience** - Single, clear action area per configuration page
+
+#### 🤖 Enhanced AI Provider Management
+- **Model Persistence Fixed** - AI provider model selections now properly persist per provider
+- **Provider-Specific Storage**:
+  - OpenAI models stored in `openai_model_name`
+  - Gemini models stored in `gemini_model_name`
+  - Ollama models stored in `ollama_model_name`
+- **Smart Model Switching** - Changing providers no longer resets previously selected models
+- **Improved Configuration Loading** - Enhanced provider-specific model restoration
+
+### 🔧 Technical Improvements
+
+#### 📊 Backend Enhancements
+- **New API Endpoints**:
+  - `GET /api/ai/chat/config` - Retrieve AI chat configuration
+  - `POST /api/ai/chat/config` - Update AI chat settings
+  - `POST /api/ai/chat/test` - Test AI chat functionality
+- **Configuration Functions**:
+  - `get_ai_chat_config()` - Database-backed chat configuration
+  - `update_ai_chat_config()` - Persist chat settings
+- **Enhanced Error Handling** - Improved response parsing for different AI provider formats
+
+#### 🎛️ Configuration Management
+- **Separated Concerns** - AI Configuration now focuses purely on provider setup
+- **Dedicated Chat Settings** - All chat-related configurations moved to separate page
+- **Default Value Management** - Comprehensive default settings for new installations
+- **Configuration Validation** - Enhanced validation for chat-specific settings
+
+### 🔄 Infrastructure Updates
+
+#### 🐳 Container & Deployment
+- **Updated Images** - `maddigsys/falco-ai-alerts:v1.5.2` published to Docker Hub
+- **Version Consistency** - All Kubernetes manifests updated to v1.5.2
+- **Script Updates** - Install and cleanup scripts reference correct version
+- **Development Improvements** - Enhanced local build and test workflow
+
+### 📋 Navigation & Organization
+
+#### 🧭 Improved Settings Structure
+- **Configuration Section**:
+  - General Settings
+  - AI Configuration (provider setup only)
+  - AI Chat Settings (new dedicated page)
+  - Slack Integration
+- **AI Tools Section**:
+  - AI Security Chat (direct access)
+- **Clear Separation** - Provider configuration vs. chat behavior settings
+
+### 🎯 User Experience
+
+#### 💡 Better Workflow
+- **Setup Providers First** - Configure AI providers in AI Configuration
+- **Customize Chat Behavior** - Fine-tune chat experience in AI Chat Settings
+- **Quick Access** - Direct chat access from dashboard header
+- **Consistent Interface** - Unified design across all configuration pages
+
 ## [1.0.4] - 2025-01-02
 
 ### 🎨 UI/UX Improvements

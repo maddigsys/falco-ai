@@ -22,6 +22,13 @@
 - **📈 Trend Analysis** - Identify patterns and security trends
 - **📤 Export Functionality** - Download analysis reports
 - **🎯 Filtering & Search** - Filter alerts by priority, time, and rules
+- **⚙️ Configuration Management** - Web-based configuration for all system settings
+
+### 🔧 Configuration Management
+- **🤖 AI Provider Configuration** - Setup OpenAI, Gemini, or Ollama providers
+- **💬 AI Chat Settings** - Dedicated configuration for chat behavior and preferences
+- **📱 Slack Integration** - Configure notifications and message formatting
+- **🎛️ General Settings** - System-wide preferences and alert processing options
 
 ### 🚀 Deployment Options
 - **Docker Compose** - Single-command deployment
@@ -251,6 +258,19 @@ Ask questions about your security data:
 - *"Show me trends in container security"*
 - *"What should I investigate next?"*
 - *"How can I improve my security posture?"*
+
+### Configuration Interface
+Access configuration pages at:
+- **General Settings**: `http://localhost:8080/config/general`
+- **AI Configuration**: `http://localhost:8080/config/ai` 
+- **AI Chat Settings**: `http://localhost:8080/config/ai-chat`
+- **Slack Integration**: `http://localhost:8080/config/slack`
+
+Features include:
+- **Real-time validation** - Test configurations before saving
+- **Provider-specific settings** - Separate model configurations per AI provider
+- **Chat behavior customization** - Response length, tone, and context settings
+- **Session management** - Configure timeouts and history limits
 
 ### Alert Analysis
 - **Detailed Views** - Full alert context and metadata

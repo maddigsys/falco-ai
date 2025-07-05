@@ -4,10 +4,10 @@ services:
   # Main Falco AI Alert System
   falco-ai-alerts:
     # Option 1: Use published image (recommended for production)
-    image: maddigsys/falco-ai-alerts:latest
-    # Option 2: Build locally (uncomment for development)
-    # build: .
     # image: maddigsys/falco-ai-alerts:latest
+    # Option 2: Build locally (uncomment for development)
+    build: .
+    image: maddigsys/falco-ai-alerts:latest
     ports:
       - "8080:8080"  # Main webhook and Web UI port
     environment:

@@ -1307,6 +1307,11 @@ def ai_config_ui():
     """Serve the AI configuration UI."""
     return render_template('ai_config.html', page='ai')
 
+@app.route('/config/ai-chat')
+def ai_chat_config_ui():
+    """Serve the AI Chat configuration UI."""
+    return render_template('ai_chat_config.html', page='ai_chat')
+
 @app.route('/chat')
 def chat_ui():
     """Serve the AI Chat UI."""
@@ -1795,6 +1800,72 @@ def api_ollama_download_progress():
             'message': f'Error checking progress: {str(e)}'
         }), 500
 
+@app.route('/api/ai/chat/config')
+def api_ai_chat_config():
+    """API endpoint to get AI Chat configuration."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI disabled"}), 404
+    
+    # Get AI chat configuration (create if doesn't exist)
+    config = get_ai_chat_config()
+    return jsonify(config)
+
+@app.route('/api/ai/chat/config', methods=['POST'])
+def api_update_ai_chat_config():
+    """API endpoint to update AI Chat configuration."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI disabled"}), 404
+    
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    try:
+        valid_settings = ['chat_enabled', 'chat_max_history', 'chat_session_timeout', 
+                         'chat_context_alerts', 'chat_response_length', 'chat_tone',
+                         'chat_include_remediation', 'chat_include_context']
+        
+        for setting_name, setting_value in data.items():
+            if setting_name in valid_settings:
+                update_ai_chat_config(setting_name, setting_value)
+        
+        return jsonify({"success": True, "message": "AI Chat configuration updated successfully"})
+    except Exception as e:
+        logging.error(f"Error updating AI Chat config: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/ai/chat/test', methods=['POST'])
+def api_test_ai_chat():
+    """API endpoint to test AI Chat functionality."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI disabled"}), 404
+    
+    try:
+        # Get AI chat configuration
+        chat_config = get_ai_chat_config()
+        
+        # Check if chat is enabled
+        if chat_config.get('chat_enabled', {}).get('value') != 'true':
+            return jsonify({"success": False, "message": "AI Chat is disabled"})
+        
+        # Get AI configuration to check if AI is working
+        ai_config = get_ai_config()
+        if ai_config.get('enabled', {}).get('value') != 'true':
+            return jsonify({"success": False, "message": "AI analysis is disabled"})
+        
+        # Test basic AI connection
+        provider_name = ai_config.get('provider_name', {}).get('value', 'openai')
+        test_result = test_ai_connection(provider_name, ai_config)
+        
+        if test_result.get('success'):
+            return jsonify({"success": True, "message": "AI Chat is ready and working"})
+        else:
+            return jsonify({"success": False, "message": f"AI Chat test failed: {test_result.get('error', 'Unknown error')}"})
+            
+    except Exception as e:
+        logging.error(f"Error testing AI Chat: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
 @app.route('/api/ai/system-prompt/reset', methods=['POST'])
 def api_reset_system_prompt():
     """API endpoint to reset system prompt to default."""
@@ -2074,6 +2145,79 @@ def test_ai_connection(provider_name, config_data):
             
     except Exception as e:
         return {'success': False, 'error': f'Configuration test failed: {str(e)}'}
+
+def get_ai_chat_config():
+    """Get AI chat configuration from database."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT name, value, description FROM config WHERE name LIKE 'chat_%'")
+        config_rows = cursor.fetchall()
+        conn.close()
+        
+        config = {}
+        for row in config_rows:
+            config[row[0]] = {
+                'value': row[1],
+                'description': row[2]
+            }
+        
+        # Set defaults for missing chat settings
+        defaults = {
+            'chat_enabled': {'value': 'true', 'description': 'Enable AI Security Chat'},
+            'chat_max_history': {'value': '50', 'description': 'Maximum chat messages to keep in history'},
+            'chat_session_timeout': {'value': '30', 'description': 'Auto-clear chat after inactivity (minutes)'},
+            'chat_context_alerts': {'value': '10', 'description': 'Number of recent alerts to include as context'},
+            'chat_response_length': {'value': 'normal', 'description': 'AI response length (brief/normal/detailed)'},
+            'chat_tone': {'value': 'professional', 'description': 'AI response tone (professional/casual/technical/educational)'},
+            'chat_include_remediation': {'value': 'true', 'description': 'Include remediation steps in responses'},
+            'chat_include_context': {'value': 'true', 'description': 'Include alert context in responses'}
+        }
+        
+        for key, default_config in defaults.items():
+            if key not in config:
+                config[key] = default_config
+        
+        return config
+        
+    except Exception as e:
+        logging.error(f"Error getting AI chat config: {e}")
+        return {}
+
+def update_ai_chat_config(setting_name, setting_value):
+    """Update AI chat configuration in database."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Define descriptions for chat settings
+        descriptions = {
+            'chat_enabled': 'Enable AI Security Chat',
+            'chat_max_history': 'Maximum chat messages to keep in history',
+            'chat_session_timeout': 'Auto-clear chat after inactivity (minutes)',
+            'chat_context_alerts': 'Number of recent alerts to include as context',
+            'chat_response_length': 'AI response length (brief/normal/detailed)',
+            'chat_tone': 'AI response tone (professional/casual/technical/educational)',
+            'chat_include_remediation': 'Include remediation steps in responses',
+            'chat_include_context': 'Include alert context in responses'
+        }
+        
+        description = descriptions.get(setting_name, 'AI Chat configuration setting')
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO config (name, value, description)
+            VALUES (?, ?, ?)
+        """, (setting_name, setting_value, description))
+        
+        conn.commit()
+        conn.close()
+        
+        logging.info(f"Updated AI chat config: {setting_name} = {setting_value}")
+        
+    except Exception as e:
+        logging.error(f"Error updating AI chat config: {e}")
+        raise
 
 # --- General Configuration Functions ---
 def get_general_config():
