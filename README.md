@@ -29,6 +29,7 @@
 - **💬 AI Chat Settings** - Dedicated configuration for chat behavior and preferences
 - **📱 Slack Integration** - Configure notifications and message formatting
 - **🎛️ General Settings** - System-wide preferences and alert processing options
+- **🔍 Smart Feature Detection** - Automatic detection and validation of available features with implementation verification
 
 ### 🚀 Deployment Options
 - **Docker Compose** - Single-command deployment
@@ -265,6 +266,7 @@ Access configuration pages at:
 - **AI Configuration**: `http://localhost:8080/config/ai` 
 - **AI Chat Settings**: `http://localhost:8080/config/ai-chat`
 - **Slack Integration**: `http://localhost:8080/config/slack`
+- **Feature Status**: `http://localhost:8080/config/features` - Smart feature detection with implementation verification
 
 Features include:
 - **Real-time validation** - Test configurations before saving

@@ -1,0 +1,544 @@
+{% extends "settings_base.html" %}
+
+{% block title %}Feature Status{% endblock %}
+{% block page_icon %}<i class="fas fa-check-circle"></i>{% endblock %}
+{% block page_title %}Feature Status{% endblock %}
+{% block page_description %}Auto-detected features and configuration recommendations{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Feature status styling */
+    .feature-card {
+        margin-bottom: 1.5rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .feature-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .feature-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .feature-icon.configured {
+        background: var(--success-10);
+        color: var(--success-color);
+    }
+
+    .feature-icon.available {
+        background: var(--warning-10);
+        color: var(--warning-color);
+    }
+
+    .feature-icon.not-configured {
+        background: var(--danger-10);
+        color: var(--danger-color);
+    }
+
+    .feature-info h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .feature-status {
+        font-size: 0.875rem;
+        margin: 0.25rem 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .status-badge.configured {
+        background: var(--success-10);
+        color: var(--success-color);
+    }
+
+    .status-badge.available {
+        background: var(--warning-10);
+        color: var(--warning-color);
+    }
+
+    .status-badge.not-configured {
+        background: var(--danger-10);
+        color: var(--danger-color);
+    }
+
+    .feature-body {
+        padding: 1.5rem;
+    }
+
+    .feature-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .alert-sm {
+        padding: 0.5rem 0.75rem;
+        margin: 0.5rem 0;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        margin-left: 0.25rem;
+    }
+
+    .badge.bg-success {
+        background-color: var(--success-color) !important;
+        color: white;
+    }
+
+    .badge.bg-danger {
+        background-color: var(--danger-color) !important;
+        color: white;
+    }
+
+    .badge.bg-primary {
+        background-color: var(--primary-color) !important;
+        color: white;
+    }
+
+    .recommendation-card {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .recommendation-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .priority-high {
+        color: var(--danger-color);
+    }
+
+    .priority-medium {
+        color: var(--warning-color);
+    }
+
+    .priority-low {
+        color: var(--info-color);
+    }
+
+    .auto-config-banner {
+        background: var(--primary-10);
+        border: 1px solid var(--primary-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .auto-config-banner.applied {
+        background: var(--success-10);
+        border-color: var(--success-color);
+    }
+
+    .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-light);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .refresh-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+    }
+
+    @media (max-width: 768px) {
+        .refresh-button {
+            bottom: 1rem;
+            right: 1rem;
+        }
+
+        .summary-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .feature-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Auto-Configuration Banner -->
+<div id="autoConfigBanner" class="auto-config-banner" style="display: none;">
+    <h4><i class="fas fa-magic"></i> <span id="bannerTitle">Auto-Configuration Available</span></h4>
+    <p id="bannerMessage">We've detected configuration secrets that can be automatically applied.</p>
+    <button class="btn btn-primary" onclick="applyAutoConfiguration()">
+        <i class="fas fa-cogs"></i>
+        Apply Auto-Configuration
+    </button>
+</div>
+
+<!-- Summary Statistics -->
+<div class="summary-stats" id="summaryStats">
+    <div class="stat-card">
+        <div class="stat-number" id="configuredCount">-</div>
+        <div class="stat-label">Configured Features</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="totalCount">-</div>
+        <div class="stat-label">Total Features</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="recommendedProvider">-</div>
+        <div class="stat-label">Recommended Provider</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="implementedCount">-</div>
+        <div class="stat-label">Implemented Features</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="deploymentType">-</div>
+        <div class="stat-label">Environment</div>
+    </div>
+</div>
+
+<!-- Feature Status Cards -->
+<div id="featureCards">
+    <!-- Feature cards will be populated by JavaScript -->
+</div>
+
+<!-- Recommendations -->
+<div id="recommendations">
+    <!-- Recommendations will be populated by JavaScript -->
+</div>
+
+<!-- Refresh Button -->
+<button class="btn btn-primary btn-lg refresh-button" onclick="refreshFeatureStatus()">
+    <i class="fas fa-sync"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set the current page for sidebar navigation
+    window.page = 'features';
+    
+    let currentFeatures = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshFeatureStatus();
+    });
+
+    async function refreshFeatureStatus() {
+        const refreshBtn = document.querySelector('.refresh-button i');
+        refreshBtn.className = 'fas fa-spinner fa-spin';
+        
+        try {
+            const response = await fetch('/api/features/status');
+            const data = await response.json();
+            
+            if (data.success) {
+                currentFeatures = data.features;
+                updateUI(data);
+            } else {
+                showAlert('danger', 'Failed to load feature status: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error loading feature status:', error);
+            showAlert('danger', 'Failed to load feature status: ' + error.message);
+        } finally {
+            refreshBtn.className = 'fas fa-sync';
+        }
+    }
+
+    async function applyAutoConfiguration() {
+        const banner = document.getElementById('autoConfigBanner');
+        const applyBtn = banner.querySelector('button');
+        const originalText = applyBtn.innerHTML;
+        
+        applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+        applyBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/api/features/detect?apply_auto_config=true');
+            const data = await response.json();
+            
+            if (data.success) {
+                if (data.auto_configuration_applied) {
+                    showAlert('success', '✅ Auto-configuration applied successfully!');
+                    banner.classList.add('applied');
+                    banner.querySelector('#bannerTitle').textContent = 'Auto-Configuration Applied';
+                    banner.querySelector('#bannerMessage').textContent = 'Configuration has been automatically updated based on detected secrets.';
+                    applyBtn.style.display = 'none';
+                    
+                    // Refresh the feature status
+                    setTimeout(refreshFeatureStatus, 1000);
+                } else {
+                    showAlert('info', 'No auto-configuration was needed.');
+                }
+            } else {
+                showAlert('danger', 'Failed to apply auto-configuration: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error applying auto-configuration:', error);
+            showAlert('danger', 'Failed to apply auto-configuration: ' + error.message);
+        } finally {
+            applyBtn.innerHTML = originalText;
+            applyBtn.disabled = false;
+        }
+    }
+
+    function updateUI(data) {
+        const { features, recommendations, summary } = data;
+        
+        // Update summary statistics
+        document.getElementById('configuredCount').textContent = summary.configured_features;
+        document.getElementById('totalCount').textContent = summary.total_features;
+        document.getElementById('recommendedProvider').textContent = summary.recommended_provider || 'None';
+        document.getElementById('deploymentType').textContent = summary.deployment_type || 'Unknown';
+        
+        // Count implemented features
+        const implementedCount = Object.values(features).filter(f => 
+            typeof f === 'object' && f.implemented
+        ).length;
+        document.getElementById('implementedCount').textContent = implementedCount;
+        
+        // Update auto-configuration banner
+        const banner = document.getElementById('autoConfigBanner');
+        if (features.auto_configuration_applied && !banner.classList.contains('applied')) {
+            banner.style.display = 'block';
+        } else if (banner.classList.contains('applied')) {
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
+        
+        // Update feature cards
+        updateFeatureCards(features);
+        
+        // Update recommendations
+        updateRecommendations(recommendations);
+    }
+
+    function updateFeatureCards(features) {
+        const container = document.getElementById('featureCards');
+        container.innerHTML = '';
+        
+        const featureConfigs = [
+            {
+                key: 'slack',
+                title: 'Slack Integration',
+                icon: 'fab fa-slack',
+                description: 'Receive security alerts in Slack channels',
+                configUrl: '/config/slack'
+            },
+            {
+                key: 'openai',
+                title: 'OpenAI Provider',
+                icon: 'fas fa-brain',
+                description: 'GPT models via Portkey security layer',
+                configUrl: '/config/ai'
+            },
+            {
+                key: 'gemini',
+                title: 'Gemini Provider', 
+                icon: 'fas fa-gem',
+                description: 'Google Gemini models via Portkey',
+                configUrl: '/config/ai'
+            },
+            {
+                key: 'ollama',
+                title: 'Ollama Provider',
+                icon: 'fas fa-home',
+                description: 'Local AI models for maximum privacy',
+                configUrl: '/config/ai'
+            },
+            {
+                key: 'portkey',
+                title: 'Portkey Security',
+                icon: 'fas fa-shield-alt',
+                description: 'Security layer for cloud AI providers',
+                configUrl: '/config/ai'
+            }
+        ];
+
+        featureConfigs.forEach(config => {
+            const feature = features[config.key];
+            if (!feature) return;
+            
+            const statusClass = feature.configured ? 'configured' : 
+                              feature.available ? 'available' : 'not-configured';
+            
+            const statusText = feature.configured ? 'Configured' :
+                              feature.available ? 'Available' : 'Not Configured';
+            
+            const card = document.createElement('div');
+            card.className = 'feature-card';
+            card.innerHTML = `
+                <div class="config-card">
+                    <div class="feature-header">
+                        <div class="feature-icon ${statusClass}">
+                            <i class="${config.icon}"></i>
+                        </div>
+                        <div class="feature-info">
+                            <h5>${config.title}</h5>
+                            <div class="feature-status">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                ${feature.auto_configured ? '<span class="badge bg-primary">Auto-Configured</span>' : ''}
+                                ${feature.implemented ? 
+                                    '<span class="badge bg-success">✅ Implemented</span>' : 
+                                    '<span class="badge bg-danger">❌ Not Implemented</span>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-body">
+                        <p class="text-muted">${config.description}</p>
+                        <p><strong>Detection Status:</strong> ${feature.reason}</p>
+                        <p><strong>Implementation Status:</strong> ${feature.implementation_status ? feature.implementation_status.replace(/_/g, ' ') : 'Not checked'}</p>
+                        ${feature.implemented ? 
+                            '<div class="alert alert-success alert-sm mb-3"><i class="fas fa-check"></i> This feature is fully implemented and available in the UI.</div>' :
+                            '<div class="alert alert-warning alert-sm mb-3"><i class="fas fa-exclamation-triangle"></i> This feature is detected but not fully implemented in the UI.</div>'
+                        }
+                        <div class="feature-actions">
+                            <a href="${config.configUrl}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-cog"></i>
+                                Configure
+                            </a>
+                            ${feature.configured ? 
+                                '<span class="btn btn-success btn-sm disabled"><i class="fas fa-check"></i> Ready</span>' :
+                                '<span class="btn btn-warning btn-sm disabled"><i class="fas fa-exclamation-triangle"></i> Needs Setup</span>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        });
+    }
+
+    function updateRecommendations(recommendations) {
+        const container = document.getElementById('recommendations');
+        container.innerHTML = '';
+        
+        if (recommendations.length === 0) {
+            container.innerHTML = `
+                <div class="recommendation-card">
+                    <div class="text-center">
+                        <i class="fas fa-check-circle text-success" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h4>All Set!</h4>
+                        <p class="text-muted">All features are properly configured. No recommendations at this time.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        const header = document.createElement('h4');
+        header.innerHTML = '<i class="fas fa-lightbulb"></i> Recommendations';
+        header.style.marginBottom = '1rem';
+        container.appendChild(header);
+        
+        recommendations.forEach(rec => {
+            const card = document.createElement('div');
+            card.className = 'recommendation-card';
+            card.innerHTML = `
+                <div class="recommendation-header">
+                    <i class="fas fa-exclamation-triangle priority-${rec.priority}"></i>
+                    <div>
+                        <h5>${rec.title}</h5>
+                        <span class="badge bg-${rec.priority === 'high' ? 'danger' : rec.priority === 'medium' ? 'warning' : 'info'}">${rec.priority.toUpperCase()} PRIORITY</span>
+                    </div>
+                </div>
+                <p>${rec.description}</p>
+                <p><strong>Action:</strong> ${rec.action}</p>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at the top of the content
+        const content = document.querySelector('.main-content');
+        content.insertBefore(alertDiv, content.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+</script>
+{% endblock %} 

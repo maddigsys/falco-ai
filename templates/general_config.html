@@ -5,6 +5,163 @@
 {% block page_title %}General Configuration{% endblock %}
 {% block page_description %}Configure core system settings, alert processing, and data management{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Define additional color variables */
+    :root {
+        --primary-10: rgba(0, 174, 199, 0.1);
+        --success-10: rgba(0, 212, 170, 0.1);
+        --warning-10: rgba(255, 167, 38, 0.1);
+        --danger-10: rgba(239, 83, 80, 0.1);
+        --info-10: rgba(66, 153, 225, 0.1);
+        --success-color: #00D4AA;
+        --warning-color: #FFA726;
+        --danger-color: #EF5350;
+        --info-color: #4299E1;
+    }
+
+    /* Sticky Action Bar */
+    .sticky-action-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 1.5rem 1.5rem 0;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .sticky-action-bar .btn {
+        margin-right: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .sticky-action-bar .btn-lg {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .save-status {
+        font-style: italic;
+        white-space: nowrap;
+    }
+
+    .save-needed {
+        color: var(--warning-color) !important;
+        animation: pulse 2s infinite;
+    }
+
+    .save-complete {
+        color: var(--success-color) !important;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Connection Status */
+    .connection-status {
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .connection-status.success {
+        background: var(--success-10);
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+    }
+
+    .connection-status.error {
+        background: var(--danger-10);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .connection-status.warning {
+        background: var(--warning-10);
+        color: var(--warning-color);
+        border: 1px solid var(--warning-color);
+    }
+
+    .connection-status.info {
+        background: var(--info-10);
+        color: var(--info-color);
+        border: 1px solid var(--info-color);
+    }
+
+    /* Config Info Boxes */
+    .config-info {
+        background: var(--primary-10);
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .config-info strong {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Collapsible Sections */
+    .config-card.collapsed .config-card-body {
+        display: none;
+    }
+
+    .collapse-icon {
+        transition: transform 0.3s ease;
+        margin-left: auto;
+    }
+
+    .config-card.collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .sticky-action-bar {
+            position: relative;
+            margin: 0.5rem;
+            padding: 1rem;
+        }
+
+        .sticky-action-bar .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Sticky Action Bar -->
 <div class="sticky-action-bar">
@@ -35,6 +192,9 @@
         </div>
     </div>
 </div>
+
+<!-- Connection Status -->
+<div id="connectionStatus"></div>
 
 <!-- Configuration Summary Card -->
 <div class="config-card">
@@ -359,57 +519,6 @@
 <div id="status-alert" class="status-alert"></div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.sticky-action-bar {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: var(--bg-primary);
-    border-bottom: 2px solid var(--border-color);
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.sticky-action-bar .btn {
-    margin-right: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.sticky-action-bar .btn-lg {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.save-status {
-    font-style: italic;
-}
-
-.config-card .action-area {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1.5rem;
-    margin-top: 1.5rem;
-    background: var(--bg-light);
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    margin-bottom: -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-bottom: 1.5rem;
-}
-
-.save-needed {
-    color: var(--warning-color) !important;
-}
-
-.save-complete {
-    color: var(--success-color) !important;
-}
-</style>
-{% endblock %}
-
 {% block extra_js %}
 <script>
     // Set the current page for sidebar navigation
@@ -505,16 +614,16 @@
             const response = await fetch('/api/general/config', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(formData)
             });
 
-            const result = await response.json();
-            
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to save configuration');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
+            const result = await response.json();
             
             showAlert('success', '✅ Configuration saved successfully!');
             loadConfigurationSummary();
@@ -525,12 +634,6 @@
             showAlert('danger', 'Failed to save configuration: ' + error.message);
         } finally {
             setLoading(saveBtn, false);
-            // Update all save buttons
-            document.querySelectorAll('[onclick*="saveConfiguration"]').forEach(btn => {
-                btn.innerHTML = btn.innerHTML.includes('Save All') ? 
-                    '<i class="fas fa-save"></i> Save All Changes' : 
-                    '<i class="fas fa-save"></i> Save Configuration';
-            });
         }
     }
 
@@ -539,6 +642,7 @@
         setLoading(testBtn, true);
         
         try {
+            // Collect current form data for testing
             const formData = {};
             const formElements = document.querySelectorAll('input, select');
             
@@ -555,17 +659,21 @@
             const response = await fetch('/api/general/test', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(formData)
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const result = await response.json();
-
+            
             if (result.success) {
-                showAlert('success', '✅ Configuration validation successful!');
+                showAlert('success', '✅ Configuration test successful!');
             } else {
-                showAlert('danger', '❌ Configuration validation failed: ' + result.message);
+                showAlert('warning', '⚠️ Configuration test completed with warnings: ' + result.message);
             }
             
         } catch (error) {
@@ -573,12 +681,11 @@
             showAlert('danger', 'Failed to test configuration: ' + error.message);
         } finally {
             setLoading(testBtn, false);
-            testBtn.innerHTML = '<i class="fas fa-check-circle"></i> Test Configuration';
         }
     }
 
     async function resetConfiguration() {
-        if (!confirm('⚠️ Are you sure you want to reset all general configuration to defaults?\n\nThis action cannot be undone.')) {
+        if (!confirm('Are you sure you want to reset all settings to defaults? This action cannot be undone.')) {
             return;
         }
         
@@ -589,69 +696,48 @@
             const response = await fetch('/api/general/reset', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             });
 
-            const result = await response.json();
-            
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to reset configuration');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            showAlert('success', '✅ Configuration reset to defaults successfully!');
-            
-            // Reload the page after 2 seconds to show the reset values
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
+            showAlert('success', '✅ Configuration reset to defaults!');
+            loadConfiguration();
             
         } catch (error) {
             console.error('Error resetting configuration:', error);
             showAlert('danger', 'Failed to reset configuration: ' + error.message);
         } finally {
             setLoading(resetBtn, false);
-            resetBtn.innerHTML = '<i class="fas fa-undo"></i> Reset to Defaults';
         }
     }
 
     async function exportConfiguration() {
+        const exportBtn = document.querySelector('[onclick="exportConfiguration()"]');
+        setLoading(exportBtn, true);
+        
         try {
-            const response = await fetch('/api/general/config');
-            if (!response.ok) throw new Error('Failed to load configuration');
+            const response = await fetch('/api/general/export');
+            if (!response.ok) throw new Error('Failed to export configuration');
             
-            const data = await response.json();
-            
-            // Create export object with just the values
-            const exportData = {};
-            for (const [key, config] of Object.entries(data)) {
-                exportData[key] = config.value;
-            }
-            
-            // Add metadata
-            const exportObject = {
-                export_date: new Date().toISOString(),
-                export_type: 'general_configuration',
-                version: '1.0',
-                configuration: exportData
-            };
-            
-            // Create and download file
-            const blob = new Blob([JSON.stringify(exportObject, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `falco-general-config-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
+            a.download = 'falco-ai-config.json';
             a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            window.URL.revokeObjectURL(url);
             
-            showAlert('success', '📁 Configuration exported successfully!');
+            showAlert('success', '✅ Configuration exported successfully!');
             
         } catch (error) {
             console.error('Error exporting configuration:', error);
             showAlert('danger', 'Failed to export configuration: ' + error.message);
+        } finally {
+            setLoading(exportBtn, false);
         }
     }
 
@@ -663,86 +749,102 @@
             const data = await response.json();
             const summaryElement = document.getElementById('config-summary');
             
-            const summaryItems = [
-                {
-                    icon: 'fas fa-exclamation-triangle',
-                    label: 'Minimum Priority',
-                    value: data.min_priority?.value || 'warning',
-                    color: 'text-warning'
-                },
-                {
-                    icon: 'fas fa-clock',
-                    label: 'Age Filter',
-                    value: data.ignore_older_minutes?.value === '0' ? 'Disabled' : `${data.ignore_older_minutes?.value} min`,
-                    color: 'text-info'
-                },
-                {
-                    icon: 'fas fa-copy',
-                    label: 'Deduplication',
-                    value: data.deduplication_enabled?.value === 'true' ? 'Enabled' : 'Disabled',
-                    color: data.deduplication_enabled?.value === 'true' ? 'text-success' : 'text-danger'
-                },
-                {
-                    icon: 'fas fa-list-alt',
-                    label: 'Log Level',
-                    value: data.log_level?.value || 'INFO',
-                    color: 'text-primary'
-                },
-                {
-                    icon: 'fas fa-database',
-                    label: 'Max Alerts',
-                    value: data.max_alerts_storage?.value || '10000',
-                    color: 'text-secondary'
-                },
-                {
-                    icon: 'fas fa-calendar-times',
-                    label: 'Retention',
-                    value: `${data.alert_retention_days?.value || '30'} days`,
-                    color: 'text-secondary'
-                },
-                {
-                    icon: 'fas fa-tachometer-alt',
-                    label: 'Rate Limiting',
-                    value: data.rate_limit_enabled?.value === 'true' ? `${data.max_alerts_per_minute?.value || '60'}/min` : 'Disabled',
-                    color: data.rate_limit_enabled?.value === 'true' ? 'text-success' : 'text-muted'
-                },
-                {
-                    icon: 'fas fa-layer-group',
-                    label: 'Batch Processing',
-                    value: data.batch_processing_enabled?.value === 'true' ? `Size: ${data.batch_size?.value || '10'}` : 'Disabled',
-                    color: data.batch_processing_enabled?.value === 'true' ? 'text-success' : 'text-muted'
-                },
-                {
-                    icon: 'fas fa-project-diagram',
-                    label: 'Alert Correlation',
-                    value: data.alert_correlation_enabled?.value === 'true' ? `${data.correlation_window_minutes?.value || '15'}min window` : 'Disabled',
-                    color: data.alert_correlation_enabled?.value === 'true' ? 'text-success' : 'text-muted'
-                }
-            ];
-            
-            summaryElement.innerHTML = summaryItems.map(item => `
-                <div class="col-md-4 col-sm-6 mb-3">
+            summaryElement.innerHTML = `
+                <div class="col-md-3 mb-3">
                     <div class="d-flex align-items-center">
-                        <i class="${item.icon} ${item.color} me-2"></i>
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
                         <div>
-                            <div class="fw-bold">${item.label}</div>
-                            <div class="text-muted small">${item.value}</div>
+                            <div class="fw-bold">Min Priority</div>
+                            <div class="text-muted small">${data.min_priority?.value || 'Not set'}</div>
                         </div>
                     </div>
                 </div>
-            `).join('');
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-database text-info me-2"></i>
+                        <div>
+                            <div class="fw-bold">Max Alerts</div>
+                            <div class="text-muted small">${data.max_alerts_storage?.value || 'Not set'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-calendar-times text-danger me-2"></i>
+                        <div>
+                            <div class="fw-bold">Retention</div>
+                            <div class="text-muted small">${data.alert_retention_days?.value || 'Not set'} days</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-toggle-${data.deduplication_enabled?.value === 'true' ? 'on text-success' : 'off text-danger'} me-2"></i>
+                        <div>
+                            <div class="fw-bold">Deduplication</div>
+                            <div class="text-muted small">${data.deduplication_enabled?.value === 'true' ? 'Enabled' : 'Disabled'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
             
         } catch (error) {
             console.error('Error loading configuration summary:', error);
             document.getElementById('config-summary').innerHTML = `
                 <div class="col-12">
-                    <div class="alert alert-danger">
+                    <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Failed to load configuration summary
+                        Unable to load configuration summary
                     </div>
                 </div>
             `;
         }
+    }
+
+    // Generic utility functions
+    function setLoading(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+        } else {
+            button.disabled = false;
+            const icon = button.querySelector('i');
+            if (icon) {
+                // Restore original icon based on button content
+                if (button.textContent.includes('Save')) {
+                    icon.className = 'fas fa-save';
+                } else if (button.textContent.includes('Test')) {
+                    icon.className = 'fas fa-check-circle';
+                } else if (button.textContent.includes('Reset')) {
+                    icon.className = 'fas fa-undo';
+                } else if (button.textContent.includes('Export')) {
+                    icon.className = 'fas fa-download';
+                }
+            }
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.getElementById('connectionStatus');
+        container.innerHTML = '';
+        container.appendChild(alertDiv);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
 </script>
 {% endblock %} 

@@ -393,52 +393,158 @@
 
 {% block extra_css %}
 <style>
-.sticky-action-bar {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: var(--bg-primary);
-    border-bottom: 2px solid var(--border-color);
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+    /* Define additional color variables */
+    :root {
+        --primary-10: rgba(0, 174, 199, 0.1);
+        --success-10: rgba(0, 212, 170, 0.1);
+        --warning-10: rgba(255, 167, 38, 0.1);
+        --danger-10: rgba(239, 83, 80, 0.1);
+        --info-10: rgba(66, 153, 225, 0.1);
+        --success-color: #00D4AA;
+        --warning-color: #FFA726;
+        --danger-color: #EF5350;
+        --info-color: #4299E1;
+    }
 
-.sticky-action-bar .btn {
-    margin-right: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+    /* Sticky Action Bar */
+    .sticky-action-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 1.5rem 1.5rem 0;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+    }
 
-.sticky-action-bar .btn-lg {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .sticky-action-bar .btn {
+        margin-right: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 
-.save-status {
-    font-style: italic;
-}
+    .sticky-action-bar .btn-lg {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-.config-card .action-area {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1.5rem;
-    margin-top: 1.5rem;
-    background: var(--bg-light);
-    margin-left: -1.5rem;
-    margin-right: -1.5rem;
-    margin-bottom: -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-bottom: 1.5rem;
-}
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
 
-.save-needed {
-    color: var(--warning-color) !important;
-}
+    .save-status {
+        font-style: italic;
+        white-space: nowrap;
+    }
 
-.save-complete {
-    color: var(--success-color) !important;
-}
+    .save-needed {
+        color: var(--warning-color) !important;
+        animation: pulse 2s infinite;
+    }
+
+    .save-complete {
+        color: var(--success-color) !important;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Connection Status */
+    .connection-status {
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .connection-status.success {
+        background: var(--success-10);
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+    }
+
+    .connection-status.error {
+        background: var(--danger-10);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .connection-status.warning {
+        background: var(--warning-10);
+        color: var(--warning-color);
+        border: 1px solid var(--warning-color);
+    }
+
+    .connection-status.info {
+        background: var(--info-10);
+        color: var(--info-color);
+        border: 1px solid var(--info-color);
+    }
+
+    /* Config Info Boxes */
+    .config-info {
+        background: var(--primary-10);
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .config-info strong {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Collapsible Sections */
+    .config-card.collapsed .config-card-body {
+        display: none;
+    }
+
+    .collapse-icon {
+        transition: transform 0.3s ease;
+        margin-left: auto;
+    }
+
+    .config-card.collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .sticky-action-bar {
+            position: relative;
+            margin: 0.5rem;
+            padding: 1rem;
+        }
+
+        .sticky-action-bar .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -560,11 +666,11 @@
                 body: JSON.stringify(config)
             });
 
-            const result = await response.json();
-            
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to save configuration');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
+            const result = await response.json();
             
             showAlert('success', '✅ Slack configuration saved successfully!');
             currentConfig = config;
@@ -576,12 +682,6 @@
             showAlert('danger', 'Failed to save configuration: ' + error.message);
         } finally {
             setLoading(saveBtn, false);
-            // Update all save buttons
-            document.querySelectorAll('[onclick*="saveConfig"]').forEach(btn => {
-                btn.innerHTML = btn.innerHTML.includes('Save All') ? 
-                    '<i class="fas fa-save"></i> Save All Changes' : 
-                    '<i class="fas fa-save"></i> Save Configuration';
-            });
         }
     }
 
@@ -608,13 +708,17 @@
                 })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const result = await response.json();
 
             if (result.success) {
                 showAlert('success', `✅ Connection successful! Bot: ${result.bot_info.user}, Team: ${result.bot_info.team}`);
                 updateConnectionStatus('success', `Connected as ${result.bot_info.user} to ${result.bot_info.team}`);
             } else {
-                showAlert('danger', '❌ Connection failed: ' + result.error);
+                showAlert('warning', '⚠️ Connection test completed with warnings: ' + result.error);
                 updateConnectionStatus('error', result.error);
             }
             
@@ -624,7 +728,6 @@
             updateConnectionStatus('error', error.message);
         } finally {
             setLoading(testBtn, false);
-            testBtn.innerHTML = '<i class="fas fa-check-circle"></i> Test Connection';
         }
     }
 
@@ -648,6 +751,10 @@
                 body: JSON.stringify(config)
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const result = await response.json();
             
             const previewElement = document.getElementById('messagePreview');
@@ -667,7 +774,6 @@
             document.getElementById('messagePreview').textContent = `Error: ${error.message}`;
         } finally {
             setLoading(previewBtn, false);
-            previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview Message';
         }
     }
 
@@ -784,6 +890,50 @@
         } catch (error) {
             console.error('Error updating status summary:', error);
         }
+    }
+
+    // Generic utility functions
+    function setLoading(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+        } else {
+            button.disabled = false;
+            const icon = button.querySelector('i');
+            if (icon) {
+                // Restore original icon based on button content
+                if (button.textContent.includes('Save')) {
+                    icon.className = 'fas fa-save';
+                } else if (button.textContent.includes('Test')) {
+                    icon.className = 'fas fa-check-circle';
+                } else if (button.textContent.includes('Preview')) {
+                    icon.className = 'fas fa-eye';
+                }
+            }
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.getElementById('connectionStatus');
+        container.innerHTML = '';
+        container.appendChild(alertDiv);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
 </script>
 {% endblock %}

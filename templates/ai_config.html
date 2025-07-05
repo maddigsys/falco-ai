@@ -230,7 +230,7 @@
         background: white;
         border: 1px solid var(--border-color);
         border-radius: var(--radius-sm);
-        padding: 1rem;
+        padding: 1.5rem;
         min-height: 200px;
         font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
         font-size: 0.875rem;
@@ -238,6 +238,7 @@
         max-height: 400px;
         overflow-y: auto;
         box-shadow: var(--shadow-sm);
+        margin-top: 0;
     }
 
     .preview-header {
@@ -327,6 +328,7 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         margin: 1.5rem 1.5rem 0;
         padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
     }
 
     .action-buttons {
@@ -374,6 +376,63 @@
             flex: 1;
             min-width: 120px;
         }
+    }
+
+    /* Config card consistency */
+    .config-card {
+        margin: 2rem;
+    }
+
+    .config-card-body {
+        padding: 1.5rem;
+    }
+
+    .config-card .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .config-card .row {
+        margin-bottom: 1rem;
+    }
+
+    .config-card .row:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Model status and progress containers */
+    .model-status,
+    .progress-container {
+        margin: 1.5rem 0;
+    }
+
+    /* Button spacing */
+    .config-card .btn {
+        margin-top: 0.75rem;
+        margin-right: 0.5rem;
+    }
+
+    .d-flex.gap-2 .btn {
+        margin-top: 0;
+        margin-right: 0;
+    }
+
+    /* System prompt and response preview alignment */
+    .config-card .config-info {
+        margin-bottom: 1.5rem;
+    }
+
+    .config-card .d-flex.justify-content-end {
+        margin-bottom: 1rem;
+    }
+
+    .config-card .d-flex.gap-2 {
+        margin-top: 0;
+    }
+
+    /* Ensure consistent button alignment */
+    .config-card .d-flex.gap-2 .btn {
+        margin-top: 0;
+        margin-right: 0;
     }
 </style>
 {% endblock %}
@@ -490,13 +549,9 @@
         </h3>
     </div>
     <div class="config-card-body">
-        <div class="portkey-info">
+        <div class="config-info">
             <strong><i class="fas fa-lock"></i> AI Security & Sanitization</strong><br>
             Portkey acts as a security layer that sanitizes and monitors all AI interactions. Configure once to protect all cloud AI providers.
-            <br><br>
-            <a href="https://portkey.ai" target="_blank" class="btn btn-outline">
-                <i class="fas fa-external-link-alt"></i> Get your Portkey API key
-            </a>
         </div>
 
         <div class="form-group">
@@ -510,6 +565,10 @@
                 Required for OpenAI and Gemini. Provides security, monitoring, and sanitization.
             </div>
         </div>
+
+        <a href="https://portkey.ai" target="_blank" class="btn btn-outline">
+            <i class="fas fa-external-link-alt"></i> Get your Portkey API key
+        </a>
     </div>
 </div>
 
@@ -659,7 +718,7 @@
             </div>
 
             <!-- Timeout Configuration -->
-            <div class="row" style="margin-top: 1rem;">
+            <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
                         <label for="ollamaTimeout" class="form-label">
@@ -729,7 +788,7 @@
                 <div class="progress-bar" id="progressBar">0%</div>
             </div>
 
-            <div class="form-group" style="margin-top: 1.5rem;">
+            <div class="form-group">
                 <label class="form-label">
                     <i class="fas fa-list"></i>
                     Available Models
@@ -739,14 +798,12 @@
                     <i class="fas fa-info-circle"></i>
                     Click to select. ✓ = Downloaded locally
                 </div>
-                <button class="btn btn-secondary" onclick="refreshOllamaModels()" style="margin-top: 0.75rem;">
+                <button class="btn btn-secondary" onclick="refreshOllamaModels()">
                     <i class="fas fa-sync"></i>
                     Refresh Models
                 </button>
             </div>
         </div>
-    </div>
-
     </div>
 </div>
 
@@ -762,38 +819,50 @@
         </h3>
     </div>
     <div class="config-card-body">
-        <div class="config-info">
-            <strong><i class="fas fa-brain"></i> AI Behavior Customization</strong><br>
-            The system prompt defines how the AI analyzes security alerts. Customize it to match your organization's security analysis needs and response procedures.
-        </div>
-        
-        <div class="form-group">
-            <label for="systemPrompt" class="form-label">
-                <i class="fas fa-file-alt"></i>
-                System Prompt
-            </label>
-            <textarea 
-                class="form-control" 
-                id="systemPrompt" 
-                rows="12" 
-                placeholder="Leave empty to use the default prompt..."
-                style="font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace; font-size: 0.875rem;"
-            ></textarea>
-            <div class="form-text">
-                <i class="fas fa-info-circle"></i>
-                Define how the AI should analyze Falco alerts. Leave empty to use the default prompt.
+        <div class="row">
+            <div class="col-12">
+                <div class="config-info">
+                    <strong><i class="fas fa-brain"></i> AI Behavior Customization</strong><br>
+                    The system prompt defines how the AI analyzes security alerts. Customize it to match your organization's security analysis needs and response procedures.
+                </div>
             </div>
         </div>
         
-        <div class="d-flex gap-2 flex-wrap">
-            <button class="btn btn-warning" onclick="resetSystemPrompt()">
-                <i class="fas fa-undo"></i>
-                Reset to Default
-            </button>
-            <button class="btn btn-secondary" onclick="previewCurrentPrompt()">
-                <i class="fas fa-eye"></i>
-                Preview Current
-            </button>
+        <div class="row">
+            <div class="col-12">
+                <div class="form-group">
+                    <label for="systemPrompt" class="form-label">
+                        <i class="fas fa-file-alt"></i>
+                        System Prompt
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="systemPrompt" 
+                        rows="12" 
+                        placeholder="Leave empty to use the default prompt..."
+                        style="font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace; font-size: 0.875rem;"
+                    ></textarea>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle"></i>
+                        Define how the AI should analyze Falco alerts. Leave empty to use the default prompt.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-warning" onclick="resetSystemPrompt()">
+                        <i class="fas fa-undo"></i>
+                        Reset to Default
+                    </button>
+                    <button class="btn btn-secondary" onclick="previewCurrentPrompt()">
+                        <i class="fas fa-eye"></i>
+                        Preview Current
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -809,16 +878,33 @@
         </h3>
     </div>
     <div class="config-card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="preview-header">Sample AI Analysis:</div>
-            <button class="btn btn-primary" onclick="generateSample()">
-                <i class="fas fa-magic"></i>
-                Generate Sample
-            </button>
+        <div class="row">
+            <div class="col-12">
+                <div class="config-info">
+                    <strong><i class="fas fa-magic"></i> Sample AI Analysis</strong><br>
+                    Generate a sample AI analysis to see how your current configuration will analyze security alerts.
+                </div>
+            </div>
         </div>
-        <div class="response-preview">
-            <div id="responsePreview" style="color: var(--text-light);">
-                Click "Generate Sample" to see how AI analyzes security alerts with your current configuration
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary" onclick="generateSample()">
+                        <i class="fas fa-magic"></i>
+                        Generate Sample
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="response-preview">
+                    <div id="responsePreview" style="color: var(--text-light);">
+                        Click "Generate Sample" to see how AI analyzes security alerts with your current configuration
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1097,12 +1183,6 @@
             showAlert('danger', 'Failed to save configuration: ' + error.message);
         } finally {
             setLoading(saveBtn, false);
-            // Update all save buttons
-            document.querySelectorAll('[onclick*="saveConfig"]').forEach(btn => {
-                btn.innerHTML = btn.innerHTML.includes('Save All') ? 
-                    '<i class="fas fa-save"></i> Save All Changes' : 
-                    '<i class="fas fa-save"></i> Save Configuration';
-            });
         }
     }
 
@@ -1152,11 +1232,13 @@
             const result = await response.json();
 
             if (result.success) {
-                showAlert('success', '✅ AI connection test successful!');
-                updateConnectionStatus('success', result.message);
+                const message = result.message || 'Connection successful!';
+                showAlert('success', '✅ AI connection test successful! ' + message);
+                updateConnectionStatus('success', message);
             } else {
-                showAlert('danger', '❌ AI connection test failed: ' + result.message);
-                updateConnectionStatus('error', result.message);
+                const errorMessage = result.error || result.message || 'Unknown error';
+                showAlert('warning', '⚠️ AI connection test completed with warnings: ' + errorMessage);
+                updateConnectionStatus('error', errorMessage);
             }
             
         } catch (error) {
@@ -1165,7 +1247,6 @@
             updateConnectionStatus('error', error.message);
         } finally {
             setLoading(testBtn, false);
-            testBtn.innerHTML = '<i class="fas fa-check-circle"></i> Test Connection';
         }
     }
 
@@ -1229,7 +1310,6 @@
             previewElement.innerHTML = `<span style="color: #dc3545;">Error: ${error.message}</span>`;
         } finally {
             setLoading(generateBtn, false);
-            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate Sample';
         }
     }
 
@@ -1457,7 +1537,6 @@
             showAlert('danger', 'Failed to download model: ' + error.message);
         } finally {
             setLoading(downloadBtn, false);
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Model';
         }
     }
 
@@ -1522,6 +1601,58 @@
     function toggleSection(header) {
         const card = header.closest('.config-card');
         card.classList.toggle('collapsed');
+    }
+
+    // Generic utility functions
+    function setLoading(button, isLoading) {
+        if (isLoading) {
+            button.disabled = true;
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+        } else {
+            button.disabled = false;
+            const icon = button.querySelector('i');
+            if (icon) {
+                // Restore original icon based on button content
+                if (button.textContent.includes('Save')) {
+                    icon.className = 'fas fa-save';
+                } else if (button.textContent.includes('Test')) {
+                    icon.className = 'fas fa-check-circle';
+                } else if (button.textContent.includes('Generate')) {
+                    icon.className = 'fas fa-magic';
+                } else if (button.textContent.includes('Download')) {
+                    icon.className = 'fas fa-download';
+                } else if (button.textContent.includes('Refresh')) {
+                    icon.className = 'fas fa-sync';
+                } else if (button.textContent.includes('Reset')) {
+                    icon.className = 'fas fa-undo';
+                } else if (button.textContent.includes('Preview')) {
+                    icon.className = 'fas fa-eye';
+                }
+            }
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.getElementById('connectionStatus');
+        container.innerHTML = '';
+        container.appendChild(alertDiv);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
 </script>
 {% endblock %}

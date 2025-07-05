@@ -309,7 +309,7 @@ main() {
         echo "   • Storage: 15Gi ollama-data PVC"
     elif [ "$ENVIRONMENT" = "production" ]; then
         print_info "Production cleanup includes:"
-        echo "   • Image: maddigsys/falco-ai-alerts:v1.5.2"
+        echo "   • Image: maddigsys/falco-ai-alerts:v1.5.3"
         echo "   • Namespace: falco-ai-alerts"
         echo "   • Resources: HPA, Network Policies, Ingress"
         echo "   • Storage: 30Gi ollama-data PVC"

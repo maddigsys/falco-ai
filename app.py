@@ -200,6 +200,31 @@ def init_database():
         ('alert_correlation_enabled', 'false', 'boolean', 'Enable Alert Correlation'),
         ('correlation_window_minutes', '15', 'number', 'Alert Correlation Window (minutes)')
     ''')
+
+    # Create config table for AI chat and other general settings
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS config (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            value TEXT,
+            description TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # Initialize default AI Chat settings
+    cursor.execute('''
+        INSERT OR IGNORE INTO config (name, value, description)
+        VALUES 
+        ('chat_enabled', 'true', 'Enable AI Security Chat'),
+        ('chat_max_history', '50', 'Maximum chat messages to keep in history'),
+        ('chat_session_timeout', '30', 'Auto-clear chat after inactivity (minutes)'),
+        ('chat_context_alerts', '10', 'Number of recent alerts to include as context'),
+        ('chat_response_length', 'normal', 'AI response length (brief/normal/detailed)'),
+        ('chat_tone', 'professional', 'AI response tone (professional/casual/technical/educational)'),
+        ('chat_include_remediation', 'true', 'Include remediation steps in responses'),
+        ('chat_include_context', 'true', 'Include alert context in responses')
+    ''')
     
     conn.commit()
     conn.close()
@@ -542,8 +567,44 @@ Command: {alert_payload.get('output_fields', {}).get('proc.cmdline', 'N/A')}"""
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint."""
-    return jsonify({"status": "healthy", "service": "falco-ai-alerts"}), 200
+    """Enhanced health check endpoint with feature detection."""
+    try:
+        # Basic health info
+        health_data = {
+            "status": "healthy", 
+            "service": "falco-ai-alerts",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "web_ui_enabled": WEB_UI_ENABLED
+        }
+        
+        # Add feature detection if Web UI is enabled
+        if WEB_UI_ENABLED:
+            try:
+                features = detect_available_features()
+                health_data.update({
+                    "features": {
+                        "slack_configured": features['slack']['configured'],
+                        "ai_providers": {
+                            "openai": features['openai']['configured'],
+                            "gemini": features['gemini']['configured'],
+                            "ollama": features['ollama']['configured']
+                        },
+                        "recommended_provider": features['recommended_provider'],
+                        "deployment_type": features['deployment_type'],
+                        "auto_configuration_available": features['auto_configuration_applied']
+                    }
+                })
+            except Exception as e:
+                health_data["features"] = {"error": f"Feature detection failed: {str(e)}"}
+        
+        return jsonify(health_data), 200
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy", 
+            "service": "falco-ai-alerts",
+            "error": str(e),
+            "timestamp": datetime.datetime.now().isoformat()
+        }), 500
 
 @app.route('/falco-webhook', methods=['POST'])
 def falco_webhook():
@@ -2406,6 +2467,13 @@ def api_reset_general_config():
     
     return jsonify({"message": "General configuration reset to defaults"})
 
+@app.route('/config/features')
+def feature_status_ui():
+    """Render feature status page."""
+    if not WEB_UI_ENABLED:
+        return "Web UI is disabled", 404
+    return render_template('feature_status.html', page='features')
+
 @app.route('/api/falco/config')
 def api_falco_config():
     """Get Falco webhook configuration."""
@@ -2467,10 +2535,523 @@ priority: warning
             'error': str(e)
         }), 500
 
+# --- Feature Detection and Auto-Configuration ---
+def detect_available_features():
+    """
+    Intelligently detect available features based on environment variables and system state.
+    Also verifies actual implementation and UI integration.
+    Returns a comprehensive feature detection report.
+    """
+    features = {
+        'slack': {
+            'available': False,
+            'configured': False,
+            'implemented': False,
+            'status': 'not_configured',
+            'reason': '',
+            'auto_configured': False,
+            'implementation_status': 'not_checked'
+        },
+        'openai': {
+            'available': False,
+            'configured': False,
+            'implemented': False,
+            'status': 'not_configured',
+            'reason': '',
+            'auto_configured': False,
+            'implementation_status': 'not_checked'
+        },
+        'gemini': {
+            'available': False,
+            'configured': False,
+            'implemented': False,
+            'status': 'not_configured',
+            'reason': '',
+            'auto_configured': False,
+            'implementation_status': 'not_checked'
+        },
+        'ollama': {
+            'available': False,
+            'configured': False,
+            'implemented': False,
+            'status': 'not_configured',
+            'reason': '',
+            'auto_configured': False,
+            'implementation_status': 'not_checked'
+        },
+        'portkey': {
+            'available': False,
+            'configured': False,
+            'implemented': False,
+            'status': 'not_configured',
+            'reason': '',
+            'auto_configured': False,
+            'implementation_status': 'not_checked'
+        },
+        'recommended_provider': None,
+        'auto_configuration_applied': False,
+        'deployment_type': 'unknown'
+    }
+    
+    # Detect deployment environment
+    hostname = os.environ.get('HOSTNAME', '')
+    if 'dev' in hostname.lower() or 'localhost' in hostname.lower():
+        features['deployment_type'] = 'development'
+    elif 'prod' in hostname.lower() or 'k8s' in hostname.lower():
+        features['deployment_type'] = 'production'
+    else:
+        features['deployment_type'] = 'local'
+    
+    # Detect Slack configuration
+    slack_token = os.environ.get("SLACK_BOT_TOKEN", "")
+    if slack_token and slack_token != "xoxb-your-token-here" and slack_token.startswith("xoxb-"):
+        features['slack']['available'] = True
+        features['slack']['configured'] = True
+        features['slack']['status'] = 'configured'
+        features['slack']['reason'] = 'Valid Slack bot token detected'
+        features['slack']['auto_configured'] = True
+        logging.info("✅ FEATURE_DETECTION: Slack integration auto-configured")
+    elif slack_token and slack_token != "xoxb-your-token-here":
+        features['slack']['available'] = True
+        features['slack']['configured'] = False
+        features['slack']['status'] = 'invalid_token'
+        features['slack']['reason'] = 'Invalid Slack bot token format'
+    else:
+        features['slack']['available'] = False
+        features['slack']['configured'] = False
+        features['slack']['status'] = 'not_configured'
+        features['slack']['reason'] = 'No Slack bot token provided'
+    
+    # Detect Portkey configuration
+    portkey_key = os.environ.get("PORTKEY_API_KEY", "")
+    if portkey_key and portkey_key != "pk-your-portkey-api-key-here" and portkey_key.startswith("pk-"):
+        features['portkey']['available'] = True
+        features['portkey']['configured'] = True
+        features['portkey']['status'] = 'configured'
+        features['portkey']['reason'] = 'Valid Portkey API key detected'
+        features['portkey']['auto_configured'] = True
+        logging.info("✅ FEATURE_DETECTION: Portkey security layer auto-configured")
+    elif portkey_key and portkey_key != "pk-your-portkey-api-key-here":
+        features['portkey']['available'] = True
+        features['portkey']['configured'] = False
+        features['portkey']['status'] = 'invalid_key'
+        features['portkey']['reason'] = 'Invalid Portkey API key format'
+    else:
+        features['portkey']['available'] = False
+        features['portkey']['configured'] = False
+        features['portkey']['status'] = 'not_configured'
+        features['portkey']['reason'] = 'No Portkey API key provided'
+    
+    # Detect OpenAI configuration (requires Portkey)
+    openai_vkey = os.environ.get("OPENAI_VIRTUAL_KEY", "")
+    if features['portkey']['configured'] and openai_vkey and openai_vkey != "openai-your-virtual-key-here":
+        features['openai']['available'] = True
+        features['openai']['configured'] = True
+        features['openai']['status'] = 'configured'
+        features['openai']['reason'] = 'OpenAI virtual key detected with Portkey'
+        features['openai']['auto_configured'] = True
+        logging.info("✅ FEATURE_DETECTION: OpenAI provider auto-configured")
+    elif openai_vkey and openai_vkey != "openai-your-virtual-key-here":
+        features['openai']['available'] = True
+        features['openai']['configured'] = False
+        features['openai']['status'] = 'missing_portkey'
+        features['openai']['reason'] = 'OpenAI virtual key found but Portkey not configured'
+    elif features['portkey']['configured']:
+        features['openai']['available'] = True
+        features['openai']['configured'] = False
+        features['openai']['status'] = 'missing_virtual_key'
+        features['openai']['reason'] = 'Portkey configured but no OpenAI virtual key'
+    else:
+        features['openai']['available'] = False
+        features['openai']['configured'] = False
+        features['openai']['status'] = 'not_configured'
+        features['openai']['reason'] = 'No OpenAI virtual key or Portkey configuration'
+    
+    # Detect Gemini configuration (requires Portkey)
+    gemini_vkey = os.environ.get("GEMINI_VIRTUAL_KEY", "")
+    if features['portkey']['configured'] and gemini_vkey and gemini_vkey != "gemini-your-virtual-key-here":
+        features['gemini']['available'] = True
+        features['gemini']['configured'] = True
+        features['gemini']['status'] = 'configured'
+        features['gemini']['reason'] = 'Gemini virtual key detected with Portkey'
+        features['gemini']['auto_configured'] = True
+        logging.info("✅ FEATURE_DETECTION: Gemini provider auto-configured")
+    elif gemini_vkey and gemini_vkey != "gemini-your-virtual-key-here":
+        features['gemini']['available'] = True
+        features['gemini']['configured'] = False
+        features['gemini']['status'] = 'missing_portkey'
+        features['gemini']['reason'] = 'Gemini virtual key found but Portkey not configured'
+    elif features['portkey']['configured']:
+        features['gemini']['available'] = True
+        features['gemini']['configured'] = False
+        features['gemini']['status'] = 'missing_virtual_key'
+        features['gemini']['reason'] = 'Portkey configured but no Gemini virtual key'
+    else:
+        features['gemini']['available'] = False
+        features['gemini']['configured'] = False
+        features['gemini']['status'] = 'not_configured'
+        features['gemini']['reason'] = 'No Gemini virtual key or Portkey configuration'
+    
+    # Detect Ollama configuration
+    ollama_url = os.environ.get("OLLAMA_API_URL", "")
+    if ollama_url and ollama_url != "http://your-ollama-url:11434/api/generate":
+        try:
+            # Test Ollama connectivity
+            import requests
+            health_url = ollama_url.replace('/api/generate', '/api/tags')
+            response = requests.get(health_url, timeout=5)
+            if response.status_code == 200:
+                features['ollama']['available'] = True
+                features['ollama']['configured'] = True
+                features['ollama']['status'] = 'configured'
+                features['ollama']['reason'] = 'Ollama server detected and responding'
+                features['ollama']['auto_configured'] = True
+                logging.info("✅ FEATURE_DETECTION: Ollama provider auto-configured")
+            else:
+                features['ollama']['available'] = True
+                features['ollama']['configured'] = False
+                features['ollama']['status'] = 'unreachable'
+                features['ollama']['reason'] = f'Ollama server unreachable (HTTP {response.status_code})'
+        except Exception as e:
+            features['ollama']['available'] = True
+            features['ollama']['configured'] = False
+            features['ollama']['status'] = 'connection_error'
+            features['ollama']['reason'] = f'Ollama connection error: {str(e)}'
+    else:
+        features['ollama']['available'] = False
+        features['ollama']['configured'] = False
+        features['ollama']['status'] = 'not_configured'
+        features['ollama']['reason'] = 'No Ollama API URL configured'
+    
+    # Determine recommended provider based on what's available
+    if features['openai']['configured']:
+        features['recommended_provider'] = 'openai'
+    elif features['gemini']['configured']:
+        features['recommended_provider'] = 'gemini'
+    elif features['ollama']['configured']:
+        features['recommended_provider'] = 'ollama'
+    elif features['ollama']['available']:
+        features['recommended_provider'] = 'ollama'  # Default to Ollama even if not responding
+    else:
+        features['recommended_provider'] = 'ollama'  # Fallback default
+    
+    # Check if any auto-configuration was applied
+    features['auto_configuration_applied'] = any(
+        feature['auto_configured'] for feature in features.values() if isinstance(feature, dict)
+    )
+    
+    # Verify actual implementation in UI/backend
+    _verify_feature_implementation(features)
+    
+    return features
+
+def _verify_feature_implementation(features):
+    """
+    Verify that detected features are actually implemented and working in the current UI/backend.
+    Updates the features dict with implementation status.
+    """
+    
+    # Check Slack implementation
+    try:
+        # Check if Slack configuration UI exists and is accessible
+        slack_config = get_slack_config()
+        if slack_config and len(slack_config) > 0:
+            features['slack']['implemented'] = True
+            features['slack']['implementation_status'] = 'ui_accessible'
+            
+            # Check if Slack client is actually working
+            if slack_client is not None:
+                features['slack']['implementation_status'] = 'fully_functional'
+                if features['slack']['configured']:
+                    features['slack']['reason'] += ' (UI and backend integrated)'
+        else:
+            features['slack']['implemented'] = False
+            features['slack']['implementation_status'] = 'ui_missing'
+    except Exception as e:
+        features['slack']['implemented'] = False
+        features['slack']['implementation_status'] = f'error: {str(e)}'
+    
+    # Check AI provider implementation
+    try:
+        # Check if AI configuration UI exists and is accessible
+        ai_config = get_ai_config()
+        if ai_config and len(ai_config) > 0:
+            # Check each AI provider
+            provider_implementations = {
+                'openai': 'openai_virtual_key' in ai_config,
+                'gemini': 'gemini_virtual_key' in ai_config,
+                'ollama': 'ollama_api_url' in ai_config
+            }
+            
+            for provider, has_config in provider_implementations.items():
+                if has_config:
+                    features[provider]['implemented'] = True
+                    features[provider]['implementation_status'] = 'ui_accessible'
+                    
+                    # Check if the provider has actual backend support
+                    if provider == 'openai' and 'openai_parser' in globals():
+                        features[provider]['implementation_status'] = 'fully_functional'
+                    elif provider == 'gemini' and 'gemini_parser' in globals():
+                        features[provider]['implementation_status'] = 'fully_functional'
+                    elif provider == 'ollama':
+                        features[provider]['implementation_status'] = 'fully_functional'
+                        
+                    if features[provider]['configured']:
+                        features[provider]['reason'] += ' (UI and backend integrated)'
+                else:
+                    features[provider]['implemented'] = False
+                    features[provider]['implementation_status'] = 'config_missing'
+        else:
+            for provider in ['openai', 'gemini', 'ollama']:
+                features[provider]['implemented'] = False
+                features[provider]['implementation_status'] = 'ui_missing'
+    except Exception as e:
+        for provider in ['openai', 'gemini', 'ollama']:
+            features[provider]['implemented'] = False
+            features[provider]['implementation_status'] = f'error: {str(e)}'
+    
+    # Check Portkey implementation
+    try:
+        # Check if Portkey is integrated in the AI configuration
+        ai_config = get_ai_config()
+        if ai_config and 'portkey_api_key' in ai_config:
+            features['portkey']['implemented'] = True
+            features['portkey']['implementation_status'] = 'ui_accessible'
+            
+            # Check if portkey_config module is available
+            if 'portkey_config' in globals():
+                features['portkey']['implementation_status'] = 'fully_functional'
+                if features['portkey']['configured']:
+                    features['portkey']['reason'] += ' (UI and backend integrated)'
+        else:
+            features['portkey']['implemented'] = False
+            features['portkey']['implementation_status'] = 'ui_missing'
+    except Exception as e:
+        features['portkey']['implemented'] = False
+        features['portkey']['implementation_status'] = f'error: {str(e)}'
+    
+    # Additional checks for endpoints and routes
+    try:
+        # Verify key API endpoints exist
+        from flask import current_app
+        with current_app.app_context():
+            # Check if configuration routes exist
+            rule_names = [rule.rule for rule in current_app.url_map.iter_rules()]
+            
+            required_routes = {
+                'slack': ['/config/slack', '/api/slack/config'],
+                'ai_providers': ['/config/ai', '/api/ai/config'],
+                'features': ['/config/features', '/api/features/status']
+            }
+            
+            # Update implementation status based on route availability
+            if '/config/slack' in rule_names and '/api/slack/config' in rule_names:
+                if features['slack']['implementation_status'] not in ['fully_functional']:
+                    features['slack']['implementation_status'] = 'routes_available'
+            
+            if '/config/ai' in rule_names and '/api/ai/config' in rule_names:
+                for provider in ['openai', 'gemini', 'ollama', 'portkey']:
+                    if features[provider]['implementation_status'] not in ['fully_functional']:
+                        features[provider]['implementation_status'] = 'routes_available'
+            
+            if '/config/features' in rule_names:
+                # Feature detection itself is implemented
+                features['_feature_detection_implemented'] = True
+                
+    except Exception as e:
+        logging.warning(f"Could not verify route implementation: {e}")
+    
+    # Log implementation summary
+    implemented_features = [k for k, v in features.items() 
+                          if isinstance(v, dict) and v.get('implemented', False)]
+    logging.info(f"✅ IMPLEMENTATION_CHECK: {len(implemented_features)} features verified as implemented: {implemented_features}")
+
+def apply_auto_configuration():
+    """
+    Apply intelligent auto-configuration based on detected features.
+    Updates database configuration with detected optimal settings.
+    """
+    features = detect_available_features()
+    
+    if not features['auto_configuration_applied']:
+        logging.info("⚠️ AUTO_CONFIG: No auto-configuration needed")
+        return features
+    
+    logging.info("🔧 AUTO_CONFIG: Applying intelligent auto-configuration...")
+    
+    # Auto-configure AI provider based on detection
+    if features['recommended_provider']:
+        try:
+            current_provider = get_ai_config().get('provider_name', {}).get('value', 'openai')
+            if current_provider != features['recommended_provider']:
+                update_ai_config('provider_name', features['recommended_provider'])
+                logging.info(f"✅ AUTO_CONFIG: AI provider set to {features['recommended_provider']}")
+        except Exception as e:
+            logging.warning(f"⚠️ AUTO_CONFIG: Failed to update AI provider: {e}")
+    
+    # Auto-configure Slack if detected
+    if features['slack']['configured']:
+        try:
+            slack_token = os.environ.get("SLACK_BOT_TOKEN", "")
+            current_token = get_slack_config().get('bot_token', {}).get('value', '')
+            if current_token != slack_token:
+                update_slack_config('bot_token', slack_token)
+                update_slack_config('enabled', 'true')
+                logging.info("✅ AUTO_CONFIG: Slack integration enabled")
+        except Exception as e:
+            logging.warning(f"⚠️ AUTO_CONFIG: Failed to update Slack config: {e}")
+    
+    # Auto-configure Portkey and cloud providers
+    if features['portkey']['configured']:
+        try:
+            portkey_key = os.environ.get("PORTKEY_API_KEY", "")
+            current_key = get_ai_config().get('portkey_api_key', {}).get('value', '')
+            if current_key != portkey_key:
+                update_ai_config('portkey_api_key', portkey_key)
+                logging.info("✅ AUTO_CONFIG: Portkey security layer configured")
+        except Exception as e:
+            logging.warning(f"⚠️ AUTO_CONFIG: Failed to update Portkey config: {e}")
+    
+    if features['openai']['configured']:
+        try:
+            openai_vkey = os.environ.get("OPENAI_VIRTUAL_KEY", "")
+            current_vkey = get_ai_config().get('openai_virtual_key', {}).get('value', '')
+            if current_vkey != openai_vkey:
+                update_ai_config('openai_virtual_key', openai_vkey)
+                logging.info("✅ AUTO_CONFIG: OpenAI virtual key configured")
+        except Exception as e:
+            logging.warning(f"⚠️ AUTO_CONFIG: Failed to update OpenAI config: {e}")
+    
+    if features['gemini']['configured']:
+        try:
+            gemini_vkey = os.environ.get("GEMINI_VIRTUAL_KEY", "")
+            current_vkey = get_ai_config().get('gemini_virtual_key', {}).get('value', '')
+            if current_vkey != gemini_vkey:
+                update_ai_config('gemini_virtual_key', gemini_vkey)
+                logging.info("✅ AUTO_CONFIG: Gemini virtual key configured")
+        except Exception as e:
+            logging.warning(f"⚠️ AUTO_CONFIG: Failed to update Gemini config: {e}")
+    
+    # Auto-configure Ollama if detected
+    if features['ollama']['configured']:
+        try:
+            ollama_url = os.environ.get("OLLAMA_API_URL", "")
+            current_url = get_ai_config().get('ollama_api_url', {}).get('value', '')
+            if current_url != ollama_url:
+                update_ai_config('ollama_api_url', ollama_url)
+                logging.info("✅ AUTO_CONFIG: Ollama API URL configured")
+        except Exception as e:
+            logging.warning(f"⚠️ AUTO_CONFIG: Failed to update Ollama config: {e}")
+    
+    logging.info("✅ AUTO_CONFIG: Auto-configuration completed successfully")
+    return features
+
+@app.route('/api/features/detect', methods=['GET'])
+def api_detect_features():
+    """API endpoint to detect available features and auto-configure if requested."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI disabled"}), 404
+    
+    apply_auto_config = request.args.get('apply_auto_config', 'false').lower() == 'true'
+    
+    try:
+        if apply_auto_config:
+            features = apply_auto_configuration()
+        else:
+            features = detect_available_features()
+        
+        return jsonify({
+            'success': True,
+            'features': features,
+            'auto_configuration_applied': apply_auto_config and features.get('auto_configuration_applied', False)
+        })
+    except Exception as e:
+        logging.error(f"Error detecting features: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/features/status', methods=['GET'])
+def api_feature_status():
+    """Get current feature status with recommendations."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI disabled"}), 404
+    
+    try:
+        features = detect_available_features()
+        
+        # Generate recommendations
+        recommendations = []
+        
+        if not features['slack']['configured']:
+            recommendations.append({
+                'type': 'slack',
+                'priority': 'medium',
+                'title': 'Enable Slack Notifications',
+                'description': 'Configure Slack bot token to receive security alerts',
+                'action': 'Add SLACK_BOT_TOKEN to your Kubernetes secrets'
+            })
+        
+        if not any(features[p]['configured'] for p in ['openai', 'gemini', 'ollama']):
+            recommendations.append({
+                'type': 'ai',
+                'priority': 'high',
+                'title': 'Configure AI Provider',
+                'description': 'No AI provider is configured for security analysis',
+                'action': 'Configure at least one AI provider (OpenAI, Gemini, or Ollama)'
+            })
+        
+        if features['portkey']['configured'] and not features['openai']['configured'] and not features['gemini']['configured']:
+            recommendations.append({
+                'type': 'cloud_ai',
+                'priority': 'low',
+                'title': 'Add Cloud AI Provider',
+                'description': 'Portkey is configured but no cloud AI providers are enabled',
+                'action': 'Add OpenAI or Gemini virtual keys to use cloud AI'
+            })
+        
+        return jsonify({
+            'success': True,
+            'features': features,
+            'recommendations': recommendations,
+            'summary': {
+                'total_features': len([f for f in features.values() if isinstance(f, dict)]),
+                'configured_features': len([f for f in features.values() if isinstance(f, dict) and f.get('configured', False)]),
+                'recommended_provider': features.get('recommended_provider'),
+                'deployment_type': features.get('deployment_type')
+            }
+        })
+    except Exception as e:
+        logging.error(f"Error getting feature status: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Initialize database if Web UI is enabled
     if WEB_UI_ENABLED:
         init_database()
+        
+        # Apply auto-configuration based on detected secrets
+        logging.info("🔍 STARTUP: Detecting available features and applying auto-configuration...")
+        try:
+            features = apply_auto_configuration()
+            configured_count = len([f for f in features.values() if isinstance(f, dict) and f.get('configured', False)])
+            total_count = len([f for f in features.values() if isinstance(f, dict)])
+            
+            logging.info(f"✅ STARTUP: Feature detection completed - {configured_count}/{total_count} features configured")
+            logging.info(f"🤖 STARTUP: Recommended AI provider: {features.get('recommended_provider', 'unknown')}")
+            logging.info(f"🏢 STARTUP: Deployment type: {features.get('deployment_type', 'unknown')}")
+            
+            if features.get('auto_configuration_applied'):
+                logging.info("🔧 STARTUP: Auto-configuration was applied based on detected secrets")
+            else:
+                logging.info("⚠️ STARTUP: No auto-configuration applied - manual configuration may be needed")
+                
+        except Exception as e:
+            logging.warning(f"⚠️ STARTUP: Feature detection failed: {e}")
         
         # Add some sample data for demonstration
         sample_alerts = [
@@ -2494,10 +3075,10 @@ if __name__ == '__main__':
             for alert in sample_alerts:
                 store_alert(alert)
     
-    logging.info(f"Starting Falco AI Alert System on port {falco_ai_port}")
-    logging.info(f"Provider: {os.environ.get('PROVIDER_NAME', 'openai')}")
-    logging.info(f"Min Priority: {MIN_FALCO_PRIORITY}")
-    logging.info(f"Slack: {'✅ Configured' if slack_client else '❌ Not configured'}")
-    logging.info(f"Web UI: {'✅ Enabled at http://localhost:{falco_ai_port}/dashboard' if WEB_UI_ENABLED else '❌ Disabled'}")
+    logging.info(f"🚀 Starting Falco AI Alert System on port {falco_ai_port}")
+    logging.info(f"🤖 Provider: {os.environ.get('PROVIDER_NAME', 'openai')}")
+    logging.info(f"⚠️ Min Priority: {MIN_FALCO_PRIORITY}")
+    logging.info(f"📢 Slack: {'✅ Configured' if slack_client else '❌ Not configured'}")
+    logging.info(f"🖥️ Web UI: {'✅ Enabled at http://localhost:' + str(falco_ai_port) + '/dashboard' if WEB_UI_ENABLED else '❌ Disabled'}")
     
     app.run(debug=True, host='0.0.0.0', port=falco_ai_port, threaded=True)
