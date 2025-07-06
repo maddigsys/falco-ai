@@ -5,6 +5,31 @@ All notable changes to the Falco AI Alert System project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2025-01-07
+
+### 🔧 Critical Performance Fixes
+
+#### ⚡ Performance Optimizations
+- **Health Check Performance** - Fixed expensive feature detection running on every health check
+- **Feature Detection Caching** - Added 5-minute caching for feature detection results to prevent repeated expensive operations
+- **Reduced Verbose Logging** - Changed feature detection logging from INFO to DEBUG level to reduce log spam
+- **Smart Cache Invalidation** - Cache automatically invalidates when configuration changes
+
+#### 🐛 Configuration Bug Fixes
+- **Slack Channel Update Fix** - Fixed critical bug where Slack channel configuration updates weren't being used
+- **Database-Driven Channel Selection** - Webhook now uses current channel from database instead of startup environment variable
+- **Real-time Configuration Updates** - Configuration changes now take effect immediately without restart
+
+#### 🏗️ Infrastructure Improvements
+- **Reduced Resource Usage** - Significant reduction in CPU usage from eliminating redundant feature detection
+- **Better Monitoring** - Health checks are now lightweight and suitable for frequent polling
+- **Production Stability** - Improved system stability under high load and frequent health checks
+
+### 🎯 Production Impact
+- **Immediate Effect** - All fixes take effect without configuration changes
+- **Better Performance** - Reduced CPU usage and faster response times
+- **Fixed Channel Updates** - Slack channel configuration updates now work properly in production
+
 ## [1.5.3] - 2025-01-07
 
 ### ✨ New Features

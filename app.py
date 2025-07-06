@@ -567,7 +567,7 @@ Command: {alert_payload.get('output_fields', {}).get('proc.cmdline', 'N/A')}"""
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Enhanced health check endpoint with feature detection."""
+    """Lightweight health check endpoint."""
     try:
         # Basic health info
         health_data = {
@@ -577,25 +577,25 @@ def health_check():
             "web_ui_enabled": WEB_UI_ENABLED
         }
         
-        # Add feature detection if Web UI is enabled
+        # Add only essential feature info if Web UI is enabled (no expensive detection)
         if WEB_UI_ENABLED:
             try:
-                features = detect_available_features()
+                # Use cached configuration data instead of running full feature detection
                 health_data.update({
                     "features": {
-                        "slack_configured": features['slack']['configured'],
+                        "slack_configured": bool(get_slack_config()),
                         "ai_providers": {
-                            "openai": features['openai']['configured'],
-                            "gemini": features['gemini']['configured'],
-                            "ollama": features['ollama']['configured']
+                            "openai": bool(get_general_setting('openai_virtual_key')),
+                            "gemini": bool(get_general_setting('gemini_virtual_key')),
+                            "ollama": bool(get_general_setting('ollama_api_url', 'http://ollama:11434/api/generate'))
                         },
-                        "recommended_provider": features['recommended_provider'],
-                        "deployment_type": features['deployment_type'],
-                        "auto_configuration_available": features['auto_configuration_applied']
+                        "recommended_provider": get_general_setting('provider_name', 'ollama'),
+                        "deployment_type": "local",
+                        "auto_configuration_available": True
                     }
                 })
             except Exception as e:
-                health_data["features"] = {"error": f"Feature detection failed: {str(e)}"}
+                health_data["features"] = {"error": f"Basic feature check failed: {str(e)}"}
         
         return jsonify(health_data), 200
     except Exception as e:
@@ -704,15 +704,19 @@ def falco_webhook():
     # Send to Slack
     if slack_client:
         try:
+            # Get current channel name from database configuration (not global variable)
+            slack_config = get_slack_config()
+            current_channel = slack_config.get('channel_name', {}).get('value', slack_channel_name)
+            
             if ai_success:
-                post_to_slack(alert_payload, explanation_sections, slack_client, slack_channel_name)
-                logging.info(f"📢 SLACK_SUCCESS: Alert sent with AI analysis to {slack_channel_name} | Rule: {rule_name}")
+                post_to_slack(alert_payload, explanation_sections, slack_client, current_channel)
+                logging.info(f"📢 SLACK_SUCCESS: Alert sent with AI analysis to {current_channel} | Rule: {rule_name}")
                 return jsonify({"status": "success", "message": "Alert sent with AI analysis"}), 200
             else:
                 error_msg = explanation_sections.get("error", "AI analysis failed") if explanation_sections else "AI analysis failed"
                 basic_message = format_slack_message_basic(alert_payload, error_msg)
-                send_slack_message(basic_message, slack_client, slack_channel_name)
-                logging.warning(f"📢 SLACK_PARTIAL: Alert sent without AI analysis to {slack_channel_name} | Rule: {rule_name} | Reason: {error_msg}")
+                send_slack_message(basic_message, slack_client, current_channel)
+                logging.warning(f"📢 SLACK_PARTIAL: Alert sent without AI analysis to {current_channel} | Rule: {rule_name} | Reason: {error_msg}")
                 return jsonify({"status": "partial_success", "message": "Alert sent without AI analysis", "error": error_msg}), 200
         except Exception as e:
             logging.error(f"❌ SLACK_ERROR: Failed to send to Slack: {e} | Rule: {rule_name}")
@@ -1985,6 +1989,12 @@ def update_slack_config(setting_name, setting_value):
     
     conn.commit()
     conn.close()
+    
+    # Invalidate feature cache when configuration changes
+    global _feature_cache, _feature_cache_last_updated
+    _feature_cache = None
+    _feature_cache_last_updated = 0
+    
     logging.info(f"Updated Slack config: {setting_name} = {setting_value}")
 
 def test_slack_connection(bot_token, channel_name):
@@ -2067,6 +2077,12 @@ def update_ai_config(setting_name, setting_value):
     
     conn.commit()
     conn.close()
+    
+    # Invalidate feature cache when configuration changes
+    global _feature_cache, _feature_cache_last_updated
+    _feature_cache = None
+    _feature_cache_last_updated = 0
+    
     logging.info(f"Updated AI config: {setting_name} = {setting_value}")
 
 def test_ai_connection(provider_name, config_data):
@@ -2536,6 +2552,25 @@ priority: warning
         }), 500
 
 # --- Feature Detection and Auto-Configuration ---
+
+# Feature detection cache for performance
+_feature_cache = None
+_feature_cache_last_updated = 0
+
+def get_cached_features():
+    """Get feature detection results with caching for performance."""
+    global _feature_cache, _feature_cache_last_updated
+    
+    current_time = datetime.datetime.now().timestamp()
+    
+    # Refresh cache every 5 minutes (feature detection is expensive)
+    if _feature_cache is None or (current_time - _feature_cache_last_updated) > 300:
+        _feature_cache = detect_available_features()
+        _feature_cache_last_updated = current_time
+        logging.debug(f"🔄 FEATURE_CACHE: Refreshed feature detection cache")
+    
+    return _feature_cache
+
 def detect_available_features():
     """
     Intelligently detect available features based on environment variables and system state.
@@ -2610,7 +2645,7 @@ def detect_available_features():
         features['slack']['status'] = 'configured'
         features['slack']['reason'] = 'Valid Slack bot token detected'
         features['slack']['auto_configured'] = True
-        logging.info("✅ FEATURE_DETECTION: Slack integration auto-configured")
+        logging.debug("✅ FEATURE_DETECTION: Slack integration auto-configured")
     elif slack_token and slack_token != "xoxb-your-token-here":
         features['slack']['available'] = True
         features['slack']['configured'] = False
@@ -2630,7 +2665,7 @@ def detect_available_features():
         features['portkey']['status'] = 'configured'
         features['portkey']['reason'] = 'Valid Portkey API key detected'
         features['portkey']['auto_configured'] = True
-        logging.info("✅ FEATURE_DETECTION: Portkey security layer auto-configured")
+        logging.debug("✅ FEATURE_DETECTION: Portkey security layer auto-configured")
     elif portkey_key and portkey_key != "pk-your-portkey-api-key-here":
         features['portkey']['available'] = True
         features['portkey']['configured'] = False
@@ -2650,7 +2685,7 @@ def detect_available_features():
         features['openai']['status'] = 'configured'
         features['openai']['reason'] = 'OpenAI virtual key detected with Portkey'
         features['openai']['auto_configured'] = True
-        logging.info("✅ FEATURE_DETECTION: OpenAI provider auto-configured")
+        logging.debug("✅ FEATURE_DETECTION: OpenAI provider auto-configured")
     elif openai_vkey and openai_vkey != "openai-your-virtual-key-here":
         features['openai']['available'] = True
         features['openai']['configured'] = False
@@ -2675,7 +2710,7 @@ def detect_available_features():
         features['gemini']['status'] = 'configured'
         features['gemini']['reason'] = 'Gemini virtual key detected with Portkey'
         features['gemini']['auto_configured'] = True
-        logging.info("✅ FEATURE_DETECTION: Gemini provider auto-configured")
+        logging.debug("✅ FEATURE_DETECTION: Gemini provider auto-configured")
     elif gemini_vkey and gemini_vkey != "gemini-your-virtual-key-here":
         features['gemini']['available'] = True
         features['gemini']['configured'] = False
@@ -2706,7 +2741,7 @@ def detect_available_features():
                 features['ollama']['status'] = 'configured'
                 features['ollama']['reason'] = 'Ollama server detected and responding'
                 features['ollama']['auto_configured'] = True
-                logging.info("✅ FEATURE_DETECTION: Ollama provider auto-configured")
+                logging.debug("✅ FEATURE_DETECTION: Ollama provider auto-configured")
             else:
                 features['ollama']['available'] = True
                 features['ollama']['configured'] = False
@@ -2861,10 +2896,10 @@ def _verify_feature_implementation(features):
     except Exception as e:
         logging.warning(f"Could not verify route implementation: {e}")
     
-    # Log implementation summary
+    # Log implementation summary (only at debug level to reduce noise)
     implemented_features = [k for k, v in features.items() 
                           if isinstance(v, dict) and v.get('implemented', False)]
-    logging.info(f"✅ IMPLEMENTATION_CHECK: {len(implemented_features)} features verified as implemented: {implemented_features}")
+    logging.debug(f"✅ IMPLEMENTATION_CHECK: {len(implemented_features)} features verified as implemented: {implemented_features}")
 
 def apply_auto_configuration():
     """
@@ -2979,7 +3014,7 @@ def api_feature_status():
         return jsonify({"error": "Web UI disabled"}), 404
     
     try:
-        features = detect_available_features()
+        features = get_cached_features()
         
         # Generate recommendations
         recommendations = []
