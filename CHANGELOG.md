@@ -5,6 +5,36 @@ All notable changes to the Falco AI Alert System project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.5] - 2025-01-07
+
+### 🔧 Critical Slack Integration Fix
+
+#### 🐛 Webhook Authentication Fix
+- **Database Token Integration** - Fixed critical issue where webhook used stale global Slack client instead of current database token
+- **Dynamic Client Creation** - Webhook now creates fresh WebClient instance with current token from database configuration
+- **Real-time Configuration** - Slack configuration changes now take effect immediately without restart
+- **Improved Error Handling** - Better error messages and fallback behavior for authentication issues
+
+#### 🏗️ Webhook Architecture Improvements
+- **Database-Driven Configuration** - Webhook now reads all Slack settings from database instead of environment variables
+- **Token Validation** - Enhanced token validation and configuration checks
+- **Channel Configuration** - Proper channel name handling from database configuration
+- **Enable/Disable Logic** - Respects Slack enabled/disabled setting from configuration
+
+#### 🎯 Production Impact
+- **Fixed Slack Delivery** - Alerts now properly deliver to configured Slack channels
+- **No Restart Required** - Configuration updates work immediately
+- **Improved Reliability** - Eliminated authentication errors from stale token usage
+- **Better Debugging** - Enhanced logging for Slack integration troubleshooting
+
+### 🔄 Infrastructure Updates
+
+#### 🐳 Container & Deployment
+- **New Image Version** - `maddigsys/falco-ai-alerts:v1.5.5` with webhook fixes
+- **Kubernetes Manifests Updated** - All K8s deployments now reference v1.5.5
+- **Docker Compose Updated** - Production docker-compose uses v1.5.5
+- **Script Version Updates** - Install and cleanup scripts reference correct version
+
 ## [1.5.4] - 2025-01-07
 
 ### 🔧 Critical Performance Fixes

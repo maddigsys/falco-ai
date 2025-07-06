@@ -702,20 +702,25 @@ def falco_webhook():
         logging.info(f"⚠️ DB_SKIP: Web UI disabled, not storing alert | Rule: {rule_name}")
 
     # Send to Slack
-    if slack_client:
+    # Get current Slack configuration from database
+    slack_config = get_slack_config()
+    current_token = slack_config.get('bot_token', {}).get('value', '')
+    current_channel = slack_config.get('channel_name', {}).get('value', slack_channel_name)
+    slack_enabled = slack_config.get('enabled', {}).get('value', 'false').lower() == 'true'
+    
+    if slack_enabled and current_token and current_token != 'xoxb-your-token-here':
         try:
-            # Get current channel name from database configuration (not global variable)
-            slack_config = get_slack_config()
-            current_channel = slack_config.get('channel_name', {}).get('value', slack_channel_name)
+            # Create fresh Slack client with current token from database
+            current_slack_client = WebClient(token=current_token)
             
             if ai_success:
-                post_to_slack(alert_payload, explanation_sections, slack_client, current_channel)
+                post_to_slack(alert_payload, explanation_sections, current_slack_client, current_channel)
                 logging.info(f"📢 SLACK_SUCCESS: Alert sent with AI analysis to {current_channel} | Rule: {rule_name}")
                 return jsonify({"status": "success", "message": "Alert sent with AI analysis"}), 200
             else:
                 error_msg = explanation_sections.get("error", "AI analysis failed") if explanation_sections else "AI analysis failed"
                 basic_message = format_slack_message_basic(alert_payload, error_msg)
-                send_slack_message(basic_message, slack_client, current_channel)
+                send_slack_message(basic_message, current_slack_client, current_channel)
                 logging.warning(f"📢 SLACK_PARTIAL: Alert sent without AI analysis to {current_channel} | Rule: {rule_name} | Reason: {error_msg}")
                 return jsonify({"status": "partial_success", "message": "Alert sent without AI analysis", "error": error_msg}), 200
         except Exception as e:
