@@ -5,6 +5,37 @@ All notable changes to the Falco AI Alert System project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.6] - 2025-01-07
+
+### 🏗️ Multi-Architecture Support & Infrastructure Improvements
+
+#### 🐳 Container Architecture Enhancement
+- **Multi-Platform Support** - Docker image now supports both `linux/amd64` and `linux/arm64` architectures
+- **Cross-Platform Compatibility** - Resolves "exec format error" on different Kubernetes node architectures
+- **Enhanced Docker Build** - Implemented `docker buildx` multi-platform building with dedicated `multiarch` builder
+- **EKS Compatibility** - Fixed deployment issues on EKS clusters with x86_64 nodes
+- **Production Stability** - Ensures consistent deployment across diverse infrastructure platforms
+
+#### 🔧 Deployment Optimizations
+- **Forced Image Pull** - Updated EKS overlay with `imagePullPolicy: Always` for reliable updates
+- **Architecture Detection** - Automatic selection of appropriate image architecture during deployment
+- **Enhanced Reliability** - Eliminates platform-specific deployment failures
+- **Infrastructure Flexibility** - Supports deployment on mixed-architecture clusters
+
+#### 🎯 Production Impact
+- **Universal Compatibility** - Single image works across all supported Kubernetes platforms
+- **Reduced Deployment Friction** - Eliminates architecture-specific build requirements
+- **Improved Development Experience** - Consistent behavior across development and production environments
+- **Enhanced Scalability** - Supports diverse cloud provider architectures (AWS Graviton, etc.)
+
+### 🔄 Infrastructure Updates
+
+#### 🐳 Container & Deployment
+- **Multi-Platform Image** - `maddigsys/falco-ai-alerts:v1.5.6` with multi-arch support
+- **Enhanced Build Process** - Multi-platform builds with `--platform linux/amd64,linux/arm64`
+- **Kubernetes Compatibility** - Updated manifests for improved cross-platform deployment
+- **Docker Hub Publication** - Multi-architecture image published and verified
+
 ## [1.5.5] - 2025-01-07
 
 ### 🔧 Critical Slack Integration Fix

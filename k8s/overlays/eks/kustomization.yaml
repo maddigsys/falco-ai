@@ -114,4 +114,4 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: "v1.5.5" 
+    newTag: "v1.5.6" 
