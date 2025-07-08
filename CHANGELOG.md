@@ -5,6 +5,41 @@ All notable changes to the Falco AI Alert System project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.7] - 2025-01-07
+
+### 🐛 Dashboard Filter Bug Fix & UX Improvements
+
+#### 🔧 Critical Dashboard Bug Fix
+- **Fixed Filter State Bug** - Resolved issue where dismissing alerts in "Last Hour" view incorrectly showed getting started screen
+- **Smart Welcome Logic** - Added `checkShouldShowWelcome()` function to distinguish between "no alerts ever" vs "no alerts matching filters"
+- **Proper Filter State Management** - Dashboard maintains filter context after bulk operations and dismissals
+- **Enhanced Filter Persistence** - Filtering behavior now consistent across all user interactions
+
+#### 🎨 Empty State UX Improvements
+- **Actionable Empty State** - Added "Clear All Filters" and "Refresh" buttons when no results found
+- **Active Filter Display** - Shows current filter settings in empty state (e.g., "Last Hour, Priority: critical")
+- **Contextual Messaging** - Clear guidance on what to do when no alerts match current filters
+- **Quick Filter Reset** - One-click `clearAllFilters()` function for easy filter management
+
+#### 🛠️ Technical Enhancements
+- **Added `getActiveFiltersText()`** - Displays human-readable current filter settings
+- **Enhanced `renderAlertList()`** - Better empty state handling with actionable UI components
+- **Improved State Logic** - Better distinction between empty system vs filtered results
+- **User Experience Consistency** - Unified behavior across all filter combinations
+
+#### 🎯 User Experience Impact
+- **Eliminated Confusion** - No more unexpected "getting started" screen during filtered operations
+- **Better Workflow** - Users can efficiently work with filtered views without losing context
+- **Clearer Feedback** - Users understand exactly what filters are active and how to adjust them
+- **Improved Productivity** - Faster filter management with clear reset and refresh options
+
+### 🔄 Infrastructure Updates
+
+#### 🐳 Container & Deployment
+- **Multi-Platform Image** - `maddigsys/falco-ai-alerts:v1.5.7` with dashboard fixes
+- **Enhanced User Interface** - Improved dashboard filtering and empty state handling
+- **Production Ready** - Battle-tested filter logic for production deployments
+
 ## [1.5.6] - 2025-01-07
 
 ### 🏗️ Multi-Architecture Support & Infrastructure Improvements
