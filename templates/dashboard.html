@@ -1456,6 +1456,29 @@
             }
         }
 
+        // Check if we should show welcome card
+        async function checkShouldShowWelcome(currentFilteredCount) {
+            // If there are alerts in the current filtered view, don't show welcome
+            if (currentFilteredCount > 0) {
+                return false;
+            }
+            
+            try {
+                // Check if there are any alerts in the entire system (no filters)
+                const response = await fetch('/api/alerts?limit=1');
+                if (!response.ok) {
+                    return true; // Show welcome on error
+                }
+                
+                const allAlerts = await response.json();
+                // Show welcome only if there are truly no alerts in the system
+                return allAlerts.length === 0;
+            } catch (error) {
+                console.error('Error checking total alerts:', error);
+                return true; // Show welcome on error
+            }
+        }
+
         // Load alerts with filters
         async function loadAlerts() {
             try {
@@ -1476,18 +1499,29 @@
                 
                 renderAlertList(alerts);
                 
+                // Check if we should show welcome card by looking at total alerts count
+                // Only show welcome card if there are genuinely no alerts in the system
+                const shouldShowWelcome = await checkShouldShowWelcome(alerts.length);
+                
                 // Show/hide appropriate cards
                 if (alerts.length > 0) {
                     document.getElementById('welcomeCard').style.display = 'none';
                     document.getElementById('falcoConfigCard').style.display = 'block';
                     document.getElementById('quickStatsCard').style.display = 'block';
                     document.getElementById('alertsCard').style.display = 'block';
-                } else {
+                } else if (shouldShowWelcome) {
+                    // Show welcome card only if there are no alerts in the entire system
                     document.getElementById('welcomeCard').style.display = 'block';
                     document.getElementById('falcoConfigCard').style.display = 'block';
                     document.getElementById('quickStatsCard').style.display = 'none';
                     document.getElementById('alertsCard').style.display = 'none';
                     document.getElementById('alertDetailsCard').style.display = 'none';
+                } else {
+                    // Show filtered state - alerts exist but none match current filters
+                    document.getElementById('welcomeCard').style.display = 'none';
+                    document.getElementById('falcoConfigCard').style.display = 'block';
+                    document.getElementById('quickStatsCard').style.display = 'block';
+                    document.getElementById('alertsCard').style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error loading alerts:', error);
@@ -1539,15 +1573,24 @@
             const alertList = document.getElementById('alertList');
             
             if (alerts.length === 0) {
+                // Show a helpful message when no alerts match current filters
+                const currentFiltersText = getActiveFiltersText();
                 alertList.innerHTML = `
                     <div class="empty-state">
                         <h3>No Alerts Found</h3>
-                        <p>No security alerts match your current filters. This could mean:</p>
-                        <ul>
-                            <li>Your system is secure and running smoothly</li>
-                            <li>Falco is not yet configured to send webhooks</li>
-                            <li>Your filters are too restrictive</li>
-                        </ul>
+                        <p>No security alerts match your current filters${currentFiltersText ? ': ' + currentFiltersText : ''}.</p>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="clearAllFilters()">
+                                <i class="fas fa-filter"></i> Clear All Filters
+                            </button>
+                            <button class="btn btn-secondary ms-2" onclick="loadAlerts()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                        <p class="mt-3 text-muted small">
+                            <i class="fas fa-info-circle"></i>
+                            Try adjusting your time range, priority level, or status filters above.
+                        </p>
                     </div>
                 `;
                 return;
@@ -1788,6 +1831,50 @@
             
             loadAlerts();
             loadAlertCounts(); // Refresh counts when filters change
+        }
+
+        // Get active filters text for display
+        function getActiveFiltersText() {
+            const filters = [];
+            
+            const timeRange = document.getElementById('timeRange').value;
+            if (timeRange && timeRange !== '7d') {
+                const timeLabels = {
+                    '1h': 'Last Hour',
+                    '24h': 'Last 24 Hours',
+                    '7d': 'Last 7 Days',
+                    '30d': 'Last 30 Days'
+                };
+                filters.push(timeLabels[timeRange] || timeRange);
+            }
+            
+            const priority = document.getElementById('priorityFilter').value;
+            if (priority && priority !== 'all') {
+                filters.push(`Priority: ${priority}`);
+            }
+            
+            const rule = document.getElementById('ruleFilter').value;
+            if (rule && rule !== 'all') {
+                filters.push(`Rule: ${rule}`);
+            }
+            
+            const status = document.getElementById('statusFilter').value;
+            if (status && status !== 'all') {
+                filters.push(`Status: ${status}`);
+            }
+            
+            return filters.join(', ');
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            document.getElementById('timeRange').value = '7d';
+            document.getElementById('priorityFilter').value = 'all';
+            document.getElementById('ruleFilter').value = 'all';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('limitFilter').value = '25';
+            
+            applyFilters();
         }
 
         // Refresh dashboard
