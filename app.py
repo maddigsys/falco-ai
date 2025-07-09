@@ -1,5 +1,6 @@
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, g
+from flask_babel import Babel, _, get_locale, ngettext, lazy_gettext
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import logging
@@ -13,6 +14,8 @@ import requests
 from dotenv import load_dotenv
 import sqlite3
 import threading
+from weaviate_service import get_weaviate_service
+from multilingual_service import get_babel_llm_service, BabelLanguage
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,6 +26,32 @@ log_level = getattr(logging, log_level_str, logging.INFO)
 logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
+
+# --- Flask-Babel Configuration ---
+# Supported languages from Babel LLM
+LANGUAGES = BabelLanguage.get_supported_languages()
+
+def get_locale():
+    # 1. Check URL parameter
+    requested_language = request.args.get('lang')
+    if requested_language and requested_language in LANGUAGES:
+        session['language'] = requested_language
+        return requested_language
+    
+    # 2. Check user session
+    if 'language' in session and session['language'] in LANGUAGES:
+        return session['language']
+    
+    # 3. Check user's preferred language in database
+    if hasattr(g, 'user_language') and g.user_language in LANGUAGES:
+        return g.user_language
+    
+    # 4. Check request header
+    return request.accept_languages.best_match(LANGUAGES.keys()) or 'en'
+
+# Initialize Babel with locale selector
+babel = Babel(app, locale_selector=get_locale)
 
 # --- Web UI Configuration ---
 WEB_UI_ENABLED = os.environ.get("WEB_UI_ENABLED", "true").lower() == "true"
@@ -54,6 +83,12 @@ else:
 
 # --- Configure Alert Age ---
 IGNORE_OLDER_MINUTES = int(os.environ.get("IGNORE_OLDER", "1"))
+
+# --- Weaviate Configuration ---
+WEAVIATE_ENABLED = os.environ.get("WEAVIATE_ENABLED", "true").lower() == "true"
+WEAVIATE_HOST = os.environ.get("WEAVIATE_HOST", "localhost")
+WEAVIATE_PORT = int(os.environ.get("WEAVIATE_PORT", "8080"))
+WEAVIATE_GRPC_PORT = int(os.environ.get("WEAVIATE_GRPC_PORT", "50051"))
 
 # LLM Provider constants
 LLM_PROVIDER_OPENAI = "OpenAI via Portkey"
@@ -230,8 +265,53 @@ def init_database():
     conn.close()
     logging.info("Database initialized")
 
+def init_weaviate():
+    """Initialize Weaviate connection and schema with retry logic."""
+    if not WEAVIATE_ENABLED:
+        logging.info("⚠️ Weaviate is disabled")
+        return
+    
+    import time
+    max_retries = 5
+    retry_delay = 3  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            weaviate_service = get_weaviate_service()
+            weaviate_service.host = WEAVIATE_HOST
+            weaviate_service.port = WEAVIATE_PORT
+            weaviate_service.grpc_port = WEAVIATE_GRPC_PORT
+            
+            # Connect to Weaviate
+            if weaviate_service.connect():
+                # Create schema
+                if weaviate_service.create_schema():
+                    logging.info("✅ Weaviate initialized successfully")
+                    return
+                else:
+                    logging.error("❌ Failed to create Weaviate schema")
+                    break
+            else:
+                if attempt < max_retries - 1:
+                    logging.warning(f"⚠️ Failed to connect to Weaviate (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay}s...")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    logging.error("❌ Failed to connect to Weaviate after all retries")
+                    break
+                
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logging.warning(f"⚠️ Error initializing Weaviate (attempt {attempt + 1}/{max_retries}): {e}, retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+                continue
+            else:
+                logging.error(f"❌ Error initializing Weaviate after all retries: {e}")
+                break
+
 def store_alert(alert_data, ai_analysis=None):
-    """Store alert in database for analysis."""
+    """Store alert in database and Weaviate for analysis."""
+    # Store in SQLite as before
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
@@ -249,7 +329,22 @@ def store_alert(alert_data, ai_analysis=None):
     
     conn.commit()
     conn.close()
-    logging.info(f"Stored alert: {alert_data.get('rule', 'Unknown')}")
+    logging.info(f"Stored alert in SQLite: {alert_data.get('rule', 'Unknown')}")
+    
+    # Store in Weaviate if enabled
+    if WEAVIATE_ENABLED:
+        try:
+            weaviate_service = get_weaviate_service()
+            if weaviate_service.client:
+                weaviate_id = weaviate_service.store_alert(alert_data, ai_analysis)
+                if weaviate_id:
+                    logging.info(f"✅ Stored alert in Weaviate: {weaviate_id}")
+                else:
+                    logging.warning("⚠️ Failed to store alert in Weaviate")
+            else:
+                logging.warning("⚠️ Weaviate client not connected")
+        except Exception as e:
+            logging.error(f"❌ Error storing alert in Weaviate: {e}")
 
 def get_alerts(filters=None):
     """Retrieve alerts from database with optional filters."""
@@ -370,7 +465,45 @@ Guidelines:
     logging.info("✅ Using default system prompt")
     return default_prompt
 
-def generate_explanation_portkey(alert_payload):
+def generate_explanation_multilingual(alert_payload, language: str = "en"):
+    """Generate multilingual explanation using Babel LLM."""
+    try:
+        # Get Babel LLM service
+        babel_service = get_babel_llm_service()
+        
+        # Check if Babel LLM is available
+        if not babel_service.is_babel_available():
+            logging.warning("🌍 Babel LLM not available, falling back to regular analysis")
+            return generate_explanation_portkey(alert_payload)
+        
+        # Generate multilingual analysis
+        response = babel_service.analyze_security_alert_multilingual(
+            alert_payload, 
+            target_language=language
+        )
+        
+        if response.confidence > 0.5:
+            logging.info(f"✅ Generated multilingual analysis in {response.language.name}")
+            
+            # Parse the response into the expected format
+            return {
+                "securityImpact": response.content,
+                "nextSteps": f"Analysis provided in {response.language.name} ({response.language.flag})",
+                "remediationSteps": "Multilingual analysis includes comprehensive remediation guidance",
+                "suggestedCommands": "See analysis above for specific commands",
+                "llm_provider": f"babel-llm-{response.model_used}",
+                "language": response.language.code,
+                "translation_quality": response.translation_quality
+            }
+        else:
+            logging.warning(f"❌ Low confidence multilingual analysis, falling back to English")
+            return generate_explanation_portkey(alert_payload)
+            
+    except Exception as e:
+        logging.error(f"❌ Error in multilingual analysis: {e}")
+        return generate_explanation_portkey(alert_payload)
+
+def generate_explanation_portkey(alert_payload, language: str = "en"):
     """Generate explanation using configured AI provider from database."""
     # Get AI configuration from database
     ai_config = get_ai_config()
@@ -385,15 +518,58 @@ def generate_explanation_portkey(alert_payload):
     temperature = float(ai_config.get('temperature', {}).get('value', '0.7'))
     
     logging.info(f"🤖 Using AI provider: {provider_name} with model: {model_name}")
+    
+    # For non-English languages, try Babel LLM first
+    if language != "en":
+        return generate_explanation_multilingual(alert_payload, language)
 
     # Load configurable system prompt
     system_prompt = load_system_prompt()
+
+    # Get contextual information from Weaviate if enabled
+    contextual_info = ""
+    if WEAVIATE_ENABLED:
+        try:
+            weaviate_service = get_weaviate_service()
+            if weaviate_service.client:
+                context = weaviate_service.get_contextual_analysis(alert_payload)
+                
+                if context.get('similar_count', 0) > 0:
+                    contextual_info = f"""
+
+HISTORICAL CONTEXT:
+This alert pattern has been seen {context['similar_count']} times before. Based on similar past incidents:
+
+Similar Alerts:
+"""
+                    for i, similar_alert in enumerate(context.get('similar_alerts', [])[:3], 1):
+                        contextual_info += f"  {i}. {similar_alert.get('rule', 'Unknown')} ({similar_alert.get('priority', 'unknown')} priority, {similar_alert.get('certainty', 0):.1%} similarity)\n"
+                    
+                    # Add insights
+                    insights = context.get('insights', [])
+                    if insights:
+                        contextual_info += f"\nKey Insights:\n"
+                        for insight in insights:
+                            contextual_info += f"  - {insight}\n"
+                    
+                    # Add common patterns
+                    patterns = context.get('common_patterns', {})
+                    if patterns.get('priorities'):
+                        most_common_priority = max(patterns['priorities'].items(), key=lambda x: x[1])[0]
+                        contextual_info += f"\nHistorical Pattern: Similar alerts typically have '{most_common_priority}' priority.\n"
+                    
+                    logging.info(f"🧠 Enhanced AI analysis with context from {context['similar_count']} similar incidents")
+                else:
+                    contextual_info = "\n\nHISTORICAL CONTEXT: This appears to be a new type of alert pattern not seen before."
+        except Exception as e:
+            logging.warning(f"⚠️ Failed to get contextual analysis: {e}")
+            contextual_info = ""
 
     user_prompt = f"""Falco Alert:
 Rule: {alert_payload.get('rule', 'N/A')}
 Priority: {alert_payload.get('priority', 'N/A')}
 Details: {alert_payload.get('output', 'N/A')}
-Command: {alert_payload.get('output_fields', {}).get('proc.cmdline', 'N/A')}"""
+Command: {alert_payload.get('output_fields', {}).get('proc.cmdline', 'N/A')}{contextual_info}"""
 
     try:
         explanation_text = ""
@@ -1232,6 +1408,166 @@ def api_export():
     ])
     
     return jsonify(analysis)
+
+# --- Weaviate/Semantic Search API Endpoints ---
+
+@app.route('/api/weaviate/health')
+def api_weaviate_health():
+    """Check Weaviate health status."""
+    if not WEAVIATE_ENABLED:
+        return jsonify({"status": "disabled"}), 200
+    
+    try:
+        weaviate_service = get_weaviate_service()
+        health_status = weaviate_service.health_check()
+        return jsonify(health_status)
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/api/semantic-search', methods=['POST'])
+def api_semantic_search():
+    """Perform semantic search across alerts."""
+    if not WEAVIATE_ENABLED:
+        return jsonify({"error": "Weaviate/semantic search is disabled"}), 400
+    
+    try:
+        data = request.json or {}
+        query = data.get('query', '').strip()
+        limit = min(int(data.get('limit', 10)), 50)  # Max 50 results
+        threshold = float(data.get('threshold', 0.5))  # Use threshold instead of certainty
+        
+        if not query:
+            return jsonify({"error": "Query is required"}), 400
+        
+        weaviate_service = get_weaviate_service()
+        similar_alerts = weaviate_service.find_similar_alerts(query, limit, threshold)
+        
+        # Format results for dashboard display
+        formatted_results = []
+        for alert in similar_alerts:
+            formatted_result = {
+                "id": alert.get("_additional", {}).get("id", ""),
+                "rule": alert.get("rule", ""),
+                "priority": alert.get("priority", ""),
+                "output": alert.get("output", ""),
+                "timestamp": alert.get("timestamp", ""),
+                "source": alert.get("source", ""),
+                "similarity": alert.get("_additional", {}).get("certainty", 0)
+            }
+            formatted_results.append(formatted_result)
+        
+        return jsonify(formatted_results)
+        
+    except Exception as e:
+        logging.error(f"Semantic search error: {e}")
+        return jsonify({"error": f"Semantic search failed: {str(e)}"}), 500
+
+@app.route('/api/alert-patterns')
+def api_alert_patterns():
+    """Get alert patterns and trends from Weaviate."""
+    if not WEAVIATE_ENABLED:
+        return jsonify({"error": "Weaviate/pattern analysis is disabled"}), 400
+    
+    try:
+        days = int(request.args.get('days', 30))
+        days = min(days, 90)  # Max 90 days
+        
+        weaviate_service = get_weaviate_service()
+        patterns = weaviate_service.get_alert_patterns(days)
+        
+        return jsonify({
+            "success": True,
+            "analysis_period_days": days,
+            "patterns": patterns
+        })
+        
+    except Exception as e:
+        logging.error(f"Pattern analysis error: {e}")
+        return jsonify({"error": f"Pattern analysis failed: {str(e)}"}), 500
+
+@app.route('/api/contextual-analysis', methods=['POST'])
+def api_contextual_analysis():
+    """Get contextual analysis for an alert based on similar past incidents."""
+    if not WEAVIATE_ENABLED:
+        return jsonify({"error": "Weaviate/contextual analysis is disabled"}), 400
+    
+    try:
+        data = request.json or {}
+        
+        # Support both alert_id and direct alert_data
+        if 'alert_id' in data:
+            alert_id = data['alert_id']
+            alerts = get_alerts()
+            alert_data = next((a for a in alerts if a['id'] == alert_id), None)
+            
+            if not alert_data:
+                return jsonify({"error": "Alert not found"}), 404
+        elif 'alert_data' in data:
+            alert_data = data['alert_data']
+        else:
+            return jsonify({"error": "Either alert_id or alert_data is required"}), 400
+        
+        weaviate_service = get_weaviate_service()
+        context = weaviate_service.get_contextual_analysis(alert_data)
+        
+        return jsonify({
+            "success": True,
+            "alert_rule": alert_data.get('rule', 'Unknown'),
+            "contextual_analysis": context
+        })
+        
+    except Exception as e:
+        logging.error(f"Contextual analysis error: {e}")
+        return jsonify({"error": f"Contextual analysis failed: {str(e)}"}), 500
+
+@app.route('/api/similar-alerts/<int:alert_id>')
+def api_similar_alerts(alert_id):
+    """Find alerts similar to a specific alert."""
+    if not WEAVIATE_ENABLED:
+        return jsonify({"error": "Weaviate/similarity search is disabled"}), 400
+    
+    try:
+        # Get the reference alert
+        alerts = get_alerts()
+        reference_alert = next((a for a in alerts if a['id'] == alert_id), None)
+        
+        if not reference_alert:
+            return jsonify({"error": "Alert not found"}), 404
+        
+        # Build search query from alert content
+        query = f"{reference_alert.get('rule', '')} {reference_alert.get('output', '')}"
+        
+        weaviate_service = get_weaviate_service()
+        similar_alerts = weaviate_service.find_similar_alerts(query, limit=10, certainty=0.5)
+        
+        # Format similar alerts for dashboard display
+        formatted_similar_alerts = []
+        for alert in similar_alerts:
+            formatted_alert = {
+                "id": alert.get("_additional", {}).get("id", ""),
+                "rule": alert.get("rule", ""),
+                "priority": alert.get("priority", ""),
+                "output": alert.get("output", ""),
+                "timestamp": alert.get("timestamp", ""),
+                "source": alert.get("source", ""),
+                "similarity": alert.get("_additional", {}).get("certainty", 0)
+            }
+            formatted_similar_alerts.append(formatted_alert)
+        
+        return jsonify({
+            "success": True,
+            "reference_alert": {
+                "id": reference_alert['id'],
+                "rule": reference_alert['rule'],
+                "priority": reference_alert['priority'],
+                "timestamp": reference_alert['timestamp']
+            },
+            "similar_alerts": formatted_similar_alerts
+        })
+        
+    except Exception as e:
+        logging.error(f"Similar alerts error: {e}")
+        return jsonify({"error": f"Similar alerts search failed: {str(e)}"}), 500
 
 # --- Slack Configuration Routes ---
 @app.route('/config/slack')
@@ -3069,10 +3405,131 @@ def api_feature_status():
             'error': str(e)
         }), 500
 
+# --- Internationalization Routes ---
+@app.route('/api/lang', methods=['GET'])
+def api_get_languages():
+    """Get available languages."""
+    return jsonify({
+        'languages': LANGUAGES,
+        'current': get_locale()
+    })
+
+@app.route('/api/lang/<lang_code>', methods=['POST'])
+def api_set_language(lang_code):
+    """Set user language preference."""
+    if lang_code not in LANGUAGES:
+        return jsonify({'error': 'Language not supported'}), 400
+    
+    session['language'] = lang_code
+    
+    # Optionally store in database for persistent preference
+    # This could be extended to store per-user preferences
+    
+    return jsonify({
+        'success': True,
+        'language': lang_code,
+        'language_name': LANGUAGES[lang_code]['name']
+    })
+
+# --- Multilingual AI Analysis Routes ---
+@app.route('/api/ai/analyze-multilingual', methods=['POST'])
+def api_analyze_multilingual():
+    """Analyze security alert in multiple languages using Babel LLM."""
+    try:
+        data = request.json
+        alert_payload = data.get('alert_payload')
+        language = data.get('language', 'en')
+        
+        if not alert_payload:
+            return jsonify({'error': 'Alert payload is required'}), 400
+        
+        # Generate multilingual analysis
+        analysis = generate_explanation_multilingual(alert_payload, language)
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis,
+            'language': language
+        })
+        
+    except Exception as e:
+        logging.error(f"❌ Error in multilingual analysis API: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/babel/status')
+def api_babel_status():
+    """Check Babel LLM availability and supported languages."""
+    try:
+        babel_service = get_babel_llm_service()
+        
+        return jsonify({
+            'available': babel_service.is_babel_available(),
+            'models': babel_service.get_available_models(),
+            'supported_languages': BabelLanguage.get_supported_languages(),
+            'default_model': babel_service.default_model
+        })
+        
+    except Exception as e:
+        logging.error(f"❌ Error checking Babel status: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/babel/pull-model', methods=['POST'])
+def api_babel_pull_model():
+    """Pull Babel LLM model via Ollama."""
+    try:
+        data = request.json
+        model_name = data.get('model_name')
+        
+        babel_service = get_babel_llm_service()
+        success = babel_service.pull_babel_model(model_name)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Successfully pulled model: {model_name or babel_service.default_model}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to pull model'
+            }), 500
+            
+    except Exception as e:
+        logging.error(f"❌ Error pulling Babel model: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/translate', methods=['POST'])
+def api_translate():
+    """Translate UI strings using Babel LLM."""
+    try:
+        data = request.json
+        text = data.get('text')
+        target_language = data.get('language', 'en')
+        
+        if not text:
+            return jsonify({'error': 'Text is required'}), 400
+        
+        babel_service = get_babel_llm_service()
+        translated_text = babel_service.translate_ui_string(text, target_language)
+        
+        return jsonify({
+            'success': True,
+            'original': text,
+            'translated': translated_text,
+            'language': target_language
+        })
+        
+    except Exception as e:
+        logging.error(f"❌ Error in translation API: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     # Initialize database if Web UI is enabled
     if WEB_UI_ENABLED:
         init_database()
+        
+        # Initialize Weaviate if enabled
+        init_weaviate()
         
         # Apply auto-configuration based on detected secrets
         logging.info("🔍 STARTUP: Detecting available features and applying auto-configuration...")

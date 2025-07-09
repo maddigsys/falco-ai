@@ -48,6 +48,10 @@
             min-height: 100vh;
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             color: var(--text-dark);
+            transform: scale(0.9);
+            transform-origin: top left;
+            width: 111.11%; /* Compensate for scaled width */
+            height: 111.11vh; /* Compensate for scaled height */
         }
 
         .dashboard-container {
@@ -457,6 +461,34 @@
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .language-selector select {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            color: var(--text-dark);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 140px;
+        }
+
+        .language-selector select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .language-selector select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
         }
 
         .btn {
@@ -796,6 +828,190 @@
             color: var(--text-dark);
         }
 
+        /* Semantic Search Styles */
+        .search-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input-group input[type="text"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input-group input[type="text"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .search-options {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .search-option label {
+            font-weight: 500;
+            color: var(--text-dark);
+            white-space: nowrap;
+        }
+
+        .search-option select {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            background: white;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-option select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .search-results {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-light);
+        }
+
+        .search-result-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background: rgba(0, 174, 199, 0.05);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-similarity {
+            float: right;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .search-result-rule {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .search-result-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .search-result-snippet {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            line-height: 1.4;
+        }
+
+        /* Similar Alerts Styles */
+        .similar-alerts-header {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .similar-alerts-header h4 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .similar-alerts-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .similar-alert-item {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .similar-alert-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 174, 199, 0.05);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .similar-alert-similarity {
+            float: right;
+            background: var(--success-gradient);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .similar-alert-rule {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.925rem;
+        }
+
+        .similar-alert-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .similar-alert-snippet {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            line-height: 1.4;
+            max-height: 3rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .welcome-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1099,6 +1315,36 @@
                     Security Dashboard
                 </h1>
                 <div class="header-actions">
+                    <!-- Language Selector -->
+                    <div class="language-selector">
+                        <select id="languageSelector" onchange="changeLanguage(this.value)" class="form-select">
+                            <option value="en">🇺🇸 English</option>
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="de">🇩🇪 Deutsch</option>
+                            <option value="pt">🇵🇹 Português</option>
+                            <option value="zh">🇨🇳 中文</option>
+                            <option value="hi">🇮🇳 हिन्दी</option>
+                            <option value="ar">🇸🇦 العربية</option>
+                            <option value="bn">🇧🇩 বাংলা</option>
+                            <option value="ru">🇷🇺 Русский</option>
+                            <option value="ja">🇯🇵 日本語</option>
+                            <option value="ko">🇰🇷 한국어</option>
+                            <option value="it">🇮🇹 Italiano</option>
+                            <option value="tr">🇹🇷 Türkçe</option>
+                            <option value="vi">🇻🇳 Tiếng Việt</option>
+                            <option value="th">🇹🇭 ภาษาไทย</option>
+                            <option value="id">🇮🇩 Bahasa Indonesia</option>
+                            <option value="ur">🇵🇰 اردو</option>
+                            <option value="fa">🇮🇷 فارسی</option>
+                            <option value="sw">🇰🇪 Kiswahili</option>
+                            <option value="tl">🇵🇭 Filipino</option>
+                            <option value="ta">🇮🇳 தமிழ்</option>
+                            <option value="ha">🇳🇬 Hausa</option>
+                            <option value="my">🇲🇲 မြန်မာဘာသာ</option>
+                        </select>
+                    </div>
+                    
                     <a href="/config/general" class="btn btn-secondary">
                         <i class="fas fa-cogs"></i>
                         General Config
@@ -1309,6 +1555,54 @@
                     </div>
                 </div>
 
+                <!-- Semantic Search -->
+                <div class="content-card" id="semanticSearchCard" style="display: none;">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="fas fa-search"></i>
+                            Semantic Alert Search
+                        </h3>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="search-container">
+                            <div class="search-input-group">
+                                <input type="text" id="semanticSearchInput" class="form-control" placeholder="Search alerts by meaning... (e.g., 'file system attacks', 'network anomalies', 'privilege escalation')" />
+                                <button class="btn btn-primary" onclick="performSemanticSearch()">
+                                    <i class="fas fa-search"></i>
+                                    Search
+                                </button>
+                            </div>
+                            <div class="search-options">
+                                <div class="search-option">
+                                    <label for="searchLimit">Results limit:</label>
+                                    <select id="searchLimit">
+                                        <option value="10">10</option>
+                                        <option value="25" selected>25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="search-option">
+                                    <label for="searchThreshold">Similarity threshold:</label>
+                                    <select id="searchThreshold">
+                                        <option value="0.1">Very loose (0.1)</option>
+                                        <option value="0.3">Loose (0.3)</option>
+                                        <option value="0.5" selected>Medium (0.5)</option>
+                                        <option value="0.7">Strict (0.7)</option>
+                                        <option value="0.9">Very strict (0.9)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="semanticSearchResults" class="search-results">
+                            <div class="empty-state">
+                                <i class="fas fa-info-circle"></i>
+                                Enter a search query to find similar alerts using AI semantic understanding.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Alerts List -->
                 <div class="content-card" id="alertsCard" style="display: none;">
                     <div class="content-card-header">
@@ -1340,6 +1634,18 @@
                             <div class="empty-state">
                                 <h3>No Alert Selected</h3>
                                 <p>Select an alert from the list above to view detailed analysis.</p>
+                            </div>
+                        </div>
+                        <div id="similarAlertsSection" style="display: none;">
+                            <div class="similar-alerts-header">
+                                <h4>
+                                    <i class="fas fa-clone"></i>
+                                    Similar Alerts
+                                </h4>
+                                <p class="text-muted">Alerts with similar patterns and characteristics</p>
+                            </div>
+                            <div id="similarAlertsList" class="similar-alerts-list">
+                                <!-- Similar alerts will be populated here -->
                             </div>
                         </div>
                     </div>
@@ -1380,11 +1686,30 @@
                     loadStats().catch(e => console.error('Stats loading failed:', e)),
                     loadAlerts().catch(e => console.error('Alerts loading failed:', e)),
                     loadRules().catch(e => console.error('Rules loading failed:', e)),
-                    loadAlertCounts().catch(e => console.error('Alert counts loading failed:', e))
+                    loadAlertCounts().catch(e => console.error('Alert counts loading failed:', e)),
+                    checkWeaviateStatus().catch(e => console.error('Weaviate status check failed:', e))
                 ]);
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
                 showError('Dashboard connection error. Check your network and refresh the page.');
+            }
+        }
+
+        // Check Weaviate status
+        async function checkWeaviateStatus() {
+            try {
+                const response = await fetch('/api/weaviate/health');
+                const status = await response.json();
+                
+                if (status.status === 'healthy') {
+                    // Show semantic search card if Weaviate is healthy
+                    document.getElementById('semanticSearchCard').style.display = 'block';
+                    console.log('Weaviate is healthy - semantic search enabled');
+                } else {
+                    console.warn('Weaviate is not healthy - semantic search disabled');
+                }
+            } catch (error) {
+                console.error('Error checking Weaviate status:', error);
             }
         }
 
@@ -1720,6 +2045,9 @@
             
             showAlertDetails(alert);
             document.getElementById('alertDetailsCard').style.display = 'block';
+            
+            // Load similar alerts if Weaviate is available
+            loadSimilarAlerts(alertId);
         }
 
         // Show alert details
@@ -2560,6 +2888,214 @@ data:
                 showError('❌ Failed to download configuration');
             }
         }
+
+        // Semantic Search Functions
+        async function performSemanticSearch() {
+            const searchInput = document.getElementById('semanticSearchInput');
+            const searchResults = document.getElementById('semanticSearchResults');
+            const searchButton = document.querySelector('[onclick="performSemanticSearch()"]');
+            const searchLimit = document.getElementById('searchLimit').value;
+            const searchThreshold = document.getElementById('searchThreshold').value;
+            
+            const query = searchInput.value.trim();
+            if (!query) {
+                showError('Please enter a search query');
+                return;
+            }
+            
+            const originalButtonHTML = searchButton.innerHTML;
+            searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+            searchButton.disabled = true;
+            
+            try {
+                const response = await fetch('/api/semantic-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        limit: parseInt(searchLimit),
+                        threshold: parseFloat(searchThreshold)
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const results = await response.json();
+                renderSemanticSearchResults(results);
+                
+            } catch (error) {
+                console.error('Error performing semantic search:', error);
+                searchResults.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Search Error</h3>
+                        <p>Failed to perform semantic search: ${error.message}</p>
+                    </div>
+                `;
+                showError('Semantic search failed: ' + error.message);
+            } finally {
+                searchButton.innerHTML = originalButtonHTML;
+                searchButton.disabled = false;
+            }
+        }
+
+        // Handle Enter key in search input
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('semanticSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        performSemanticSearch();
+                    }
+                });
+            }
+        });
+
+        // Render semantic search results
+        function renderSemanticSearchResults(results) {
+            const searchResults = document.getElementById('semanticSearchResults');
+            
+            if (!results || results.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No Similar Alerts Found</h3>
+                        <p>Try adjusting your search terms or lowering the similarity threshold.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const resultsHTML = results.map(result => {
+                const similarity = Math.round(result.similarity * 100);
+                const timestamp = new Date(result.timestamp).toLocaleString();
+                const snippet = result.output.length > 200 ? result.output.substring(0, 200) + '...' : result.output;
+                
+                return `
+                    <div class="search-result-item" onclick="selectAlert(${result.id})">
+                        <div class="search-result-similarity">${similarity}% match</div>
+                        <div class="search-result-rule">${result.rule}</div>
+                        <div class="search-result-meta">
+                            <span class="alert-priority priority-${result.priority}">${result.priority}</span>
+                            <span>${timestamp}</span>
+                        </div>
+                        <div class="search-result-snippet">${snippet}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            searchResults.innerHTML = resultsHTML;
+        }
+
+        // Load similar alerts for a specific alert
+        async function loadSimilarAlerts(alertId) {
+            const similarAlertsSection = document.getElementById('similarAlertsSection');
+            const similarAlertsList = document.getElementById('similarAlertsList');
+            
+            try {
+                const response = await fetch(`/api/similar-alerts/${alertId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const similarAlerts = await response.json();
+                
+                if (similarAlerts && similarAlerts.length > 0) {
+                    renderSimilarAlerts(similarAlerts);
+                    similarAlertsSection.style.display = 'block';
+                } else {
+                    similarAlertsSection.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error loading similar alerts:', error);
+                similarAlertsSection.style.display = 'none';
+            }
+        }
+
+        // Render similar alerts
+        function renderSimilarAlerts(similarAlerts) {
+            const similarAlertsList = document.getElementById('similarAlertsList');
+            
+            const similarAlertsHTML = similarAlerts.map(alert => {
+                const similarity = Math.round(alert.similarity * 100);
+                const timestamp = new Date(alert.timestamp).toLocaleString();
+                const snippet = alert.output.length > 150 ? alert.output.substring(0, 150) + '...' : alert.output;
+                
+                return `
+                    <div class="similar-alert-item" onclick="selectAlert(${alert.id})">
+                        <div class="similar-alert-similarity">${similarity}% similar</div>
+                        <div class="similar-alert-rule">${alert.rule}</div>
+                        <div class="similar-alert-meta">
+                            <span class="alert-priority priority-${alert.priority}">${alert.priority}</span>
+                            <span>${timestamp}</span>
+                        </div>
+                        <div class="similar-alert-snippet">${snippet}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            similarAlertsList.innerHTML = similarAlertsHTML;
+        }
+
+        // Language switching functionality
+        async function changeLanguage(languageCode) {
+            try {
+                const response = await fetch(`/api/lang/${languageCode}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Language changed to:', result.language_name);
+                    
+                    // Show success message
+                    showError(`🌍 Language changed to ${result.language_name}`, 'success');
+                    
+                    // Reload the page to apply the new language
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error('Failed to change language');
+                }
+            } catch (error) {
+                console.error('Error changing language:', error);
+                showError('❌ Failed to change language: ' + error.message);
+                
+                // Reset the selector to the current language
+                loadCurrentLanguage();
+            }
+        }
+
+        // Load and set the current language in the selector
+        async function loadCurrentLanguage() {
+            try {
+                const response = await fetch('/api/lang');
+                if (response.ok) {
+                    const data = await response.json();
+                    const languageSelector = document.getElementById('languageSelector');
+                    if (languageSelector) {
+                        languageSelector.value = data.current;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading current language:', error);
+            }
+        }
+
+        // Initialize language selector on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentLanguage();
+        });
 
 
     </script>
