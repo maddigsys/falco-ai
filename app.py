@@ -3523,6 +3523,194 @@ def api_translate():
         logging.error(f"❌ Error in translation API: {e}")
         return jsonify({'error': str(e)}), 500
 
+# --- Multilingual Configuration Routes ---
+@app.route('/config/multilingual')
+def multilingual_config_ui():
+    """Multilingual configuration page."""
+    if not WEB_UI_ENABLED:
+        return jsonify({"error": "Web UI disabled"}), 404
+    return render_template('multilingual_config.html')
+
+@app.route('/api/multilingual/config')
+def api_multilingual_config():
+    """Get multilingual configuration."""
+    try:
+        config = get_multilingual_config()
+        return jsonify(config)
+    except Exception as e:
+        logging.error(f"❌ Error getting multilingual config: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/multilingual/config/general', methods=['POST'])
+def api_update_multilingual_general_config():
+    """Update general multilingual settings."""
+    try:
+        data = request.json
+        
+        # Update each setting
+        for key, value in data.items():
+            update_multilingual_config(f'general_{key}', value)
+        
+        return jsonify({'success': True, 'message': 'General settings updated successfully'})
+    except Exception as e:
+        logging.error(f"❌ Error updating general multilingual config: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/multilingual/config/babel', methods=['POST'])
+def api_update_multilingual_babel_config():
+    """Update Babel LLM settings."""
+    try:
+        data = request.json
+        
+        # Update each Babel setting
+        for key, value in data.items():
+            update_multilingual_config(f'babel_{key}', value)
+        
+        return jsonify({'success': True, 'message': 'Babel LLM settings updated successfully'})
+    except Exception as e:
+        logging.error(f"❌ Error updating Babel multilingual config: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/multilingual/config/languages', methods=['POST'])
+def api_update_multilingual_language_config():
+    """Update enabled languages settings."""
+    try:
+        data = request.json
+        enabled_languages = data.get('enabled_languages', [])
+        
+        # Store as JSON string
+        update_multilingual_config('enabled_languages', json.dumps(enabled_languages))
+        
+        return jsonify({'success': True, 'message': 'Language settings updated successfully'})
+    except Exception as e:
+        logging.error(f"❌ Error updating language multilingual config: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/multilingual/test', methods=['POST'])
+def api_test_multilingual():
+    """Test multilingual functionality."""
+    try:
+        data = request.json
+        test_type = data.get('type', 'babel_connection')
+        
+        if test_type == 'babel_connection':
+            # Test Babel LLM connection
+            babel_service = get_babel_llm_service()
+            if babel_service.is_babel_available():
+                return jsonify({
+                    'success': True,
+                    'message': 'Babel LLM connection successful',
+                    'models': babel_service.get_available_models()
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Babel LLM not available - models may need to be downloaded'
+                }), 400
+        
+        elif test_type == 'translation':
+            # Test translation
+            text = data.get('text', 'Hello, this is a test.')
+            language = data.get('language', 'es')
+            
+            babel_service = get_babel_llm_service()
+            translated = babel_service.translate_ui_string(text, language)
+            
+            return jsonify({
+                'success': True,
+                'original': text,
+                'translated': translated,
+                'language': language
+            })
+        
+        else:
+            return jsonify({'error': 'Unknown test type'}), 400
+            
+    except Exception as e:
+        logging.error(f"❌ Error testing multilingual functionality: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# --- Multilingual Configuration Management ---
+def get_multilingual_config():
+    """Get all multilingual configuration settings."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('SELECT setting_name, setting_value FROM multilingual_config')
+        settings = cursor.fetchall()
+        
+        config = {}
+        for setting_name, setting_value in settings:
+            config[setting_name] = setting_value
+        
+        # Set defaults if not configured
+        defaults = {
+            'general_default_language': 'en',
+            'general_auto_detect_language': 'true',
+            'general_enable_ui_translation': 'babel',
+            'general_fallback_behavior': 'english',
+            'general_persist_language': 'true',
+            'babel_babel_model': 'babel-9b',
+            'babel_babel_timeout': '60',
+            'babel_babel_temperature': '0.7',
+            'babel_babel_max_tokens': '1000',
+            'babel_ollama_endpoint': 'http://ollama:11434',
+            'babel_enable_babel_llm': 'true',
+            'enabled_languages': json.dumps(['en', 'es', 'fr', 'de', 'pt', 'zh', 'hi', 'ar', 'bn', 'ru'])
+        }
+        
+        for key, default_value in defaults.items():
+            if key not in config:
+                config[key] = default_value
+        
+        return config
+        
+    except sqlite3.OperationalError:
+        # Table doesn't exist, create it
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS multilingual_config (
+                setting_name TEXT PRIMARY KEY,
+                setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        return get_multilingual_config()  # Recursive call after creating table
+    finally:
+        conn.close()
+
+def update_multilingual_config(setting_name, setting_value):
+    """Update a multilingual configuration setting."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    try:
+        # Ensure table exists
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS multilingual_config (
+                setting_name TEXT PRIMARY KEY,
+                setting_value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute('''
+            INSERT OR REPLACE INTO multilingual_config (setting_name, setting_value, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        ''', (setting_name, str(setting_value)))
+        
+        conn.commit()
+        logging.info(f"📝 Updated multilingual config: {setting_name} = {setting_value}")
+        
+    finally:
+        conn.close()
+
+def get_multilingual_setting(setting_name, default_value=None):
+    """Get a specific multilingual configuration setting."""
+    config = get_multilingual_config()
+    return config.get(setting_name, default_value)
+
 if __name__ == '__main__':
     # Initialize database if Web UI is enabled
     if WEB_UI_ENABLED:

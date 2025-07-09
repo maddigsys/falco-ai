@@ -71,16 +71,12 @@ class BabelLLMService:
     """Service for multilingual AI analysis using Babel LLM via Ollama"""
     
     def __init__(self):
-        self.ollama_url = os.getenv("OLLAMA_API_URL", "http://ollama:11434")
-        if self.ollama_url.endswith("/api/generate"):
-            self.ollama_url = self.ollama_url[:-13]  # Remove /api/generate
-        
+        # Set up models first
         self.babel_model_9b = "babel-9b"
         self.babel_model_83b = "babel-83b"
-        self.default_model = self.babel_model_9b  # Use smaller model by default
         
-        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "60"))
-        self.max_tokens = int(os.getenv("BABEL_MAX_TOKENS", "1000"))
+        # Load configuration from database if available
+        self._load_config()
         
         # Language-specific system prompts
         self.language_prompts = {
@@ -96,8 +92,95 @@ class BabelLLMService:
             "ja": "あなたはサイバーセキュリティの専門家です。このセキュリティアラートを分析し、日本語で明確で実行可能な洞察を提供してください。",
         }
     
+    def _load_config(self):
+        """Load configuration from database or use defaults."""
+        # Set defaults first
+        self.ollama_url = os.getenv("OLLAMA_API_URL", "http://ollama:11434")
+        if self.ollama_url.endswith("/api/generate"):
+            self.ollama_url = self.ollama_url[:-13]
+        
+        self.default_model = self.babel_model_9b
+        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "60"))
+        self.max_tokens = int(os.getenv("BABEL_MAX_TOKENS", "1000"))
+        self.temperature = 0.7
+        self.enabled = True
+        
+        # Try to load from database if available (will be done later via reload_config)
+        logger.debug("📋 Using default Babel LLM config (database config loaded on demand)")
+        
+    def _load_database_config(self):
+        """Load configuration from database if available."""
+        try:
+            # Import here to avoid circular dependencies
+            import sqlite3
+            import json
+            
+            # Try to connect to database directly
+            DB_PATH = os.getenv("DATABASE_PATH", "data/falco_alerts.db")
+            
+            if os.path.exists(DB_PATH):
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+                
+                try:
+                    cursor.execute('SELECT setting_name, setting_value FROM multilingual_config')
+                    settings = cursor.fetchall()
+                    
+                    config = {}
+                    for setting_name, setting_value in settings:
+                        config[setting_name] = setting_value
+                    
+                    # Update configuration
+                    if 'babel_ollama_endpoint' in config:
+                        ollama_endpoint = config['babel_ollama_endpoint']
+                        if ollama_endpoint.endswith("/api/generate"):
+                            ollama_endpoint = ollama_endpoint[:-13]
+                        self.ollama_url = ollama_endpoint
+                    
+                    if 'babel_babel_model' in config:
+                        self.default_model = config['babel_babel_model']
+                    
+                    if 'babel_babel_timeout' in config:
+                        self.timeout = int(config['babel_babel_timeout'])
+                    
+                    if 'babel_babel_max_tokens' in config:
+                        self.max_tokens = int(config['babel_babel_max_tokens'])
+                    
+                    if 'babel_babel_temperature' in config:
+                        self.temperature = float(config['babel_babel_temperature'])
+                    
+                    if 'babel_enable_babel_llm' in config:
+                        self.enabled = config['babel_enable_babel_llm'].lower() == 'true'
+                    
+                    logger.debug(f"📋 Loaded Babel LLM config from database: model={self.default_model}, endpoint={self.ollama_url}")
+                    
+                except sqlite3.OperationalError:
+                    # Table doesn't exist yet, use defaults
+                    logger.debug("📋 Multilingual config table not found, using defaults")
+                finally:
+                    conn.close()
+            else:
+                logger.debug("📋 Database file not found, using defaults")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Error loading database config: {e}")
+            # Keep defaults
+    
+    def reload_config(self):
+        """Reload configuration from database."""
+        self._load_database_config()
+    
     def is_babel_available(self) -> bool:
         """Check if Babel LLM model is available in Ollama"""
+        # Load database config on first use if not already loaded
+        if not hasattr(self, '_config_loaded'):
+            self._load_database_config()
+            self._config_loaded = True
+        
+        # Check if Babel LLM is enabled in configuration
+        if not getattr(self, 'enabled', True):
+            return False
+            
         try:
             response = requests.get(f"{self.ollama_url}/api/tags", timeout=5)
             if response.status_code == 200:
@@ -224,7 +307,7 @@ Respond entirely in {language.display_name}. Be clear, professional, and actiona
                     "prompt": prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.7,
+                        "temperature": self.temperature,
                         "top_p": 0.9,
                         "max_tokens": self.max_tokens,
                         "stop": ["Human:", "Assistant:"]
@@ -306,7 +389,7 @@ Translation:"""
                     "prompt": prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.3,  # Lower temperature for more consistent translations
+                        "temperature": max(0.3, self.temperature - 0.2),  # Lower temperature for more consistent translations
                         "max_tokens": 200,
                         "stop": ["\n\n", "Original:", "Translation:"]
                     }
@@ -393,7 +476,7 @@ Response:"""
                     "prompt": prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.8,
+                        "temperature": min(1.0, self.temperature + 0.1),  # Slightly higher temperature for chat
                         "top_p": 0.9,
                         "max_tokens": 500
                     }
