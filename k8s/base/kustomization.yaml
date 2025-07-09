@@ -15,6 +15,7 @@ resources:
   - ingress.yaml
   - ollama-deployment.yaml
   - ollama-init-job.yaml
+  - weaviate-deployment.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: falco-ecosystem

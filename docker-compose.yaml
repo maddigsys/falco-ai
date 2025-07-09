@@ -4,10 +4,10 @@ services:
   # Main Falco AI Alert System
   falco-ai-alerts:
     # Option 1: Use published image (recommended for production)
-    image: maddigsys/falco-ai-alerts:v1.5.7
-    # Option 2: Build locally (uncomment for development)
-    # build: .
-    # image: maddigsys/falco-ai-alerts:latest
+    # image: maddigsys/falco-ai-alerts:v1.5.7
+    # Option 2: Build locally (for development with new features)
+    build: .
+    image: maddigsys/falco-ai-alerts:weaviate-dev
     ports:
       - "8080:8080"  # Main webhook and Web UI port
     environment:
@@ -36,12 +36,19 @@ services:
       # Alert Configuration
       - MIN_PRIORITY=${MIN_PRIORITY:-warning}
       - IGNORE_OLDER=${IGNORE_OLDER:-1}
+      
+      # Weaviate Configuration
+      - WEAVIATE_ENABLED=${WEAVIATE_ENABLED:-true}
+      - WEAVIATE_HOST=weaviate
+      - WEAVIATE_PORT=8080
+      - WEAVIATE_GRPC_PORT=50051
     volumes:
       - ./templates:/app/templates:ro
       - ./app.py:/app/app.py:ro  # Mount updated app.py for fixes
       - alerts_data:/app/data  # Persistent storage for database and other data
     depends_on:
       - ollama
+      - weaviate
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
@@ -96,6 +103,34 @@ services:
     # Just serve Ollama - model will be pulled on first use
     command: serve
 
+  # Weaviate Vector Database for AI-Enhanced Search
+  weaviate:
+    image: semitechnologies/weaviate:1.25.0
+    ports:
+      - "8082:8080"  # HTTP API
+      - "50051:50051"  # gRPC API
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
+      ENABLE_MODULES: 'text2vec-openai,text2vec-huggingface,text2vec-ollama,qna-openai,generative-openai,generative-ollama'
+      CLUSTER_HOSTNAME: 'node1'
+      LOG_LEVEL: 'info'
+      # OpenAI Configuration (passed through from environment)
+      OPENAI_APIKEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - falco-network
+
   # Optional: Adminer for database management (development only)
   adminer:
     image: adminer:latest
@@ -135,4 +170,6 @@ volumes:
   alerts_data:
     driver: local
   ollama_data:
+    driver: local
+  weaviate_data:
     driver: local
