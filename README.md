@@ -26,6 +26,15 @@ docker-compose up -d
 open http://localhost:8080/dashboard
 ```
 
+### Docker Run (Quick Start)
+```bash
+# Run the latest version
+docker run -d -p 8080:8080 --name falco-ai-alerts maddigsys/falco-ai-alerts:v2.0.0
+
+# Access Web UI
+open http://localhost:8080/dashboard
+```
+
 ### Environment Configuration
 Create a `.env` file:
 ```bash
