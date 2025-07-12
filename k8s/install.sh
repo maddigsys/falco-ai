@@ -79,7 +79,7 @@ check_prerequisites() {
     # Show image tag information
     print_info "Image versions per environment:"
     echo "   • Development: maddigsys/falco-ai-alerts:latest"
-    echo "   • Production: maddigsys/falco-ai-alerts:v1.5.7"
+    echo "   • Production: maddigsys/falco-ai-alerts:v2.0.0"
 }
 
 # Function to validate environment config

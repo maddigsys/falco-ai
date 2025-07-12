@@ -15,7 +15,7 @@ namePrefix: prod-
 commonLabels:
   environment: production
   platform: eks
-  app.kubernetes.io/version: "1.5.2"
+  app.kubernetes.io/version: "2.0.0"
 
 patches:
   # EKS-specific storage class
@@ -114,4 +114,4 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: "v1.5.7" 
+    newTag: "v2.0.0" 

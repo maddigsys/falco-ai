@@ -13,7 +13,7 @@ namePrefix: dev-
 
 commonLabels:
   environment: development
-  app.kubernetes.io/version: dev
+  app.kubernetes.io/version: "2.0.0-dev"
 
 patches:
   # Reduce replicas for development
