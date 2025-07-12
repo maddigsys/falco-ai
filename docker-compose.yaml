@@ -4,10 +4,10 @@ services:
   # Main Falco AI Alert System
   falco-ai-alerts:
     # Option 1: Use published image (recommended for production)
-    # image: maddigsys/falco-ai-alerts:v1.5.7
+    image: maddigsys/falco-ai-alerts:latest
     # Option 2: Build locally (for development with new features)
-    build: .
-    image: maddigsys/falco-ai-alerts:weaviate-dev
+    # build: .
+    # image: maddigsys/falco-ai-alerts:dev
     ports:
       - "8080:8080"  # Main webhook and Web UI port
     environment:
@@ -43,8 +43,6 @@ services:
       - WEAVIATE_PORT=8080
       - WEAVIATE_GRPC_PORT=50051
     volumes:
-      - ./templates:/app/templates:ro
-      - ./app.py:/app/app.py:ro  # Mount updated app.py for fixes
       - alerts_data:/app/data  # Persistent storage for database and other data
     depends_on:
       - ollama
@@ -59,30 +57,28 @@ services:
     networks:
       - falco-network
 
-  # Falco Security Runtime (Linux only - use profile to enable)
-  falco:
-    image: falcosecurity/falco:latest
-    container_name: falco
-    privileged: true
+  # Event Generator - creates test security events for development
+  event-generator:
+    image: alpine:latest
+    container_name: event-generator
     volumes:
-      - /var/run/docker.sock:/host/var/run/docker.sock:ro
-      - /dev:/host/dev:ro
-      - /proc:/host/proc:ro
-      - /boot:/host/boot:ro
-      - /lib/modules:/host/lib/modules:ro
-      - /usr:/host/usr:ro
-      - /etc:/host/etc:ro
-      - ./falco-config.yaml:/etc/falco/falco.yaml:ro
+      - ./generate_events.py:/app/generate_events.py:ro
     environment:
-      - FALCO_GRPC_ENABLED=false
-    command: ["/usr/bin/falco", "--pidfile=/var/run/falco.pid"]
+      - WEBHOOK_URL=http://falco-ai-alerts:8080/falco-webhook
+      - GENERATION_INTERVAL=30
     depends_on:
       - falco-ai-alerts
     restart: unless-stopped
     networks:
       - falco-network
+    command: >
+      sh -c "
+        apk add --no-cache python3 py3-requests curl &&
+        echo 'Starting event generator...' &&
+        python3 /app/generate_events.py
+      "
     profiles:
-      - falco-linux  # Only run on Linux systems
+      - events  # Use profile to enable: docker compose --profile events up
 
   # Ollama Local LLM Service (included by default for local testing)
   ollama:
@@ -91,6 +87,12 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_KEEP_ALIVE=5m
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_REQUEST_TIMEOUT=30
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]

@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Falco AI Security Platform{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Core Brand Colors */
+            --falco-primary: #00B4A6;      /* Modern Teal - Primary brand color */
+            --falco-primary-dark: #008B80;  /* Deep Teal - Hover states, emphasis */
+            --falco-primary-light: #4DD0C7; /* Light Teal - Subtle accents */
+            --falco-accent: #0EA5E9;       /* Sky Blue - Secondary accent, links */
+            --falco-dark: #1E293B;        /* Slate Dark - Primary text, headers */
+            --falco-surface: #F8FAFC;     /* Cool White - Main background */
+            --falco-card: #FFFFFF;        /* Pure White - Cards, elevated content */
+            
+            /* Semantic Gray Scale */
+            --gray-50: #F8FAFC;           /* Lightest - Main background */
+            --gray-100: #F1F5F9;          /* Very Light - Section backgrounds */
+            --gray-200: #E2E8F0;          /* Light - Borders, dividers */
+            --gray-300: #CBD5E1;          /* Medium Light - Inactive elements */
+            --gray-400: #94A3B8;          /* Medium - Placeholder text */
+            --gray-500: #64748B;          /* Base - Secondary text */
+            --gray-600: #475569;          /* Medium Dark - Supporting text */
+            --gray-700: #334155;          /* Dark - Primary text */
+            --gray-800: #1E293B;          /* Darker - Headers, emphasis */
+            --gray-900: #0F172A;          /* Darkest - High contrast text */
+            
+                    /* Background System */
+        --bg-main: var(--gray-200);    /* App background - darker gray for contrast */
+        --bg-sidebar: var(--gray-300); /* Sidebar background */
+        --bg-nav: var(--falco-card);   /* Navigation background - white */
+        --bg-cards: var(--falco-card); /* Card backgrounds - pure white */
+            
+            /* Enhanced Status Colors */
+            --success: #059669;            /* Emerald - Success states */
+            --success-light: #ECFDF5;      /* Success background */
+            --warning: #D97706;            /* Amber - Warning states */
+            --warning-light: #FFFBEB;      /* Warning background */
+            --critical: #DC2626;           /* Red - Critical alerts */
+            --critical-light: #FEF2F2;     /* Critical background */
+            --info: #0EA5E9;               /* Sky - Information states */
+            --info-light: #F0F9FF;         /* Info background */
+            
+            /* Text Colors */
+            --text-primary: var(--gray-700);    /* Primary text - body content */
+            --text-secondary: var(--gray-500);  /* Secondary text - descriptions */
+            --text-muted: var(--gray-400);      /* Muted text - placeholders */
+            --text-heading: var(--gray-800);    /* Headings - emphasis */
+            --text-inverse: #FFFFFF;            /* Text on dark backgrounds */
+            
+            /* Interactive Colors */
+            --link-default: var(--falco-accent);  /* Default link color */
+            --link-hover: #0284C7;               /* Link hover state */
+            --link-visited: #7C3AED;             /* Visited links */
+            
+            /* Advanced Gradients */
+            --primary-gradient: linear-gradient(135deg, var(--falco-primary) 0%, var(--falco-accent) 100%);
+            --success-gradient: linear-gradient(135deg, var(--success) 0%, #10B981 100%);
+            --warning-gradient: linear-gradient(135deg, var(--warning) 0%, #F59E0B 100%);
+            --critical-gradient: linear-gradient(135deg, var(--critical) 0%, #EF4444 100%);
+            --surface-gradient: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
+            
+            /* Border Colors */
+            --border-light: var(--gray-200);       /* Light borders - dividers */
+            --border-medium: var(--gray-300);      /* Medium borders - inactive elements */
+            --border-dark: var(--gray-400);        /* Dark borders - emphasis */
+            
+                    /* Enhanced Shadows - Much stronger for card separation */
+        --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 6px 12px -2px rgba(0, 0, 0, 0.15), 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.15), 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.2), 0 16px 32px -8px rgba(0, 0, 0, 0.15);
+            
+            /* Interactive States */
+            --hover-bg: var(--gray-50);            /* Hover background */
+            --active-bg: #E3F2FD;                 /* Active/Selected background */
+            --focus-ring: 0 0 0 2px var(--falco-primary), 0 0 0 4px rgba(0,180,166,0.2);
+            
+            /* Badge Colors */
+            --badge-success-bg: var(--success-light);
+            --badge-success-text: #047857;
+            --badge-warning-bg: var(--warning-light);
+            --badge-warning-text: #92400E;
+            --badge-critical-bg: var(--critical-light);
+            --badge-critical-text: #991B1B;
+            --badge-info-bg: var(--info-light);
+            --badge-info-text: #0C4A6E;
+            --badge-neutral-bg: var(--gray-100);
+            --badge-neutral-text: var(--gray-600);
+            
+            /* Transition System */
+            --transition-fast: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+            
+            /* Spacing Scale */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            /* Typography Scale */
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 1.875rem;
+            --text-4xl: 2.25rem;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-size: var(--text-base);
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-main);
+            background-image: 
+                linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Layout Components */
+        .falco-layout {
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-main);
+        }
+
+        /* Unified Navigation */
+        .falco-nav {
+            background: var(--bg-nav);
+            border-bottom: 2px solid var(--border-medium);
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: var(--space-md) 0;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-brand:hover {
+            color: var(--text-primary);
+        }
+
+        .falco-logo {
+            width: 2.5rem;
+            height: 2.5rem;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+        }
+
+        .brand-text {
+            font-size: var(--text-2xl);
+            font-weight: 700;
+            color: var(--falco-primary);
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-heading);
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-sm);
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: var(--text-sm);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: var(--surface-gradient);
+            color: var(--falco-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            background: var(--primary-gradient);
+            color: var(--text-inverse);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--falco-primary);
+            border-radius: 50%;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: var(--space-sm);
+            align-items: center;
+        }
+
+        /* Main Content Area */
+        .falco-main {
+            flex: 1;
+            padding: var(--space-xl);
+            overflow-y: auto;
+            background: var(--bg-main);
+            background-image: 
+                linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%),
+                radial-gradient(circle at 1px 1px, rgba(0,0,0,0.03) 1px, transparent 0);
+            background-size: 100% 100%, 20px 20px;
+            margin: var(--space-md);
+            border-radius: var(--radius-lg);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-light);
+        }
+
+
+
+        /* Card Components */
+        .falco-card {
+            background: var(--bg-cards);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--border-medium);
+            border-top: 4px solid var(--falco-primary);
+            margin-bottom: var(--space-xl);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            /* Add subtle inner glow to emphasize white background */
+            box-shadow: 
+                var(--shadow-lg),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .falco-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                var(--shadow-xl),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            border-color: var(--falco-primary-light);
+            border-top-color: var(--falco-primary-dark);
+        }
+
+        .card-header {
+            padding: var(--space-xl) var(--space-xl) var(--space-lg);
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-cards);
+        }
+
+        .card-title {
+            font-size: var(--text-xl);
+            font-weight: 600;
+            color: var(--text-heading);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .card-body {
+            padding: var(--space-xl);
+        }
+
+        /* Button System */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: var(--text-sm);
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: var(--text-inverse);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--gray-500), var(--gray-600));
+            color: var(--text-inverse);
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            color: var(--text-inverse);
+        }
+
+        .btn-warning {
+            background: var(--warning-gradient);
+            color: var(--text-inverse);
+        }
+
+        .btn-danger {
+            background: var(--critical-gradient);
+            color: var(--text-inverse);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--falco-primary);
+            color: var(--falco-primary);
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-gradient);
+            color: var(--text-inverse);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: var(--space-sm);
+            font-size: var(--text-sm);
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: var(--space-md);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            background: var(--bg-cards);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--falco-primary);
+            box-shadow: var(--focus-ring);
+        }
+
+        .form-text {
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-sm);
+        }
+
+        /* Status Indicators */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-md);
+            border-radius: var(--radius-lg);
+            font-size: var(--text-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-success {
+            background: var(--badge-success-bg);
+            color: var(--badge-success-text);
+        }
+
+        .status-warning {
+            background: var(--badge-warning-bg);
+            color: var(--badge-warning-text);
+        }
+
+        .status-danger {
+            background: var(--badge-critical-bg);
+            color: var(--badge-critical-text);
+        }
+
+        .status-info {
+            background: var(--badge-info-bg);
+            color: var(--badge-info-text);
+        }
+
+        /* Tag/Badge System */
+        .tag-warning {
+            background: var(--badge-warning-bg);
+            color: var(--badge-warning-text);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+        }
+
+        .tag-success {
+            background: var(--badge-success-bg);
+            color: var(--badge-success-text);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+        }
+
+        .tag-info {
+            background: var(--badge-info-bg);
+            color: var(--badge-info-text);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+        }
+
+        .tag-critical {
+            background: var(--badge-critical-bg);
+            color: var(--badge-critical-text);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+        }
+
+        .tag-neutral {
+            background: var(--badge-neutral-bg);
+            color: var(--badge-neutral-text);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+        }
+
+        /* Hover/Interactive States */
+        .hover-bg {
+            background: var(--hover-bg);
+        }
+
+        .active-bg, .selected-bg {
+            background: var(--active-bg);
+        }
+
+        /* Auto-configuration feedback */
+        .auto-config-banner {
+            background: var(--bg-cards);
+            border: 2px solid var(--falco-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+
+
+        .banner-icon {
+            font-size: var(--text-2xl);
+            color: var(--falco-primary);
+            margin-bottom: var(--space-md);
+        }
+
+        .banner-title {
+            font-size: var(--text-xl);
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: var(--space-sm);
+        }
+
+        .banner-message {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-lg);
+        }
+
+        /* Loading States */
+        .loading-spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .nav-container {
+                padding: 0 var(--space-md);
+            }
+            
+            .falco-main {
+                padding: var(--space-lg);
+                margin: var(--space-sm);
+            }
+            
+            .nav-links {
+                gap: var(--space-xs);
+            }
+            
+            .nav-link {
+                padding: var(--space-sm) var(--space-md);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .nav-container {
+                flex-direction: column;
+                gap: var(--space-md);
+                padding: var(--space-md);
+            }
+            
+            .nav-brand {
+                justify-content: center;
+            }
+            
+            .falco-main {
+                padding: var(--space-md);
+                margin: var(--space-xs);
+            }
+            
+            .card-body {
+                padding: var(--space-lg);
+            }
+            
+            .btn {
+                padding: var(--space-sm) var(--space-md);
+                font-size: var(--text-xs);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: var(--space-sm);
+                padding: var(--space-sm);
+            }
+            
+            .nav-links {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: var(--space-xs);
+                width: 100%;
+            }
+            
+            .nav-link {
+                padding: var(--space-xs) var(--space-sm);
+                font-size: var(--text-xs);
+                min-width: auto;
+                flex-shrink: 1;
+            }
+            
+            .nav-link span {
+                display: none;
+            }
+            
+            .brand-text {
+                font-size: var(--text-lg);
+            }
+            
+            .brand-subtitle {
+                font-size: var(--text-xs);
+            }
+            
+            .falco-main {
+                padding: var(--space-sm);
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .card-body {
+                padding: var(--space-md);
+            }
+            
+            .falco-card {
+                margin-bottom: var(--space-lg);
+                border-radius: var(--radius-md);
+            }
+            
+            .card-header {
+                padding: var(--space-lg) var(--space-md) var(--space-md);
+            }
+            
+            .card-title {
+                font-size: var(--text-lg);
+            }
+            
+            .form-control, .form-select {
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: var(--space-sm);
+            }
+            
+            .btn-group .btn {
+                width: auto;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-container {
+                padding: var(--space-xs);
+            }
+            
+            .nav-links {
+                justify-content: space-around;
+            }
+            
+            .nav-link {
+                padding: var(--space-xs);
+                border-radius: var(--radius-sm);
+            }
+            
+            .falco-logo {
+                width: 2rem;
+                height: 2rem;
+            }
+            
+            .brand-text {
+                font-size: var(--text-base);
+            }
+            
+            .brand-subtitle {
+                display: none;
+            }
+            
+            .falco-main {
+                padding: var(--space-xs);
+            }
+            
+            .card-body {
+                padding: var(--space-sm);
+            }
+            
+            .dropdown-menu {
+                position: relative !important;
+                transform: none !important;
+                box-shadow: none;
+                border: none;
+                background: var(--bg-secondary);
+                margin-top: var(--space-xs);
+                border-radius: var(--radius-sm);
+            }
+        }
+
+        /* Enhanced Mobile Navigation */
+        @media (max-width: 768px) {
+            .dropdown {
+                position: static;
+            }
+            
+            .dropdown-menu {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: var(--space-xs);
+                position: static;
+                transform: none;
+                box-shadow: none;
+                border: 1px solid var(--border-light);
+                border-radius: var(--radius-md);
+                margin-top: var(--space-sm);
+                padding: var(--space-sm);
+            }
+            
+            .dropdown-item {
+                font-size: var(--text-xs);
+                padding: var(--space-xs);
+                text-align: center;
+                border-radius: var(--radius-sm);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .falco-nav,
+            .nav-actions,
+            .btn {
+                display: none !important;
+            }
+            
+            .falco-main {
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+            }
+            
+            .falco-card {
+                border: 1px solid #ccc;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Dark Mode Support (future enhancement) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: var(--falco-dark);
+                --bg-secondary: #2d3748;
+                --text-primary: var(--falco-white);
+                --text-secondary: #cbd5e0;
+            }
+        }
+
+        /* Dropdown Styling */
+        .dropdown-menu {
+            background: var(--bg-cards);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-sm);
+        }
+
+        .dropdown-item {
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: var(--surface-gradient);
+            color: var(--falco-primary);
+        }
+
+        .dropdown-item:focus {
+            background: var(--surface-gradient);
+            color: var(--falco-primary);
+            outline: none;
+        }
+
+        /* Accessibility Improvements */
+        .btn:focus,
+        .form-control:focus,
+        .form-select:focus,
+        .nav-link:focus {
+            outline: 2px solid var(--falco-primary);
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Unified Navigation -->
+    <nav class="falco-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Falco" class="falco-logo">
+                <div>
+                    <div class="brand-text">Falco AI</div>
+                    <div class="brand-subtitle">Security Platform</div>
+                </div>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a></li>
+                <li><a href="/runtime-events" class="nav-link {% if request.endpoint == 'runtime_events' %}active{% endif %}">
+                    <i class="fas fa-bolt"></i>
+                    <span>Runtime Events</span>
+                </a></li>
+                <li><a href="/enhanced-chat" class="nav-link {% if request.endpoint == 'enhanced_chat_ui' %}active{% endif %}">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Assistant</span>
+                </a></li>
+                <li><a href="/api-explorer" class="nav-link {% if request.endpoint == 'api_explorer_ui' %}active{% endif %}">
+                    <i class="fas fa-code"></i>
+                    <span>API Explorer</span>
+                </a></li>
+                <li><a href="/mcp-dashboard" class="nav-link {% if request.endpoint == 'mcp_dashboard' %}active{% endif %}">
+                    <i class="fas fa-plug"></i>
+                    <span>MCP</span>
+                </a></li>
+                
+                <!-- Configuration Dropdown -->
+                <li class="dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cogs"></i>
+                        <span>Configuration</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/config/general">
+                            <i class="fas fa-sliders-h"></i> General Settings
+                        </a></li>
+                        <li><a class="dropdown-item" href="/config/falco">
+                            <i class="fas fa-shield-alt"></i> Falco Integration
+                        </a></li>
+                        <li><a class="dropdown-item" href="/config/ai">
+                            <i class="fas fa-brain"></i> AI Models
+                        </a></li>
+                        <li><a class="dropdown-item" href="/config/slack">
+                            <i class="fab fa-slack"></i> Slack Integration
+                        </a></li>
+                        <li><a class="dropdown-item" href="/config/multilingual">
+                            <i class="fas fa-globe"></i> Languages
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/config/features">
+                            <i class="fas fa-check-circle"></i> Feature Status
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <div class="nav-actions">
+                {% block nav_actions %}
+                <button class="btn btn-outline" onclick="window.location.reload()" title="Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                {% endblock %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="falco-layout">
+        <main class="falco-main">
+            <!-- Auto-configuration Banner -->
+            {% block auto_config_banner %}{% endblock %}
+
+            <!-- Main Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global utility functions
+        function showNotification(type, message, duration = 5000) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, duration);
+        }
+
+        function setLoadingState(element, loading = true) {
+            if (loading) {
+                element.classList.add('loading');
+                const spinner = element.querySelector('.loading-spinner') || document.createElement('span');
+                spinner.className = 'loading-spinner';
+                element.prepend(spinner);
+            } else {
+                element.classList.remove('loading');
+                const spinner = element.querySelector('.loading-spinner');
+                if (spinner) spinner.remove();
+            }
+        }
+
+        // Initialize tooltips if Bootstrap is available
+        if (typeof bootstrap !== 'undefined') {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

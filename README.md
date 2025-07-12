@@ -1,9 +1,6 @@
 # Falco AI Alert System with Integrated Web UI
 
-> ⚠️ **WORK IN PROGRESS DISCLAIMER** ⚠️  
-> **This project is actively under development.** While the core functionality is operational, some features and configurations may not work as expected. We are continuously improving the system and fixing issues as they arise. Please use with caution in production environments and report any issues you encounter.
-
-🚀 **Complete Integration Ready!** A comprehensive security alert system that combines Falco runtime security with AI-powered analysis and an interactive web dashboard.
+> 🚀 **Production Ready!** A comprehensive security alert system that combines Falco runtime security with AI-powered analysis and an interactive web dashboard.
 
 ## ✨ Features
 
@@ -35,6 +32,7 @@
 - **Docker Compose** - Single-command deployment
 - **Kubernetes** - Scalable container orchestration
 - **Cloud Deployment** - AWS, GCP, Azure ready
+- **Docker Hub** - Pre-built images available
 
 ## 🏗️ Architecture
 
@@ -61,7 +59,7 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.11+
 - Docker & Docker Compose (for containerized deployment)
 - API keys for your chosen AI provider
 
@@ -351,14 +349,21 @@ http_output:
 ```
 falco-rag-ai-gateway/
 ├── app.py                 # Main application with integrated web UI
-├── integrated_web_ui.py   # Original web UI module (reference)
+├── mcp_alternative.py     # MCP (Model Context Protocol) implementation
+├── multilingual_service.py # Multilingual support
+├── weaviate_service.py    # Vector database integration
+├── slack.py              # Slack integration
+├── portkey_config.py     # Portkey AI configuration
 ├── templates/
 │   ├── dashboard.html     # Web UI dashboard template
-│   ├── falco_dashboard.html
+│   ├── mcp_dashboard.html # MCP management interface
 │   └── system_prompt.txt  # AI system prompt
+├── static/
+│   └── logo.png          # Application logo
 ├── docker-compose.yaml    # Docker deployment
 ├── Dockerfile            # Container image
 ├── requirements.txt      # Python dependencies
+├── k8s/                  # Kubernetes deployment files
 └── README.md            # This file
 ```
 
@@ -400,6 +405,168 @@ docker-compose logs -f falco-ai-alerts
 
 # Filter for specific log levels
 docker-compose logs falco-ai-alerts | grep ERROR
+```
+
+## 🚀 MCP (Model Context Protocol) Integration
+
+The Falco AI Gateway includes comprehensive MCP (Model Context Protocol) integration, enabling enhanced AI capabilities through external data sources and tools.
+
+### 🎯 MCP Features
+
+#### **MCP Server Implementation**
+- **15 Security Tools**: Complete set of security analysis and management tools
+- **Real-time Integration**: Direct access to security data and AI models
+- **Alternative Implementation**: Lightweight, dependency-free MCP server
+
+#### **Available MCP Tools**
+
+##### **Security Alerts (8 tools)**
+- `get_security_alerts` - Retrieve alerts with filtering options
+- `analyze_security_alert` - AI analysis for specific alerts
+- `chat_with_security_ai` - Chat with security AI assistant
+- `get_security_dashboard` - Generate security dashboard data
+- `search_security_events` - Semantic search across security events
+- `get_alert_statistics` - Get comprehensive alert statistics
+- `reprocess_alert` - Reprocess alerts with fresh AI analysis
+- `bulk_generate_ai_analysis` - Generate AI analysis for missing alerts
+
+##### **Threat Intelligence (1 tool)**
+- `get_threat_intelligence` - AI-powered threat intelligence analysis
+
+##### **Configuration (3 tools)**
+- `get_ai_config` - Get current AI configuration
+- `get_slack_config` - Get Slack integration configuration
+- `get_system_health` - Get system health status
+
+##### **Advanced Analytics (2 tools)**
+- `cluster_alerts` - Cluster similar alerts using AI
+- `predict_threats` - Predict potential threats based on patterns
+
+##### **System Analysis (1 tool)**
+- `analyze_system_state` - Analyze system state for security vulnerabilities
+
+### 🎨 MCP Dashboard
+
+Access the MCP Dashboard at `/mcp-dashboard` to:
+
+1. **Monitor Status**: View real-time status of all MCP components
+2. **Manage Tools**: View and test all available MCP tools
+3. **Configure Settings**: Update MCP configuration dynamically
+4. **View Logs**: Monitor MCP activity and troubleshoot issues
+
+### 🔌 MCP API Endpoints
+
+#### **Status & Health**
+- `GET /api/mcp/status` - Get MCP integration status
+- `GET /api/mcp/system-health` - Comprehensive system health
+
+#### **Configuration**
+- `GET /api/mcp/config` - Get MCP configuration
+- `POST /api/mcp/config` - Update MCP configuration
+- `GET /api/mcp/export-config` - Export configuration
+
+#### **Enhanced Features**
+- `POST /api/mcp/enhanced-chat` - Enhanced AI chat with MCP context
+- `GET /api/mcp/enrich-alert/{id}` - Enrich alert with MCP data
+- `GET /api/mcp/threat-intelligence` - Get threat intelligence
+
+### 🚀 Getting Started with MCP
+
+#### **1. Access MCP Dashboard**
+```bash
+# Navigate to the MCP Dashboard
+http://localhost:8080/mcp-dashboard
+```
+
+#### **2. Check MCP Status**
+```bash
+# Check if MCP is available
+curl http://localhost:8080/api/mcp/status
+```
+
+#### **3. Use Enhanced Chat**
+```bash
+# Enhanced chat with MCP context
+curl -X POST http://localhost:8080/api/mcp/enhanced-chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Analyze recent security threats",
+    "context": {"alert_id": 123}
+  }'
+```
+
+#### **4. Enrich Alerts**
+```bash
+# Enrich an alert with external data
+curl http://localhost:8080/api/mcp/enrich-alert/123
+```
+
+### 🔧 MCP Configuration
+
+#### **AI Provider Configuration**
+```json
+{
+  "ai_provider": "ollama",
+  "ai_model": "tinyllama",
+  "ai_api_url": "http://ollama:11434",
+  "mcp_enabled": "true"
+}
+```
+
+### 📊 MCP Metrics
+
+The MCP Dashboard provides real-time metrics:
+
+- **Total Tools**: Number of available MCP tools (15)
+- **Server Status**: MCP server availability
+- **Active Integrations**: Number of active integrations
+- **Context Enrichments**: Number of context enrichments performed
+
+## 🐳 Docker Hub Publishing
+
+### Building and Publishing
+
+#### **1. Build the Image**
+```bash
+# Build the Docker image
+docker build -t maddigsys/falco-ai-alerts:latest .
+
+# Tag for versioning
+docker tag maddigsys/falco-ai-alerts:latest maddigsys/falco-ai-alerts:v1.0.0
+```
+
+#### **2. Push to Docker Hub**
+```bash
+# Login to Docker Hub
+docker login
+
+# Push the image
+docker push maddigsys/falco-ai-alerts:latest
+docker push maddigsys/falco-ai-alerts:v1.0.0
+```
+
+#### **3. Automated Build**
+```bash
+# Use the provided build script
+./scripts/build-and-push.sh v1.0.0
+```
+
+### Available Tags
+- `latest` - Latest stable release
+- `v1.0.0` - Specific version
+- `dev` - Development build
+
+### Pull and Run
+```bash
+# Pull the latest image
+docker pull maddigsys/falco-ai-alerts:latest
+
+# Run with environment file
+docker run -d \
+  --name falco-ai-alerts \
+  -p 8080:8080 \
+  -v $(pwd)/.env:/app/.env \
+  maddigsys/falco-ai-alerts:latest
 ```
 
 ## 🤝 Contributing

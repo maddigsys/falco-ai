@@ -1,31 +1,34 @@
-{% extends "settings_base.html" %}
+{% extends "falco_base.html" %}
 
 {% block title %}Feature Status{% endblock %}
 {% block page_icon %}<i class="fas fa-check-circle"></i>{% endblock %}
 {% block page_title %}Feature Status{% endblock %}
-{% block page_description %}Auto-detected features and configuration recommendations{% endblock %}
+{% block page_description %}Auto-detected features and intelligent configuration recommendations for optimal security monitoring{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Feature status styling */
+    /* Enhanced feature status styling */
     .feature-card {
-        margin-bottom: 1.5rem;
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
+        background: var(--bg-cards);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        margin-bottom: var(--space-xl);
         transition: all 0.3s ease;
     }
 
     .feature-card:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-xl);
     }
 
     .feature-header {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--border-color);
+        padding: var(--space-xl);
+        border-bottom: 1px solid var(--border-light);
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: var(--space-md);
     }
 
     .feature-icon {
@@ -35,188 +38,341 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        font-weight: bold;
+        font-size: var(--text-lg);
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
     }
 
     .feature-icon.configured {
-        background: var(--success-10);
-        color: var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
     }
 
     .feature-icon.available {
-        background: var(--warning-10);
-        color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
     }
 
     .feature-icon.not-configured {
-        background: var(--danger-10);
-        color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .feature-icon.beta {
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        color: white;
+        animation: glow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+        from { box-shadow: 0 0 5px rgba(255, 107, 107, 0.5); }
+        to { box-shadow: 0 0 20px rgba(78, 205, 196, 0.8); }
     }
 
     .feature-info h5 {
         margin: 0;
         font-weight: 600;
-        color: var(--text-dark);
+        color: var(--text-primary);
+        font-size: var(--text-lg);
     }
 
     .feature-status {
-        font-size: 0.875rem;
-        margin: 0.25rem 0 0 0;
+        font-size: var(--text-sm);
+        margin: var(--space-sm) 0 0 0;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--space-sm);
     }
 
     .status-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.375rem;
-        font-size: 0.75rem;
-        font-weight: 500;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-md);
+        font-size: var(--text-xs);
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.025em;
     }
 
     .status-badge.configured {
-        background: var(--success-10);
-        color: var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
     }
 
     .status-badge.available {
-        background: var(--warning-10);
-        color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
     }
 
     .status-badge.not-configured {
-        background: var(--danger-10);
-        color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .status-badge.beta {
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+        color: white;
+        text-transform: uppercase;
+        font-weight: bold;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
 
     .feature-body {
-        padding: 1.5rem;
+        padding: var(--space-xl);
     }
 
     .feature-actions {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
+        margin-top: var(--space-lg);
+        padding-top: var(--space-lg);
+        border-top: 1px solid var(--border-light);
         display: flex;
-        gap: 0.5rem;
+        gap: var(--space-sm);
         flex-wrap: wrap;
     }
 
     .alert-sm {
-        padding: 0.5rem 0.75rem;
-        margin: 0.5rem 0;
-        font-size: 0.875rem;
-        border-radius: 0.375rem;
+        padding: var(--space-sm) var(--space-md);
+        margin: var(--space-sm) 0;
+        font-size: var(--text-sm);
+        border-radius: var(--radius-md);
     }
 
     .badge {
-        font-size: 0.75rem;
+        font-size: var(--text-xs);
         font-weight: 500;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        margin-left: 0.25rem;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-sm);
+        margin-left: var(--space-xs);
     }
 
     .badge.bg-success {
-        background-color: var(--success-color) !important;
+        background-color: var(--success) !important;
         color: white;
     }
 
     .badge.bg-danger {
-        background-color: var(--danger-color) !important;
+        background-color: var(--danger) !important;
         color: white;
     }
 
     .badge.bg-primary {
-        background-color: var(--primary-color) !important;
+        background-color: var(--falco-primary) !important;
         color: white;
     }
 
-    .recommendation-card {
-        background: var(--bg-light);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .recommendation-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .priority-high {
-        color: var(--danger-color);
-    }
-
-    .priority-medium {
-        color: var(--warning-color);
-    }
-
-    .priority-low {
-        color: var(--info-color);
+    .badge.bg-beta {
+        background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%) !important;
+        color: white;
+        animation: pulse 2s infinite;
     }
 
     .auto-config-banner {
-        background: var(--primary-10);
-        border: 1px solid var(--primary-color);
-        border-radius: var(--radius-md);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(0, 174, 199, 0.1), rgba(16, 185, 129, 0.05));
+        border: 2px solid var(--falco-primary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-2xl);
+        margin-bottom: var(--space-xl);
         text-align: center;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .auto-config-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(0, 174, 199, 0.05), transparent);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
     }
 
     .auto-config-banner.applied {
-        background: var(--success-10);
-        border-color: var(--success-color);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0, 174, 199, 0.05));
+        border-color: var(--success);
+    }
+
+    .auto-config-banner h4 {
+        color: var(--falco-primary);
+        margin-bottom: var(--space-lg);
+        font-size: var(--text-xl);
+        font-weight: 600;
+    }
+
+    .auto-config-banner.applied h4 {
+        color: var(--success);
+    }
+
+    .config-source-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-lg);
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        margin: var(--space-sm);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        border: 2px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+    }
+
+    .config-source-indicator.kubernetes {
+        color: #326ce5;
+        border-color: #326ce5;
+    }
+
+    .config-source-indicator.environment {
+        color: var(--warning);
+        border-color: var(--warning);
+    }
+
+    .config-source-indicator.manual {
+        color: var(--falco-primary);
+        border-color: var(--falco-primary);
     }
 
     .summary-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+        gap: var(--space-xl);
+        margin-bottom: var(--space-2xl);
+    }
+
+    .falco-card {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--falco-primary);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: var(--space-xl);
+    }
+
+    .falco-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--falco-primary-light);
+        border-top-color: var(--falco-primary-dark);
     }
 
     .stat-card {
-        background: white;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 1.5rem;
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--falco-primary);
+        padding: var(--space-xl);
         text-align: center;
-        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--falco-primary-light);
+        border-top-color: var(--falco-primary-dark);
     }
 
     .stat-number {
-        font-size: 2rem;
-        font-weight: bold;
-        color: var(--primary-color);
-        margin-bottom: 0.5rem;
+        font-size: var(--text-2xl);
+        font-weight: 700;
+        color: var(--falco-primary);
+        margin-bottom: var(--space-sm);
     }
 
     .stat-label {
-        color: var(--text-light);
-        font-size: 0.875rem;
+        color: var(--text-secondary);
+        font-size: var(--text-sm);
         font-weight: 500;
     }
 
     .refresh-button {
         position: fixed;
-        bottom: 2rem;
-        right: 2rem;
+        bottom: var(--space-xl);
+        right: var(--space-xl);
         z-index: 1000;
         box-shadow: var(--shadow-lg);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-size: var(--text-lg);
+        transition: all 0.3s ease;
     }
 
+    .refresh-button:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .recommendation-card {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--warning);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .recommendation-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--warning);
+        border-top-color: var(--warning);
+    }
+
+    .recommendation-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        margin-bottom: var(--space-lg);
+    }
+
+    .priority-high {
+        color: var(--danger);
+    }
+
+    .priority-medium {
+        color: var(--warning);
+    }
+
+    .priority-low {
+        color: var(--info);
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
         .refresh-button {
-            bottom: 1rem;
-            right: 1rem;
+            bottom: var(--space-lg);
+            right: var(--space-lg);
         }
 
         .summary-stats {
@@ -225,6 +381,10 @@
 
         .feature-actions {
             flex-direction: column;
+        }
+
+        .auto-config-banner {
+            padding: var(--space-xl);
         }
     }
 </style>
@@ -235,6 +395,23 @@
 <div id="autoConfigBanner" class="auto-config-banner" style="display: none;">
     <h4><i class="fas fa-magic"></i> <span id="bannerTitle">Auto-Configuration Available</span></h4>
     <p id="bannerMessage">We've detected configuration secrets that can be automatically applied.</p>
+    
+    <!-- Configuration Source Indicators -->
+    <div id="configSources" style="margin: var(--space-lg) 0;">
+        <div class="config-source-indicator kubernetes" id="kubernetesIndicator" style="display: none;">
+            <i class="fas fa-dharmachakra"></i>
+            <span>Kubernetes Secrets Detected</span>
+        </div>
+        <div class="config-source-indicator environment" id="environmentIndicator" style="display: none;">
+            <i class="fas fa-terminal"></i>
+            <span>Environment Variables Found</span>
+        </div>
+        <div class="config-source-indicator manual" id="manualIndicator" style="display: none;">
+            <i class="fas fa-user-cog"></i>
+            <span>Manual Configuration</span>
+        </div>
+    </div>
+    
     <button class="btn btn-primary" onclick="applyAutoConfiguration()">
         <i class="fas fa-cogs"></i>
         Apply Auto-Configuration
@@ -276,16 +453,14 @@
 </div>
 
 <!-- Refresh Button -->
-<button class="btn btn-primary btn-lg refresh-button" onclick="refreshFeatureStatus()">
+<button class="refresh-button" onclick="refreshFeatureStatus()">
     <i class="fas fa-sync"></i>
 </button>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Set the current page for sidebar navigation
-    window.page = 'features';
-    
+    // Feature Status management JavaScript
     let currentFeatures = null;
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -351,6 +526,41 @@
         }
     }
 
+    function updateConfigSourceIndicators(features) {
+        const kubernetesIndicator = document.getElementById('kubernetesIndicator');
+        const environmentIndicator = document.getElementById('environmentIndicator');
+        const manualIndicator = document.getElementById('manualIndicator');
+        
+        // Check for Kubernetes-detected configurations
+        let hasKubernetes = false;
+        let hasEnvironment = false;
+        let hasManual = false;
+        
+        Object.values(features).forEach(feature => {
+            if (typeof feature === 'object' && feature.config_source) {
+                switch(feature.config_source) {
+                    case 'kubernetes':
+                    case 'k8s_secrets':
+                        hasKubernetes = true;
+                        break;
+                    case 'environment':
+                    case 'env_vars':
+                        hasEnvironment = true;
+                        break;
+                    case 'manual':
+                    case 'user_configured':
+                        hasManual = true;
+                        break;
+                }
+            }
+        });
+        
+        // Show/hide indicators based on detected sources
+        kubernetesIndicator.style.display = hasKubernetes ? 'inline-flex' : 'none';
+        environmentIndicator.style.display = hasEnvironment ? 'inline-flex' : 'none';
+        manualIndicator.style.display = hasManual ? 'inline-flex' : 'none';
+    }
+
     function updateUI(data) {
         const { features, recommendations, summary } = data;
         
@@ -360,184 +570,160 @@
         document.getElementById('recommendedProvider').textContent = summary.recommended_provider || 'None';
         document.getElementById('deploymentType').textContent = summary.deployment_type || 'Unknown';
         
-        // Count implemented features
+        // Update implemented count
         const implementedCount = Object.values(features).filter(f => 
-            typeof f === 'object' && f.implemented
+            typeof f === 'object' && (f.status === 'configured' || f.status === 'available')
         ).length;
         document.getElementById('implementedCount').textContent = implementedCount;
-        
-        // Update auto-configuration banner
-        const banner = document.getElementById('autoConfigBanner');
-        if (features.auto_configuration_applied && !banner.classList.contains('applied')) {
-            banner.style.display = 'block';
-        } else if (banner.classList.contains('applied')) {
-            banner.style.display = 'block';
-        } else {
-            banner.style.display = 'none';
-        }
         
         // Update feature cards
         updateFeatureCards(features);
         
         // Update recommendations
         updateRecommendations(recommendations);
+        
+        // Update configuration source indicators
+        updateConfigSourceIndicators(features);
+        
+        // Show auto-config banner if applicable
+        if (summary.auto_configuration_available) {
+            document.getElementById('autoConfigBanner').style.display = 'block';
+        }
     }
 
     function updateFeatureCards(features) {
         const container = document.getElementById('featureCards');
         container.innerHTML = '';
         
-        const featureConfigs = [
-            {
-                key: 'slack',
-                title: 'Slack Integration',
-                icon: 'fab fa-slack',
-                description: 'Receive security alerts in Slack channels',
-                configUrl: '/config/slack'
-            },
-            {
-                key: 'openai',
-                title: 'OpenAI Provider',
-                icon: 'fas fa-brain',
-                description: 'GPT models via Portkey security layer',
-                configUrl: '/config/ai'
-            },
-            {
-                key: 'gemini',
-                title: 'Gemini Provider', 
-                icon: 'fas fa-gem',
-                description: 'Google Gemini models via Portkey',
-                configUrl: '/config/ai'
-            },
-            {
-                key: 'ollama',
-                title: 'Ollama Provider',
-                icon: 'fas fa-home',
-                description: 'Local AI models for maximum privacy',
-                configUrl: '/config/ai'
-            },
-            {
-                key: 'portkey',
-                title: 'Portkey Security',
-                icon: 'fas fa-shield-alt',
-                description: 'Security layer for cloud AI providers',
-                configUrl: '/config/ai'
+        Object.entries(features).forEach(([key, feature]) => {
+            if (typeof feature === 'object') {
+                const card = createFeatureCard(key, feature);
+                container.appendChild(card);
             }
-        ];
+        });
+    }
 
-        featureConfigs.forEach(config => {
-            const feature = features[config.key];
-            if (!feature) return;
-            
-            const statusClass = feature.configured ? 'configured' : 
-                              feature.available ? 'available' : 'not-configured';
-            
-            const statusText = feature.configured ? 'Configured' :
-                              feature.available ? 'Available' : 'Not Configured';
-            
-            const card = document.createElement('div');
-            card.className = 'feature-card';
-            card.innerHTML = `
-                <div class="config-card">
-                    <div class="feature-header">
-                        <div class="feature-icon ${statusClass}">
-                            <i class="${config.icon}"></i>
-                        </div>
-                        <div class="feature-info">
-                            <h5>${config.title}</h5>
-                            <div class="feature-status">
-                                <span class="status-badge ${statusClass}">${statusText}</span>
-                                ${feature.auto_configured ? '<span class="badge bg-primary">Auto-Configured</span>' : ''}
-                                ${feature.implemented ? 
-                                    '<span class="badge bg-success">✅ Implemented</span>' : 
-                                    '<span class="badge bg-danger">❌ Not Implemented</span>'
-                                }
-                            </div>
-                        </div>
-                    </div>
-                    <div class="feature-body">
-                        <p class="text-muted">${config.description}</p>
-                        <p><strong>Detection Status:</strong> ${feature.reason}</p>
-                        <p><strong>Implementation Status:</strong> ${feature.implementation_status ? feature.implementation_status.replace(/_/g, ' ') : 'Not checked'}</p>
-                        ${feature.implemented ? 
-                            '<div class="alert alert-success alert-sm mb-3"><i class="fas fa-check"></i> This feature is fully implemented and available in the UI.</div>' :
-                            '<div class="alert alert-warning alert-sm mb-3"><i class="fas fa-exclamation-triangle"></i> This feature is detected but not fully implemented in the UI.</div>'
-                        }
-                        <div class="feature-actions">
-                            <a href="${config.configUrl}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-cog"></i>
-                                Configure
-                            </a>
-                            ${feature.configured ? 
-                                '<span class="btn btn-success btn-sm disabled"><i class="fas fa-check"></i> Ready</span>' :
-                                '<span class="btn btn-warning btn-sm disabled"><i class="fas fa-exclamation-triangle"></i> Needs Setup</span>'
-                            }
-                        </div>
+    function createFeatureCard(key, feature) {
+        const card = document.createElement('div');
+        card.className = 'feature-card';
+        
+        const status = feature.status || 'not-configured';
+        const statusClass = status.replace('-', '');
+        
+        // Special handling for experimental features
+        const isExperimental = feature.experimental || (feature.beta && key === 'multilingual');
+        const experimentalWarning = isExperimental ? `
+            <div class="alert alert-warning alert-sm">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>⚠️ EXPERIMENTAL FEATURE</strong> - May not work reliably. Use with caution.
+            </div>
+        ` : '';
+        
+        // Display warnings if available
+        const warningsHtml = feature.warnings ? feature.warnings.map(warning => 
+            `<div class="alert alert-warning alert-sm"><i class="fas fa-exclamation-triangle"></i> ${warning}</div>`
+        ).join('') : '';
+        
+        card.innerHTML = `
+            <div class="feature-header">
+                <div class="feature-icon ${statusClass} ${isExperimental ? 'beta' : ''}">
+                    <i class="fas fa-${getFeatureIcon(key)}"></i>
+                </div>
+                <div class="feature-info">
+                    <h5>${feature.name || formatFeatureName(key)}
+                        ${isExperimental ? '<span class="badge bg-warning ms-2">⚠️ EXPERIMENTAL</span>' : ''}
+                    </h5>
+                    <div class="feature-status">
+                        <span class="status-badge ${statusClass}">${status.replace('-', ' ')}</span>
+                        ${feature.beta ? '<span class="badge bg-beta">BETA</span>' : ''}
+                        ${feature.version ? `<span class="badge bg-primary">${feature.version}</span>` : ''}
                     </div>
                 </div>
-            `;
-            
-            container.appendChild(card);
-        });
+            </div>
+            <div class="feature-body">
+                <p>${feature.reason || feature.description || 'No description available'}</p>
+                ${experimentalWarning}
+                ${warningsHtml}
+                ${feature.actions ? createFeatureActions(feature.actions) : ''}
+            </div>
+        `;
+        
+        return card;
+    }
+
+    function createFeatureActions(actions) {
+        const actionsHtml = actions.map(action => 
+            `<button class="btn btn-sm btn-outline-primary" onclick="performAction('${action.id}')">${action.label}</button>`
+        ).join('');
+        
+        return `<div class="feature-actions">${actionsHtml}</div>`;
     }
 
     function updateRecommendations(recommendations) {
         const container = document.getElementById('recommendations');
         container.innerHTML = '';
         
-        if (recommendations.length === 0) {
-            container.innerHTML = `
-                <div class="recommendation-card">
-                    <div class="text-center">
-                        <i class="fas fa-check-circle text-success" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <h4>All Set!</h4>
-                        <p class="text-muted">All features are properly configured. No recommendations at this time.</p>
-                    </div>
-                </div>
-            `;
+        if (!recommendations || recommendations.length === 0) {
             return;
         }
-        
-        const header = document.createElement('h4');
-        header.innerHTML = '<i class="fas fa-lightbulb"></i> Recommendations';
-        header.style.marginBottom = '1rem';
-        container.appendChild(header);
         
         recommendations.forEach(rec => {
             const card = document.createElement('div');
             card.className = 'recommendation-card';
+            
             card.innerHTML = `
                 <div class="recommendation-header">
-                    <i class="fas fa-exclamation-triangle priority-${rec.priority}"></i>
-                    <div>
-                        <h5>${rec.title}</h5>
-                        <span class="badge bg-${rec.priority === 'high' ? 'danger' : rec.priority === 'medium' ? 'warning' : 'info'}">${rec.priority.toUpperCase()} PRIORITY</span>
-                    </div>
+                    <i class="fas fa-lightbulb priority-${rec.priority}"></i>
+                    <h5>${rec.title}</h5>
                 </div>
                 <p>${rec.description}</p>
-                <p><strong>Action:</strong> ${rec.action}</p>
+                ${rec.action ? `<button class="btn btn-primary" onclick="performAction('${rec.action}')">${rec.action_label}</button>` : ''}
             `;
+            
             container.appendChild(card);
         });
     }
 
+    function getFeatureIcon(key) {
+        const icons = {
+            'ai_providers': 'brain',
+            'slack': 'slack',
+            'weaviate': 'database',
+            'ollama': 'robot',
+            'multilingual': 'language',
+            'translation': 'language',
+            'webhook': 'plug',
+            'security': 'shield-alt',
+            'monitoring': 'eye',
+            'analytics': 'chart-line',
+            'alerts': 'bell',
+            'chat': 'comments',
+            'openai': 'brain',
+            'gemini': 'brain',
+            'portkey': 'shield-alt'
+        };
+        
+        return icons[key] || 'cog';
+    }
+
+    function formatFeatureName(key) {
+        return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function performAction(actionId) {
+        console.log('Performing action:', actionId);
+        // Implementation would depend on the specific action
+    }
+
     function showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        // Simple alert implementation
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        document.body.appendChild(alert);
         
-        // Insert at the top of the content
-        const content = document.querySelector('.main-content');
-        content.insertBefore(alertDiv, content.firstChild);
-        
-        // Auto-dismiss after 5 seconds
         setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.remove();
-            }
+            alert.remove();
         }, 5000);
     }
 </script>

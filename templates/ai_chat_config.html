@@ -1,69 +1,47 @@
-{% extends "settings_base.html" %}
+{% extends "falco_base.html" %}
 
 {% block title %}AI Chat Configuration{% endblock %}
 {% block page_icon %}<i class="fas fa-comments"></i>{% endblock %}
 {% block page_title %}AI Security Chat Configuration{% endblock %}
-{% block page_description %}Configure AI Security Chat settings, behavior, and session management{% endblock %}
+{% block page_description %}Configure intelligent AI-powered security chat settings, behavior, and session management{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Define additional color variables */
-    :root {
-        --primary-10: rgba(0, 174, 199, 0.1);
-        --success-10: rgba(0, 212, 170, 0.1);
-        --warning-10: rgba(255, 167, 38, 0.1);
-        --danger-10: rgba(239, 83, 80, 0.1);
-        --info-10: rgba(66, 153, 225, 0.1);
-        --success-color: #00D4AA;
-        --warning-color: #FFA726;
-        --danger-color: #EF5350;
-        --info-color: #4299E1;
-    }
-
-    /* Sticky Action Bar */
+    /* Enhanced AI Chat config styling */
     .sticky-action-bar {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: var(--bg-card);
-        backdrop-filter: blur(20px);
-        border-radius: var(--radius-xl);
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow-lg);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin: 1.5rem 1.5rem 0;
-        padding: 1.5rem 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .sticky-action-bar .btn {
-        margin-right: 0.75rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .sticky-action-bar .btn-lg {
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        position: sticky;
+        top: var(--space-md);
+        z-index: 100;
+        transition: all 0.3s ease;
     }
 
     .action-buttons {
         display: flex;
-        gap: 0.75rem;
+        gap: var(--space-md);
         flex-wrap: wrap;
+        align-items: center;
     }
 
     .save-status {
-        font-style: italic;
+        font-weight: 500;
         white-space: nowrap;
+        font-size: var(--text-sm);
     }
 
     .save-needed {
-        color: var(--warning-color) !important;
+        color: var(--warning) !important;
         animation: pulse 2s infinite;
     }
 
     .save-complete {
-        color: var(--success-color) !important;
+        color: var(--success) !important;
     }
 
     @keyframes pulse {
@@ -73,90 +51,234 @@
 
     /* Connection Status */
     .connection-status {
-        padding: 0.75rem;
-        border-radius: var(--radius-sm);
-        margin-bottom: 1rem;
+        padding: var(--space-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-xl);
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--space-sm);
         font-weight: 500;
         box-shadow: var(--shadow-sm);
+        border: 1px solid;
     }
 
     .connection-status.success {
-        background: var(--success-10);
-        color: var(--success-color);
-        border: 1px solid var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border-color: var(--success);
     }
 
     .connection-status.error {
-        background: var(--danger-10);
-        color: var(--danger-color);
-        border: 1px solid var(--danger-color);
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border-color: var(--danger);
     }
 
     .connection-status.warning {
-        background: var(--warning-10);
-        color: var(--warning-color);
-        border: 1px solid var(--warning-color);
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border-color: var(--warning);
     }
 
     .connection-status.info {
-        background: var(--info-10);
-        color: var(--info-color);
-        border: 1px solid var(--info-color);
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border-color: var(--info);
     }
 
     /* Config Info Boxes */
     .config-info {
-        background: var(--primary-10);
-        padding: 1rem;
-        border-radius: var(--radius-sm);
-        margin-bottom: 1.5rem;
-        border-left: 4px solid var(--primary-color);
+        background: linear-gradient(135deg, rgba(0, 174, 199, 0.05), rgba(0, 174, 199, 0.02));
+        padding: var(--space-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-xl);
+        border-left: 4px solid var(--falco-primary);
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
     }
 
     .config-info strong {
-        color: var(--primary-color);
+        color: var(--falco-primary);
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
     }
 
-    /* Collapsible Sections */
-    .config-card.collapsed .config-card-body {
-        display: none;
+    .config-info i {
+        color: var(--falco-primary);
     }
 
-    .collapse-icon {
-        transition: transform 0.3s ease;
-        margin-left: auto;
+    /* Form styling improvements */
+    .form-group {
+        margin-bottom: var(--space-xl);
     }
 
-    .config-card.collapsed .collapse-icon {
-        transform: rotate(-90deg);
+    .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .form-label i {
+        color: var(--falco-primary);
+        width: 1.2em;
+        text-align: center;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        font-size: var(--text-sm);
+        transition: all 0.2s ease;
+        background: var(--bg-cards);
+        color: var(--text-heading);
+        box-shadow: var(--shadow-xs);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--falco-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .form-text {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        margin-top: var(--space-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .form-text i {
+        color: var(--falco-primary);
+        opacity: 0.7;
+    }
+
+    .form-check {
+        margin-bottom: var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin: 0;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--bg-cards);
+        transition: all 0.2s ease;
+    }
+
+    .form-check-input:checked {
+        background: var(--falco-primary);
+        border-color: var(--falco-primary);
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .form-check-label {
+        font-weight: 500;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .form-check-label i {
+        color: var(--falco-primary);
+        width: 1.2em;
+        text-align: center;
+    }
+
+    /* Alert styling */
+    .alert {
+        border-radius: var(--radius-md);
+        border: 1px solid;
+        padding: var(--space-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--space-lg);
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border-color: var(--success);
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border-color: var(--danger);
+    }
+
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border-color: var(--warning);
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border-color: var(--info);
+    }
+
+    .alert i {
+        margin-right: var(--space-sm);
+    }
+
+    .alert ul {
+        margin: var(--space-md) 0 0 var(--space-lg);
+    }
+
+    .alert li {
+        margin-bottom: var(--space-xs);
+    }
+
+    /* Row spacing */
+    .row {
+        margin-bottom: var(--space-lg);
+    }
+
+    .row:last-child {
+        margin-bottom: 0;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
         .sticky-action-bar {
             position: relative;
-            margin: 0.5rem;
-            padding: 1rem;
-        }
-
-        .sticky-action-bar .d-flex {
-            flex-direction: column;
-            gap: 1rem;
+            margin: var(--space-md) 0;
+            padding: var(--space-lg);
         }
 
         .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: var(--space-sm);
+            width: 100%;
         }
 
         .action-buttons .btn {
-            flex: 1;
-            min-width: 120px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .save-status {
+            text-align: center;
+            margin-top: var(--space-md);
         }
     }
 </style>
@@ -167,7 +289,7 @@
 <div class="sticky-action-bar">
     <div class="d-flex justify-content-between align-items-center">
         <div class="action-buttons">
-            <button class="btn btn-primary btn-lg" onclick="saveConfig()">
+            <button class="btn btn-primary" onclick="saveConfig()">
                 <i class="fas fa-save"></i>
                 Save All Changes
             </button>
@@ -193,14 +315,14 @@
 <div id="connectionStatus"></div>
 
 <!-- Current Status Summary -->
-<div class="config-card">
-    <div class="config-card-header">
-        <h3 class="config-card-title">
+<div class="falco-card">
+    <div class="card-header">
+        <h3 class="card-title">
             <i class="fas fa-info-circle"></i>
             Current Status Summary
         </h3>
     </div>
-    <div class="config-card-body">
+    <div class="card-body">
         <div id="statusInfo">
             <div class="alert alert-info">
                 <i class="fas fa-spinner fa-spin"></i>
@@ -211,16 +333,19 @@
 </div>
 
 <!-- AI Chat Settings -->
-<div class="config-card">
-    <div class="config-card-header">
-        <h3 class="config-card-title">
+<div class="falco-card">
+    <div class="card-header">
+        <h3 class="card-title">
             <i class="fas fa-comments"></i>
             AI Security Chat Settings
         </h3>
     </div>
-    <div class="config-card-body">
+    <div class="card-body">
         <div class="config-info">
-            <strong><i class="fas fa-comments"></i> Interactive AI Chat Configuration</strong><br>
+            <strong>
+                <i class="fas fa-comments"></i>
+                Interactive AI Chat Configuration
+            </strong>
             Configure settings for the AI Security Chat feature. Chat with AI about security alerts in real-time.
         </div>
         
@@ -287,16 +412,19 @@
 </div>
 
 <!-- Chat Behavior Settings -->
-<div class="config-card">
-    <div class="config-card-header">
-        <h3 class="config-card-title">
+<div class="falco-card">
+    <div class="card-header">
+        <h3 class="card-title">
             <i class="fas fa-cog"></i>
             Chat Behavior Settings
         </h3>
     </div>
-    <div class="config-card-body">
+    <div class="card-body">
         <div class="config-info">
-            <strong><i class="fas fa-cog"></i> Chat Response Configuration</strong><br>
+            <strong>
+                <i class="fas fa-cog"></i>
+                Chat Response Configuration
+            </strong>
             Fine-tune how the AI responds in chat conversations about security alerts.
         </div>
         
@@ -374,23 +502,23 @@
 </div>
 
 <!-- Quick Access Information -->
-<div class="config-card">
-    <div class="config-card-header">
-        <h3 class="config-card-title">
+<div class="falco-card">
+    <div class="card-header">
+        <h3 class="card-title">
             <i class="fas fa-lightbulb"></i>
             Quick Access & Tips
         </h3>
     </div>
-    <div class="config-card-body">
+    <div class="card-body">
         <div class="alert alert-info">
             <i class="fas fa-lightbulb"></i>
-            <strong>Quick Access:</strong> AI Security Chat is available directly from the dashboard! Look for the teal chat button in the header.
+            <strong>Quick Access:</strong> AI Security Chat is available directly from the dashboard! Look for the chat button in the header.
         </div>
         
         <div class="alert alert-success">
             <i class="fas fa-rocket"></i>
             <strong>Pro Tips:</strong>
-            <ul class="mb-0 mt-2">
+            <ul>
                 <li>Select an alert first to get contextual analysis</li>
                 <li>Ask specific questions like "What's the severity of this threat?"</li>
                 <li>Use follow-up questions to dive deeper into analysis</li>
@@ -403,9 +531,7 @@
 
 {% block extra_js %}
 <script>
-    // Set the current page for sidebar navigation
-    window.page = 'ai_chat';
-    
+    // AI Chat Configuration management JavaScript
     let hasUnsavedChanges = false;
     
     document.addEventListener('DOMContentLoaded', function() {
@@ -436,9 +562,9 @@
     function updateSaveStatus(status) {
         const saveStatus = document.getElementById('saveStatus');
         if (status === 'unsaved') {
-            saveStatus.innerHTML = '<small class="text-warning save-needed"><i class="fas fa-exclamation-triangle"></i> You have unsaved changes</small>';
+            saveStatus.innerHTML = '<small class="save-needed"><i class="fas fa-exclamation-triangle"></i> You have unsaved changes</small>';
         } else if (status === 'saved') {
-            saveStatus.innerHTML = '<small class="text-success save-complete"><i class="fas fa-check"></i> All changes saved</small>';
+            saveStatus.innerHTML = '<small class="save-complete"><i class="fas fa-check"></i> All changes saved</small>';
             setTimeout(() => {
                 if (!hasUnsavedChanges) {
                     saveStatus.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle"></i> Remember to save your changes</small>';
@@ -473,14 +599,11 @@
             
         } catch (error) {
             console.error('Error loading chat config:', error);
-            showAlert('warning', 'Using default chat configuration. Save to persist your settings.');
+            showConnectionStatus('warning', 'Using default chat configuration. Save to persist your settings.');
         }
     }
     
     async function saveConfig() {
-        const saveBtn = document.querySelector('[onclick="saveConfig()"]');
-        setLoading(saveBtn, true);
-        
         try {
             const config = {
                 chat_enabled: document.getElementById('chatEnabled').checked ? 'true' : 'false',
@@ -501,147 +624,131 @@
                 body: JSON.stringify(config)
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (response.ok) {
+                markSaved();
+                showConnectionStatus('success', 'AI Chat configuration saved successfully');
+                updateStatus();
+            } else {
+                throw new Error('Failed to save chat configuration');
             }
-            
-            const result = await response.json();
-            
-            showAlert('success', '✅ AI Chat configuration saved successfully!');
-            updateStatus();
-            markSaved();
-            
         } catch (error) {
             console.error('Error saving chat config:', error);
-            showAlert('danger', 'Failed to save configuration: ' + error.message);
-        } finally {
-            setLoading(saveBtn, false);
+            showConnectionStatus('error', 'Failed to save chat configuration');
         }
     }
     
     async function testChatConnection() {
-        const testBtn = document.querySelector('[onclick="testChatConnection()"]');
-        setLoading(testBtn, true);
-        
         try {
             const response = await fetch('/api/ai/chat/test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    message: 'Test connection'
+                })
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                showAlert('success', '✅ AI Chat test successful! ' + result.message);
+            if (response.ok) {
+                const result = await response.json();
+                showConnectionStatus('success', 'AI Chat connection test successful');
             } else {
-                showAlert('warning', '⚠️ AI Chat test completed with warnings: ' + result.message);
+                throw new Error('AI Chat connection test failed');
             }
-            
         } catch (error) {
-            console.error('Error testing chat:', error);
-            showAlert('danger', 'Failed to test AI Chat: ' + error.message);
-        } finally {
-            setLoading(testBtn, false);
+            console.error('Error testing chat connection:', error);
+            showConnectionStatus('error', 'AI Chat connection test failed. Please check your AI configuration.');
         }
     }
     
     function updateStatus() {
-        const statusElement = document.getElementById('statusInfo');
+        const statusDiv = document.getElementById('statusInfo');
         const enabled = document.getElementById('chatEnabled').checked;
         const maxHistory = document.getElementById('chatMaxHistory').value;
         const sessionTimeout = document.getElementById('chatSessionTimeout').value;
         const contextAlerts = document.getElementById('chatContextAlerts').value;
+        const responseLength = document.getElementById('chatResponseLength').value;
+        const tone = document.getElementById('chatTone').value;
         
-        statusElement.innerHTML = `
+        statusDiv.innerHTML = `
             <div class="row">
-                <div class="col-md-3 mb-3">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-toggle-${enabled ? 'on text-success' : 'off text-danger'} me-2"></i>
-                        <div>
-                            <div class="fw-bold">Chat Status</div>
-                            <div class="text-muted small">${enabled ? 'Enabled' : 'Disabled'}</div>
-                        </div>
+                <div class="col-md-4">
+                    <div class="alert alert-${enabled ? 'success' : 'warning'}">
+                        <i class="fas fa-${enabled ? 'check-circle' : 'exclamation-triangle'}"></i>
+                        <strong>Chat Status</strong><br>
+                        ${enabled ? 'Enabled' : 'Disabled'}
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-history text-info me-2"></i>
-                        <div>
-                            <div class="fw-bold">History Limit</div>
-                            <div class="text-muted small">${maxHistory} messages</div>
-                        </div>
+                <div class="col-md-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-history"></i>
+                        <strong>History Limit</strong><br>
+                        ${maxHistory} messages
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-clock text-warning me-2"></i>
-                        <div>
-                            <div class="fw-bold">Session Timeout</div>
-                            <div class="text-muted small">${sessionTimeout} minutes</div>
-                        </div>
+                <div class="col-md-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock"></i>
+                        <strong>Session Timeout</strong><br>
+                        ${sessionTimeout} minutes
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-list text-primary me-2"></i>
-                        <div>
-                            <div class="fw-bold">Context Alerts</div>
-                            <div class="text-muted small">${contextAlerts} alerts</div>
-                        </div>
+                <div class="col-md-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-list"></i>
+                        <strong>Context Alerts</strong><br>
+                        ${contextAlerts} alerts
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-text-width"></i>
+                        <strong>Response Length</strong><br>
+                        ${responseLength.charAt(0).toUpperCase() + responseLength.slice(1)}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-user-tie"></i>
+                        <strong>Response Tone</strong><br>
+                        ${tone.charAt(0).toUpperCase() + tone.slice(1)}
                     </div>
                 </div>
             </div>
         `;
     }
     
-    // Generic utility functions
-    function setLoading(button, isLoading) {
-        if (isLoading) {
-            button.disabled = true;
-            const icon = button.querySelector('i');
-            if (icon) {
-                icon.className = 'fas fa-spinner fa-spin';
-            }
-        } else {
-            button.disabled = false;
-            const icon = button.querySelector('i');
-            if (icon) {
-                // Restore original icon based on button content
-                if (button.textContent.includes('Save')) {
-                    icon.className = 'fas fa-save';
-                } else if (button.textContent.includes('Test')) {
-                    icon.className = 'fas fa-check-circle';
-                } else if (button.textContent.includes('Open')) {
-                    icon.className = 'fas fa-comments';
-                }
-            }
-        }
-    }
-    
-    function showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    function showConnectionStatus(type, message) {
+        const statusDiv = document.getElementById('connectionStatus');
+        statusDiv.innerHTML = `
+            <div class="connection-status ${type}">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+            </div>
         `;
         
-        const container = document.getElementById('connectionStatus');
-        container.innerHTML = '';
-        container.appendChild(alertDiv);
-        
-        // Auto-dismiss after 5 seconds
+        // Auto-hide after 5 seconds
         setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.remove();
+            if (statusDiv.innerHTML.includes(message)) {
+                statusDiv.innerHTML = '';
             }
         }, 5000);
     }
+    
+    // Add real-time status updates
+    document.getElementById('chatEnabled').addEventListener('change', updateStatus);
+    document.getElementById('chatMaxHistory').addEventListener('input', updateStatus);
+    document.getElementById('chatSessionTimeout').addEventListener('input', updateStatus);
+    document.getElementById('chatContextAlerts').addEventListener('input', updateStatus);
+    document.getElementById('chatResponseLength').addEventListener('change', updateStatus);
+    document.getElementById('chatTone').addEventListener('change', updateStatus);
+    
+    // Prevent leaving page with unsaved changes
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 </script>
 {% endblock %} 

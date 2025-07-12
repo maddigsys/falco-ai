@@ -47,16 +47,16 @@ spec:
             -d '{"name": "nomic-embed-text"}' \
             --max-time 1800
           
-          echo "Pulling Babel LLM model: babel-9b (multilingual AI analysis)"
+          echo "Pulling multilingual AI model: qwen2:7b (multilingual AI analysis)"
           curl -X POST http://OLLAMA_SERVICE_NAME:11434/api/pull \
             -H "Content-Type: application/json" \
-            -d '{"name": "babel-9b"}' \
-            --max-time 3600 || echo "Warning: Babel LLM model not available, multilingual features will be limited"
+            -d '{"name": "qwen2:7b"}' \
+            --max-time 3600 || echo "Warning: Multilingual AI model not available, multilingual features will be limited"
           
           echo "Verifying models were pulled..."
           curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "tinyllama" || exit 1
           curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "nomic-embed-text" || exit 1
-          curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "babel-9b" || echo "Warning: Babel LLM not available"
+          curl -s http://OLLAMA_SERVICE_NAME:11434/api/tags | grep -q "qwen2:7b" || echo "Warning: Multilingual AI model not available"
           
           echo "Warming up models with test inference..."
           curl -X POST http://OLLAMA_SERVICE_NAME:11434/api/generate \

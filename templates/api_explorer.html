@@ -1,0 +1,849 @@
+{% extends "falco_base.html" %}
+
+{% block title %}API Explorer{% endblock %}
+{% block page_icon %}<i class="fas fa-code"></i>{% endblock %}
+{% block page_title %}API Explorer{% endblock %}
+{% block page_description %}Interactive interface for all Falco AI API endpoints{% endblock %}
+
+{% block extra_css %}
+<style>
+    .api-section {
+        margin-bottom: 2rem;
+    }
+    
+    .api-category {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+    }
+    
+    .api-category h3 {
+        color: var(--falco-primary);
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .api-endpoint {
+        background: var(--bg-cards);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-lg);
+        border: 2px solid var(--border-light);
+        border-left: 4px solid var(--primary);
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .endpoint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        gap: 1rem;
+    }
+    
+    .endpoint-method {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-right: 0.5rem;
+    }
+    
+    .method-get {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .method-post {
+        background: var(--success-gradient);
+        color: white;
+    }
+    
+    .endpoint-path {
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .endpoint-description {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+    
+    .api-endpoint:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+    }
+
+    .endpoint-form {
+        display: none;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        margin-top: var(--space-lg);
+        border: 2px solid var(--border-light);
+    }
+    
+    .endpoint-form.active {
+        display: block;
+    }
+    
+    .response-area {
+        background: var(--falco-dark);
+        color: white;
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.875rem;
+        margin-top: 1rem;
+        min-height: 100px;
+        overflow-x: auto;
+    }
+    
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .status-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    .status-error {
+        background: var(--danger);
+        color: white;
+    }
+    
+    .json-input {
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.875rem;
+        min-height: 100px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Info Banner -->
+<div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05)); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-xl); display: flex; align-items: center; gap: var(--space-md);">
+    <i class="fas fa-lightbulb" style="color: #3b82f6; font-size: var(--text-lg);"></i>
+    <div>
+        <strong style="color: var(--text-heading);">Interactive API Explorer</strong>
+        <p style="margin: 0; color: var(--text-secondary);">Click on any endpoint to expand its form and test the API directly. All responses are formatted for easy reading.</p>
+    </div>
+</div>
+
+<!-- Security & Alerts APIs -->
+<div class="api-category">
+    <h3><i class="fas fa-shield-alt"></i> Security & Alerts</h3>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/alerts</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('alerts-list')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Retrieve paginated list of security alerts</div>
+        <div class="endpoint-form" id="alerts-list">
+            <div class="form-group">
+                <label class="form-label">Filters</label>
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" placeholder="Status" id="alert-status">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" placeholder="Rule" id="alert-rule">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" class="form-control" placeholder="Limit" id="alert-limit" value="10">
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="testEndpoint('alerts-list', 'GET', '/api/alerts')">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="alerts-list-response">Response will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/alerts/{id}/status</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('alert-status')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Update alert status (read, dismissed, etc.)</div>
+        <div class="endpoint-form" id="alert-status">
+            <div class="form-group">
+                <label class="form-label">Alert ID</label>
+                <input type="number" class="form-control" placeholder="Alert ID" id="alert-id">
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Status</label>
+                <select class="form-select" id="new-status">
+                    <option value="read">Read</option>
+                    <option value="dismissed">Dismissed</option>
+                    <option value="investigating">Investigating</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="testAlertStatus()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="alert-status-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/stats</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('stats')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get alert statistics and metrics</div>
+        <div class="endpoint-form" id="stats">
+            <button class="btn btn-primary" onclick="testStats()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="stats-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/rules</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('rules')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get list of unique alert rules</div>
+        <div class="endpoint-form" id="rules">
+            <button class="btn btn-primary" onclick="testRules()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="rules-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/export</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('export')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Export security analysis data</div>
+        <div class="endpoint-form" id="export">
+            <button class="btn btn-primary" onclick="testExport()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="export-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/alerts/counts</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('alert-counts')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get alert counts by status (unread, read, dismissed)</div>
+        <div class="endpoint-form" id="alert-counts">
+            <button class="btn btn-primary" onclick="testAlertCounts()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="alert-counts-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/alerts/{id}/reprocess</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('reprocess-alert')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Reprocess an alert with fresh AI analysis</div>
+        <div class="endpoint-form" id="reprocess-alert">
+            <div class="form-group">
+                <label class="form-label">Alert ID</label>
+                <input type="number" class="form-control" placeholder="Alert ID to reprocess" id="reprocess-alert-id">
+            </div>
+            <button class="btn btn-primary" onclick="testReprocessAlert()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="reprocess-alert-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/enhanced-chat</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('enhanced-chat')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Enhanced AI chat with persona-based responses and multilingual support</div>
+        <div class="endpoint-form" id="enhanced-chat">
+            <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea class="form-control" placeholder="Ask about security alerts..." id="enhanced-chat-message"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Persona</label>
+                <select class="form-select" id="enhanced-chat-persona">
+                    <option value="security_analyst">Security Analyst</option>
+                    <option value="incident_responder">Incident Responder</option>
+                    <option value="threat_hunter">Threat Hunter</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Language</label>
+                <select class="form-select" id="enhanced-chat-language">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="testEnhancedChat()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="enhanced-chat-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/alerts/generate-ai-analysis</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('generate-ai-analysis')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Bulk generate AI analysis for all alerts missing it</div>
+        <div class="endpoint-form" id="generate-ai-analysis">
+            <button class="btn btn-primary" onclick="testGenerateAIAnalysis()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="generate-ai-analysis-response">Response will appear here...</div>
+        </div>
+    </div>
+</div>
+
+<!-- AI & Analysis APIs -->
+<div class="api-category">
+    <h3><i class="fas fa-brain"></i> AI & Analysis</h3>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/semantic-search</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('semantic-search')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Perform semantic search across security events</div>
+        <div class="endpoint-form" id="semantic-search">
+            <div class="form-group">
+                <label class="form-label">Search Query</label>
+                <input type="text" class="form-control" placeholder="e.g., container security threats" id="search-query">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Limit</label>
+                <input type="number" class="form-control" placeholder="10" id="search-limit" value="10">
+            </div>
+            <button class="btn btn-primary" onclick="testSemanticSearch()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="semantic-search-response">Response will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/weaviate/threat-intelligence</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('threat-intel')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get AI-powered threat intelligence analysis</div>
+        <div class="endpoint-form" id="threat-intel">
+            <div class="form-group">
+                <label class="form-label">Analysis Type</label>
+                <select class="form-select" id="threat-type">
+                    <option value="patterns">Pattern Analysis</option>
+                    <option value="indicators">Threat Indicators</option>
+                    <option value="predictions">Threat Predictions</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Time Range (days)</label>
+                <input type="number" class="form-control" placeholder="7" id="threat-days" value="7">
+            </div>
+            <button class="btn btn-primary" onclick="testThreatIntelligence()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="threat-intel-response">Response will appear here...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration APIs -->
+<div class="api-category">
+    <h3><i class="fas fa-cogs"></i> Configuration</h3>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/features/status</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('feature-status')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get current feature status and auto-detected configurations</div>
+        <div class="endpoint-form" id="feature-status">
+            <button class="btn btn-primary" onclick="testFeatureStatus()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="feature-status-response">Response will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/ai/models</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('ai-models')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">List available AI models and their status</div>
+        <div class="endpoint-form" id="ai-models">
+            <button class="btn btn-primary" onclick="testAIModels()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="ai-models-response">Response will appear here...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics APIs -->
+<div class="api-category">
+    <h3><i class="fas fa-chart-line"></i> Analytics</h3>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/weaviate/analytics-dashboard</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('analytics-dashboard')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get comprehensive analytics dashboard data</div>
+        <div class="endpoint-form" id="analytics-dashboard">
+            <div class="form-group">
+                <label class="form-label">Time Period (days)</label>
+                <input type="number" class="form-control" placeholder="30" id="analytics-days" value="30">
+            </div>
+            <button class="btn btn-primary" onclick="testAnalyticsDashboard()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="analytics-dashboard-response">Response will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/weaviate/batch-analysis</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('batch-analysis')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Perform batch analysis on multiple alerts</div>
+        <div class="endpoint-form" id="batch-analysis">
+            <div class="form-group">
+                <label class="form-label">Alert IDs (JSON Array)</label>
+                <textarea class="form-control json-input" placeholder='[1, 2, 3, 4, 5]' id="batch-alerts"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="testBatchAnalysis()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="batch-analysis-response">Response will appear here...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat & AI APIs -->
+<div class="api-category">
+    <h3><i class="fas fa-comments"></i> Chat & AI</h3>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/api/chat</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('chat')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Send message to AI chat assistant</div>
+        <div class="endpoint-form" id="chat">
+            <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea class="form-control" placeholder="Ask about security alerts..." id="chat-message"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="testChat()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="chat-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/chat/history</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('chat-history')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Get chat conversation history</div>
+        <div class="endpoint-form" id="chat-history">
+            <button class="btn btn-primary" onclick="testChatHistory()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="chat-history-response">Response will appear here...</div>
+        </div>
+    </div>
+</div>
+
+<!-- System & Health APIs -->
+<div class="api-category">
+    <h3><i class="fas fa-heartbeat"></i> System & Health</h3>
+    
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/health</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('health')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Check system health status</div>
+        <div class="endpoint-form" id="health">
+            <button class="btn btn-primary" onclick="testHealth()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="health-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/weaviate/health</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('weaviate-health')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Check Weaviate vector database health</div>
+        <div class="endpoint-form" id="weaviate-health">
+            <button class="btn btn-primary" onclick="testWeaviateHealth()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="weaviate-health-response">Response will appear here...</div>
+        </div>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="endpoint-header">
+            <div>
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/api/ollama/status</span>
+            </div>
+            <button class="btn btn-outline" onclick="toggleEndpoint('ollama-status')">
+                <i class="fas fa-play"></i> Test
+            </button>
+        </div>
+        <div class="endpoint-description">Check Ollama local AI status</div>
+        <div class="endpoint-form" id="ollama-status">
+            <button class="btn btn-primary" onclick="testOllamaStatus()">
+                <i class="fas fa-play"></i> Execute
+            </button>
+            <div class="response-area" id="ollama-status-response">Response will appear here...</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleEndpoint(endpointId) {
+        const form = document.getElementById(endpointId);
+        form.classList.toggle('active');
+    }
+    
+    function formatResponse(data, responseElement) {
+        try {
+            const formatted = JSON.stringify(data, null, 2);
+            responseElement.innerHTML = formatted;
+            responseElement.style.color = '#4ade80'; // Success color
+        } catch (e) {
+            responseElement.innerHTML = 'Error formatting response: ' + e.message;
+            responseElement.style.color = '#ef4444'; // Error color
+        }
+    }
+    
+    function showStatus(responseElement, success, message) {
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `status-indicator ${success ? 'status-success' : 'status-error'}`;
+        statusDiv.innerHTML = `
+            <i class="fas fa-${success ? 'check' : 'times'}"></i>
+            ${message}
+        `;
+        responseElement.parentNode.insertBefore(statusDiv, responseElement);
+        
+        setTimeout(() => {
+            statusDiv.remove();
+        }, 5000);
+    }
+    
+    async function testEndpoint(endpointId, method, url, data = null) {
+        const responseElement = document.getElementById(endpointId + '-response');
+        responseElement.innerHTML = 'Loading...';
+        
+        try {
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            
+            const response = await fetch(url, options);
+            const responseData = await response.json();
+            
+            formatResponse(responseData, responseElement);
+            showStatus(responseElement, response.ok, `${response.status} ${response.statusText}`);
+            
+        } catch (error) {
+            responseElement.innerHTML = 'Error: ' + error.message;
+            responseElement.style.color = '#ef4444';
+            showStatus(responseElement, false, 'Network Error');
+        }
+    }
+    
+    async function testAlertStatus() {
+        const alertId = document.getElementById('alert-id').value;
+        const newStatus = document.getElementById('new-status').value;
+        
+        if (!alertId) {
+            alert('Please enter an Alert ID');
+            return;
+        }
+        
+        const data = { status: newStatus };
+        await testEndpoint('alert-status', 'POST', `/api/alerts/${alertId}/status`, data);
+    }
+    
+    async function testSemanticSearch() {
+        const query = document.getElementById('search-query').value;
+        const limit = document.getElementById('search-limit').value;
+        
+        if (!query) {
+            alert('Please enter a search query');
+            return;
+        }
+        
+        const data = { query: query, limit: parseInt(limit) };
+        await testEndpoint('semantic-search', 'POST', '/api/semantic-search', data);
+    }
+    
+    async function testThreatIntelligence() {
+        const type = document.getElementById('threat-type').value;
+        const days = document.getElementById('threat-days').value;
+        
+        const data = { analysis_type: type, days: parseInt(days) };
+        await testEndpoint('threat-intel', 'GET', '/api/weaviate/threat-intelligence', data);
+    }
+    
+    async function testFeatureStatus() {
+        await testEndpoint('feature-status', 'GET', '/api/features/status');
+    }
+    
+    async function testAIModels() {
+        await testEndpoint('ai-models', 'GET', '/api/ai/models');
+    }
+    
+    async function testAnalyticsDashboard() {
+        const days = document.getElementById('analytics-days').value;
+        const url = `/api/weaviate/analytics-dashboard?days=${days}`;
+        await testEndpoint('analytics-dashboard', 'GET', url);
+    }
+    
+    async function testBatchAnalysis() {
+        const alertIds = document.getElementById('batch-alerts').value;
+        
+        if (!alertIds) {
+            alert('Please enter alert IDs');
+            return;
+        }
+        
+        try {
+            const data = { alert_ids: JSON.parse(alertIds) };
+            await testEndpoint('batch-analysis', 'POST', '/api/weaviate/batch-analysis', data);
+        } catch (e) {
+            alert('Invalid JSON format for alert IDs');
+        }
+    }
+
+    // New API functions
+    async function testStats() {
+        await testEndpoint('stats', 'GET', '/api/stats');
+    }
+
+    async function testRules() {
+        await testEndpoint('rules', 'GET', '/api/rules');
+    }
+
+    async function testExport() {
+        await testEndpoint('export', 'GET', '/api/export');
+    }
+
+    async function testChat() {
+        const message = document.getElementById('chat-message').value;
+        
+        if (!message) {
+            alert('Please enter a message');
+            return;
+        }
+        
+        const data = { message: message };
+        await testEndpoint('chat', 'POST', '/api/chat', data);
+    }
+
+    async function testChatHistory() {
+        await testEndpoint('chat-history', 'GET', '/api/chat/history');
+    }
+
+    async function testHealth() {
+        await testEndpoint('health', 'GET', '/health');
+    }
+
+    async function testWeaviateHealth() {
+        await testEndpoint('weaviate-health', 'GET', '/api/weaviate/health');
+    }
+
+    async function testOllamaStatus() {
+        await testEndpoint('ollama-status', 'GET', '/api/ollama/status');
+    }
+
+    async function testReprocessAlert() {
+        const alertId = document.getElementById('reprocess-alert-id').value;
+        
+        if (!alertId) {
+            alert('Please enter an Alert ID');
+            return;
+        }
+        
+        await testEndpoint('reprocess-alert', 'POST', `/api/alerts/${alertId}/reprocess`);
+    }
+
+    async function testEnhancedChat() {
+        const message = document.getElementById('enhanced-chat-message').value;
+        const persona = document.getElementById('enhanced-chat-persona').value;
+        const language = document.getElementById('enhanced-chat-language').value;
+        
+        if (!message) {
+            alert('Please enter a message');
+            return;
+        }
+        
+        const data = { 
+            message: message, 
+            persona: persona, 
+            language: language,
+            history: []
+        };
+        await testEndpoint('enhanced-chat', 'POST', '/api/enhanced-chat', data);
+    }
+
+    async function testGenerateAIAnalysis() {
+        await testEndpoint('generate-ai-analysis', 'POST', '/api/alerts/generate-ai-analysis');
+    }
+</script>
+{% endblock %} 

@@ -1,0 +1,1663 @@
+{% extends "falco_base.html" %}
+
+{% block title %}Falco AI Security Dashboard{% endblock %}
+{% block page_icon %}<i class="fas fa-tachometer-alt"></i>{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_description %}AI-powered security intelligence with machine learning analytics{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+<style>
+    /* Analytics Tabs Styling */
+    .analytics-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-xl);
+        padding: var(--space-sm);
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+    }
+
+    .analytics-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        font-size: var(--text-sm);
+    }
+
+    .analytics-tab:hover {
+        background: rgba(0, 174, 199, 0.1);
+        color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .analytics-tab.active {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    .analytics-tab i {
+        font-size: 1.1rem;
+    }
+
+    /* Analytics Sections */
+    .analytics-section {
+        display: none;
+        margin-top: var(--space-xl);
+    }
+
+    .analytics-section.active {
+        display: block;
+    }
+
+    /* Analytics Cards */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--space-xl);
+        margin-bottom: var(--space-xl);
+    }
+
+    .analytics-card {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        padding: var(--space-xl);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .analytics-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--falco-primary-light);
+        border-top-color: var(--falco-primary-dark);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+    }
+
+    .card-title {
+        font-size: var(--text-lg);
+        font-weight: 600;
+        color: var(--text-heading);
+        margin: 0;
+    }
+
+    .card-icon {
+        font-size: var(--text-xl);
+    }
+
+    .metric-large {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: var(--space-sm);
+    }
+
+    .metric-label {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Chart containers */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: var(--space-lg);
+    }
+
+    .chart-container canvas {
+        max-height: 300px;
+    }
+
+    /* Status indicators */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-lg);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        margin-bottom: var(--space-md);
+    }
+
+    .status-indicator.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+
+    .status-indicator.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border: 1px solid var(--warning);
+    }
+
+    .status-indicator.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+
+    /* Data tables */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: var(--space-lg);
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: var(--space-md);
+        text-align: left;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .data-table th {
+        background: var(--bg-secondary);
+        font-weight: 600;
+        color: var(--text-heading);
+    }
+
+    .data-table tr:hover {
+        background: rgba(0, 174, 199, 0.05);
+    }
+
+    /* Loading states */
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-2xl);
+        color: var(--text-secondary);
+    }
+
+    .loading i {
+        margin-right: var(--space-sm);
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .analytics-tabs {
+            flex-direction: column;
+        }
+
+        .analytics-tab {
+            text-align: center;
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .metric-large {
+            font-size: 2rem;
+        }
+    }
+
+    /* Clickable elements styling */
+    .clickable-metric {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .clickable-metric:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--falco-primary);
+    }
+
+    .clickable-metric::after {
+        content: '👁️';
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .clickable-metric:hover::after {
+        opacity: 0.7;
+    }
+
+    .metric-large.clickable {
+        cursor: pointer;
+        position: relative;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s ease;
+    }
+
+    .metric-large.clickable:hover {
+        background: rgba(0, 174, 199, 0.1);
+        transform: scale(1.05);
+    }
+
+    .data-table tr.clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .data-table tr.clickable:hover {
+        background: rgba(0, 174, 199, 0.1) !important;
+        transform: translateX(4px);
+    }
+
+    .navigation-hint {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        background: rgba(0, 174, 199, 0.1);
+        color: var(--primary);
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 10px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+
+    .clickable-metric:hover .navigation-hint {
+        opacity: 1;
+    }
+
+    .breadcrumb-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        margin-top: var(--space-xs);
+    }
+
+    .breadcrumb-indicator i {
+        color: var(--primary);
+    }
+
+    /* Chart clickable areas */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: var(--space-lg);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .chart-container:hover {
+        transform: scale(1.02);
+    }
+
+    .chart-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 174, 199, 0.02);
+        border: 2px solid transparent;
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        pointer-events: none;
+    }
+
+    .chart-container:hover .chart-overlay {
+        border-color: var(--primary);
+        background: rgba(0, 174, 199, 0.05);
+    }
+
+    .chart-hint {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0, 174, 199, 0.9);
+        color: white;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 10px;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+
+    .chart-container:hover .chart-hint {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Analytics Tabs -->
+<div class="analytics-tabs">
+    <button class="analytics-tab active" onclick="showSection('overview')">
+        <i class="fas fa-chart-bar"></i>
+        Overview
+    </button>
+    <button class="analytics-tab" onclick="showSection('clustering')">
+        <i class="fas fa-sitemap"></i>
+        Alert Clustering
+    </button>
+    <button class="analytics-tab" onclick="showSection('intelligence')">
+        <i class="fas fa-brain"></i>
+        Threat Intelligence
+    </button>
+    <button class="analytics-tab" onclick="showSection('patterns')">
+        <i class="fas fa-search"></i>
+        Pattern Analysis
+    </button>
+    <button class="analytics-tab" onclick="showSection('realtime')">
+        <i class="fas fa-bolt"></i>
+        Real-time Analysis
+    </button>
+</div>
+
+<!-- Overview Section -->
+<div id="overview-section" class="analytics-section active">
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <div class="card-header">
+                <h3 class="card-title">Weaviate Status</h3>
+                <span class="card-icon">🔧</span>
+            </div>
+            <div class="status-indicator success">
+                <i class="fas fa-check-circle"></i>
+                <span id="weaviate-status">Connected</span>
+            </div>
+            <div class="metric-label">AI Analytics Engine</div>
+        </div>
+
+        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('all')">
+            <div class="card-header">
+                <h3 class="card-title">Total Alerts</h3>
+                <span class="card-icon">📊</span>
+            </div>
+            <div class="metric-large clickable" id="total-alerts">-</div>
+            <div class="metric-label">Analyzed alerts</div>
+            <div class="breadcrumb-indicator">
+                <i class="fas fa-external-link-alt"></i>
+                <span>Click to view all alerts</span>
+            </div>
+            <div class="navigation-hint">View Details</div>
+        </div>
+
+        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('clusters')">
+            <div class="card-header">
+                <h3 class="card-title">Alert Clusters</h3>
+                <span class="card-icon">🧠</span>
+            </div>
+            <div class="metric-large clickable" id="total-clusters">-</div>
+            <div class="metric-label">Identified patterns</div>
+            <div class="breadcrumb-indicator">
+                <i class="fas fa-external-link-alt"></i>
+                <span>Click to view clustering details</span>
+            </div>
+            <div class="navigation-hint">View Clusters</div>
+        </div>
+
+        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('high-risk')">
+            <div class="card-header">
+                <h3 class="card-title">High Risk Alerts</h3>
+                <span class="card-icon">⚠️</span>
+            </div>
+            <div class="metric-large clickable" id="high-risk-alerts">-</div>
+            <div class="metric-label">Requiring attention</div>
+            <div class="breadcrumb-indicator">
+                <i class="fas fa-external-link-alt"></i>
+                <span>Click to view high-risk alerts</span>
+            </div>
+            <div class="navigation-hint">View High Risk</div>
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <div class="card-header">
+                <h3 class="card-title">Alert Trends</h3>
+                <span class="card-icon">📈</span>
+            </div>
+            <div class="chart-container" onclick="navigateToAlerts('trends')">
+                <canvas id="alertTrendsChart"></canvas>
+                <div class="chart-overlay"></div>
+                <div class="chart-hint">Click to view timeline alerts</div>
+            </div>
+            <div class="breadcrumb-indicator">
+                <i class="fas fa-external-link-alt"></i>
+                <span>Click chart to view recent alerts</span>
+            </div>
+        </div>
+
+        <div class="analytics-card">
+            <div class="card-header">
+                <h3 class="card-title">Priority Distribution</h3>
+                <span class="card-icon">🎯</span>
+            </div>
+            <div class="chart-container" onclick="navigateToAlerts('priority')">
+                <canvas id="priorityChart"></canvas>
+                <div class="chart-overlay"></div>
+                <div class="chart-hint">Click to filter by priority</div>
+            </div>
+            <div class="breadcrumb-indicator">
+                <i class="fas fa-external-link-alt"></i>
+                <span>Click chart to filter alerts by priority</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clustering Section -->
+<div id="clustering-section" class="analytics-section">
+    <div class="analytics-card">
+        <div class="card-header">
+            <h3 class="card-title">Intelligent Alert Clustering</h3>
+            <span class="card-icon">🧠</span>
+        </div>
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading clustering analysis...
+        </div>
+        <div id="clustering-content" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- Threat Intelligence Section -->
+<div id="intelligence-section" class="analytics-section">
+    <div class="analytics-card">
+        <div class="card-header">
+            <h3 class="card-title">Threat Intelligence Summary</h3>
+            <span class="card-icon">🛡️</span>
+        </div>
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading threat intelligence...
+        </div>
+        <div id="intelligence-content" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- Pattern Analysis Section -->
+<div id="patterns-section" class="analytics-section">
+    <div class="analytics-card">
+        <div class="card-header">
+            <h3 class="card-title">Alert Pattern Analysis</h3>
+            <span class="card-icon">🔍</span>
+        </div>
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading pattern analysis...
+        </div>
+        <div id="patterns-content" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- Real-time Analysis Section -->
+<div id="realtime-section" class="analytics-section">
+    <div class="analytics-card">
+        <div class="card-header">
+            <h3 class="card-title">Real-time Classification</h3>
+            <span class="card-icon">⚡</span>
+        </div>
+        <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading real-time analysis...
+        </div>
+        <div id="realtime-content" style="display: none;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let alertTrendsChart = null;
+    let priorityChart = null;
+    let chartsInitialized = false;
+
+    // Auto-refresh for real-time data
+    let realtimeRefreshInterval = null;
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOverviewData();
+        // Only load the active section initially
+        loadSectionData('overview');
+        
+        // Start real-time refresh if on real-time tab
+        if (document.getElementById('realtime-section').classList.contains('active')) {
+            startRealtimeRefresh();
+        }
+    });
+
+    // Tab switching
+    function showSection(sectionName) {
+        // Hide all sections
+        document.querySelectorAll('.analytics-section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // Remove active class from all tabs
+        document.querySelectorAll('.analytics-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // Show selected section
+        document.getElementById(sectionName + '-section').classList.add('active');
+        
+        // Activate selected tab
+        event.target.classList.add('active');
+
+        // Load section-specific data
+        loadSectionData(sectionName);
+    }
+
+    // Load section-specific data
+    function loadSectionData(sectionName) {
+        // Stop real-time refresh when switching away from real-time tab
+        if (realtimeRefreshInterval) {
+            clearInterval(realtimeRefreshInterval);
+            realtimeRefreshInterval = null;
+            updateRefreshStatus(false);
+        }
+        
+        switch(sectionName) {
+            case 'overview':
+                // Overview data is already loaded on page load, no need to reload
+                break;
+            case 'clustering':
+                loadClusteringData();
+                break;
+            case 'intelligence':
+                loadIntelligenceData();
+                break;
+            case 'patterns':
+                loadPatternsData();
+                break;
+            case 'realtime':
+                loadRealtimeData();
+                startRealtimeRefresh();
+                break;
+        }
+    }
+    
+    // Update refresh status indicator
+    function updateRefreshStatus(isActive) {
+        const statusElement = document.getElementById('refresh-status');
+        if (statusElement) {
+            if (isActive) {
+                statusElement.innerHTML = `
+                    <i class="fas fa-sync fa-spin" style="font-size: 10px;"></i>
+                    Auto-refresh: ON
+                `;
+                statusElement.style.color = 'var(--success)';
+            } else {
+                statusElement.innerHTML = `
+                    <i class="fas fa-pause" style="font-size: 10px;"></i>
+                    Auto-refresh: OFF
+                `;
+                statusElement.style.color = 'var(--text-muted)';
+            }
+        }
+    }
+    
+    // Start real-time refresh
+    function startRealtimeRefresh() {
+        updateRefreshStatus(true);
+        // Refresh every 30 seconds
+        realtimeRefreshInterval = setInterval(() => {
+            // Only refresh if the real-time tab is still active and page is visible
+            if (document.getElementById('realtime-section').classList.contains('active') && 
+                !document.hidden) {
+                loadRealtimeData();
+            } else if (document.hidden) {
+                // Pause refresh when tab is not visible
+                console.log('Pausing real-time refresh - tab not visible');
+            } else {
+                clearInterval(realtimeRefreshInterval);
+                realtimeRefreshInterval = null;
+                updateRefreshStatus(false);
+            }
+        }, 30000);
+    }
+
+    // Stop refresh when page becomes hidden
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && realtimeRefreshInterval) {
+            clearInterval(realtimeRefreshInterval);
+            realtimeRefreshInterval = null;
+            updateRefreshStatus(false);
+        } else if (!document.hidden && 
+                   document.getElementById('realtime-section').classList.contains('active')) {
+            startRealtimeRefresh();
+        }
+    });
+
+    // Load overview data
+    async function loadOverviewData() {
+        try {
+            // Load Weaviate health
+            const healthResponse = await fetch('/api/weaviate/health');
+            const healthData = await healthResponse.json();
+            
+            document.getElementById('weaviate-status').textContent = 
+                healthData.connected ? 'Connected' : 'Disconnected';
+            
+            if (healthData.total_alerts !== undefined) {
+                document.getElementById('total-alerts').textContent = healthData.total_alerts;
+            }
+
+            // Load threat intelligence summary
+            const threatResponse = await fetch('/api/weaviate/threat-intelligence');
+            const threatData = await threatResponse.json();
+            
+            if (threatData.success) {
+                const intel = threatData.threat_intelligence;
+                document.getElementById('high-risk-alerts').textContent = 
+                    intel.summary.high_risk_alerts || 0;
+            }
+
+            // Load alert patterns for trends data
+            const patternsResponse = await fetch('/api/alert-patterns?days=30');
+            const patternsData = await patternsResponse.json();
+            
+            // Load clustering data
+            const clusterResponse = await fetch('/api/weaviate/cluster-alerts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days: 30, min_cluster_size: 2 })
+            });
+            const clusterData = await clusterResponse.json();
+            
+            if (clusterData.success) {
+                document.getElementById('total-clusters').textContent = 
+                    clusterData.clustering_results.cluster_count || 0;
+            }
+
+            // Initialize charts with real data
+            initializeCharts(threatData.success ? threatData.threat_intelligence : null, 
+                           patternsData.success ? patternsData.patterns : null);
+            chartsInitialized = true;
+
+        } catch (error) {
+            console.warn('Analytics overview data unavailable:', error.message);
+            // Set default values if API calls fail
+            document.getElementById('total-alerts').textContent = '-';
+            document.getElementById('high-risk-alerts').textContent = '-';
+            document.getElementById('total-clusters').textContent = '-';
+        }
+    }
+
+    // Initialize charts
+    function initializeCharts(threatData = null, patternsData = null) {
+        // Destroy existing charts if they exist
+        if (alertTrendsChart) {
+            alertTrendsChart.destroy();
+            alertTrendsChart = null;
+        }
+        if (priorityChart) {
+            priorityChart.destroy();
+            priorityChart = null;
+        }
+        
+        // Prepare real timeline data for Alert Trends
+        let trendLabels = [];
+        let trendData = [];
+        
+        if (patternsData && patternsData.timeline && patternsData.timeline.length > 0) {
+            // Use real timeline data
+            patternsData.timeline.forEach(item => {
+                const date = new Date(item.date);
+                trendLabels.push(date.toLocaleDateString());
+                trendData.push(item.count);
+            });
+        } else {
+            // Fallback to recent days if no timeline data
+            trendLabels = generateDateLabels(7);
+            trendData = new Array(7).fill(0); // Show zero data instead of random
+        }
+        
+        // Alert Trends Chart with real data
+        const alertTrendsCtx = document.getElementById('alertTrendsChart').getContext('2d');
+        alertTrendsChart = new Chart(alertTrendsCtx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'Total Alerts',
+                    data: trendData,
+                    borderColor: '#00AEC7',
+                    backgroundColor: 'rgba(0, 174, 199, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return 'Alerts on ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return context.parsed.y + ' alerts';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+
+        // Priority Distribution Chart with real data
+        const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+        
+        let priorityLabels = ['High Risk', 'Medium Risk', 'Low Risk'];
+        let priorityValues = [0, 0, 0];
+        let priorityColors = ['#EF4444', '#F59E0B', '#10B981'];
+        
+        if (threatData && threatData.summary) {
+            priorityValues = [
+                threatData.summary.high_risk_alerts || 0,
+                threatData.summary.medium_risk_alerts || 0,
+                threatData.summary.low_risk_alerts || 0
+            ];
+        } else if (patternsData && patternsData.priority_distribution) {
+            // Use pattern data as fallback
+            const priorities = patternsData.priority_distribution;
+            priorityLabels = Object.keys(priorities);
+            priorityValues = Object.values(priorities);
+            // Assign colors based on priority names
+            priorityColors = priorityLabels.map(label => {
+                const lowerLabel = label.toLowerCase();
+                if (lowerLabel.includes('critical') || lowerLabel.includes('error')) return '#EF4444';
+                if (lowerLabel.includes('warning')) return '#F59E0B';
+                if (lowerLabel.includes('notice')) return '#3B82F6';
+                return '#10B981';
+            });
+        }
+        
+        priorityChart = new Chart(priorityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: priorityLabels,
+                datasets: [{
+                    data: priorityValues,
+                    backgroundColor: priorityColors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Generate date labels for fallback chart data
+    function generateDateLabels(days) {
+        const labels = [];
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            labels.push(date.toLocaleDateString());
+        }
+        return labels;
+    }
+
+    // Navigation functions
+    function navigateToAlerts(filterType, value = null) {
+        let url = '/runtime-events';
+        const params = new URLSearchParams();
+        
+        switch(filterType) {
+            case 'all':
+                // Show all alerts - no filters
+                break;
+            case 'high-risk':
+                params.append('priority', 'critical');
+                params.append('status', 'unread');
+                break;
+            case 'clusters':
+                // Show recent alerts that are likely to be clustered
+                params.append('time_range', '7d');
+                params.append('limit', '100');
+                break;
+            case 'trends':
+                params.append('time_range', '7d');
+                params.append('limit', '50');
+                break;
+            case 'priority':
+                if (value) {
+                    params.append('priority', value);
+                } else {
+                    params.append('priority', 'critical');
+                }
+                break;
+            case 'rule':
+                if (value) {
+                    params.append('rule', value);
+                }
+                break;
+            case 'time_range':
+                if (value) {
+                    params.append('time_range', value);
+                }
+                break;
+            case 'risk_level':
+                if (value === 'high') {
+                    params.append('priority', 'critical');
+                    params.append('status', 'unread');
+                } else if (value === 'medium') {
+                    params.append('priority', 'error');
+                } else if (value === 'low') {
+                    params.append('priority', 'warning');
+                }
+                break;
+            case 'status':
+                if (value) {
+                    params.append('status', value);
+                }
+                break;
+        }
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+        
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for cluster rows
+    function navigateToClusterAlerts(clusterId, rule) {
+        const params = new URLSearchParams();
+        
+        if (rule && rule !== 'Mixed') {
+            params.append('rule', rule);
+        }
+        
+        // Show recent alerts that would be in clusters
+        params.append('time_range', '7d');
+        params.append('limit', '100');
+        
+        const url = '/runtime-events' + (params.toString() ? '?' + params.toString() : '');
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for threat category
+    function navigateToThreatCategory(category) {
+        const params = new URLSearchParams();
+        
+        // Map threat categories to likely alert patterns
+        if (category === 'intrusion') {
+            params.append('priority', 'critical');
+            params.append('status', 'unread');
+        } else if (category === 'persistence') {
+            params.append('priority', 'error');
+        } else {
+            params.append('time_range', '7d');
+        }
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for rule patterns
+    function navigateToRulePattern(rule) {
+        const params = new URLSearchParams();
+        params.append('rule', rule);
+        params.append('time_range', '30d');
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for recent alerts
+    function navigateToRecentAlerts(timeRange) {
+        const params = new URLSearchParams();
+        params.append('time_range', timeRange);
+        params.append('status', 'unread');
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for source alerts
+    function navigateToSourceAlerts(source) {
+        const params = new URLSearchParams();
+        params.append('source', source);
+        params.append('time_range', '24h');
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for priority-based filtering
+    function navigateToPriorityAlerts(priority) {
+        const params = new URLSearchParams();
+        params.append('priority', priority);
+        params.append('time_range', '7d');
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for status-based filtering
+    function navigateToStatusAlerts(status) {
+        const params = new URLSearchParams();
+        params.append('status', status);
+        params.append('time_range', '7d');
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Navigation function for unprocessed alerts
+    function navigateToUnprocessedAlerts() {
+        const params = new URLSearchParams();
+        params.append('time_range', '24h');
+        params.append('limit', '100');
+        
+        const url = '/runtime-events?' + params.toString();
+        window.open(url, '_blank');
+    }
+
+    // Load clustering data with clickable elements
+    async function loadClusteringData() {
+        const content = document.getElementById('clustering-content');
+        const loading = document.querySelector('#clustering-section .loading');
+        
+        try {
+            const response = await fetch('/api/weaviate/cluster-alerts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ days: 30, min_cluster_size: 2 })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                const results = data.clustering_results;
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = `
+                    <div class="analytics-grid">
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('clusters')">
+                            <h4>Clustering Efficiency</h4>
+                            <div class="metric-large clickable">${(results.clustering_efficiency * 100).toFixed(1)}%</div>
+                            <div class="metric-label">Alerts successfully clustered</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view recent alerts (7 days)</span>
+                            </div>
+                            <div class="navigation-hint">View Recent</div>
+                        </div>
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('clusters')">
+                            <h4>Total Clusters</h4>
+                            <div class="metric-large clickable">${results.cluster_count}</div>
+                            <div class="metric-label">Distinct patterns found</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view recent alerts with patterns</span>
+                            </div>
+                            <div class="navigation-hint">View Patterns</div>
+                        </div>
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('time_range', '1h')">
+                            <h4>Noise Alerts</h4>
+                            <div class="metric-large clickable">${results.noise_alerts}</div>
+                            <div class="metric-label">Unclustered alerts</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view recent unclustered alerts</span>
+                            </div>
+                            <div class="navigation-hint">View Recent</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Top Alert Clusters</h4>
+                    <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Click any cluster row to view its alerts</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Cluster</th>
+                                <th>Size</th>
+                                <th>Common Rule</th>
+                                <th>Priority</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${results.clusters.map((cluster, index) => `
+                                <tr class="clickable" onclick="navigateToClusterAlerts(${index + 1}, '${cluster.common_rule || 'Mixed'}')">
+                                    <td>Cluster ${index + 1}</td>
+                                    <td><strong>${cluster.size}</strong> alerts</td>
+                                    <td>${cluster.common_rule || 'Mixed'}</td>
+                                    <td><span class="priority-${cluster.common_priority}">${cluster.common_priority}</span></td>
+                                    <td>
+                                        <span style="color: var(--primary); font-size: 12px;">
+                                            <i class="fas fa-external-link-alt"></i> View Alerts
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = `
+                    <div class="status-indicator error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load clustering data: ${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.warn('Clustering data unavailable:', error.message);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            content.innerHTML = `
+                <div class="status-indicator error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Clustering service unavailable
+                </div>
+            `;
+        }
+    }
+
+    // Load intelligence data with clickable elements
+    async function loadIntelligenceData() {
+        const content = document.getElementById('intelligence-content');
+        const loading = document.querySelector('#intelligence-section .loading');
+        
+        try {
+            const response = await fetch('/api/weaviate/threat-intelligence');
+            const data = await response.json();
+            
+            if (data.success) {
+                const intel = data.threat_intelligence;
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = `
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h4>Analysis Period</h4>
+                            <div class="metric-large">${intel.summary.analysis_period_days}</div>
+                            <div class="metric-label">days analyzed</div>
+                        </div>
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('time_range', '${intel.summary.analysis_period_days}d')">
+                            <h4>Total Alerts Reviewed</h4>
+                            <div class="metric-large clickable">${intel.summary.total_alerts}</div>
+                            <div class="metric-label">security events</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view reviewed alerts</span>
+                            </div>
+                            <div class="navigation-hint">View Alerts</div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Threat Categories</h4>
+                            <div class="metric-large">${Object.keys(intel.threat_categories).length}</div>
+                            <div class="metric-label">types identified</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Risk Assessment Breakdown</h4>
+                    <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Click any risk level to view matching alerts</span>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('risk_level', 'high')">
+                            <h5 style="color: var(--danger);">🔴 High Risk</h5>
+                            <div class="metric-large clickable">${intel.summary.high_risk_alerts}</div>
+                            <div class="metric-label">${intel.summary.total_alerts > 0 ? ((intel.summary.high_risk_alerts / intel.summary.total_alerts) * 100).toFixed(1) : 0}% of total</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view high-risk alerts</span>
+                            </div>
+                            <div class="navigation-hint">View High Risk</div>
+                        </div>
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('risk_level', 'medium')">
+                            <h5 style="color: var(--warning);">🟡 Medium Risk</h5>
+                            <div class="metric-large clickable">${intel.summary.medium_risk_alerts}</div>
+                            <div class="metric-label">${intel.summary.total_alerts > 0 ? ((intel.summary.medium_risk_alerts / intel.summary.total_alerts) * 100).toFixed(1) : 0}% of total</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view medium-risk alerts</span>
+                            </div>
+                            <div class="navigation-hint">View Medium Risk</div>
+                        </div>
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('risk_level', 'low')">
+                            <h5 style="color: var(--success);">🟢 Low Risk</h5>
+                            <div class="metric-large clickable">${intel.summary.low_risk_alerts}</div>
+                            <div class="metric-label">${intel.summary.total_alerts > 0 ? ((intel.summary.low_risk_alerts / intel.summary.total_alerts) * 100).toFixed(1) : 0}% of total</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view low-risk alerts</span>
+                            </div>
+                            <div class="navigation-hint">View Low Risk</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Threat Category Distribution</h4>
+                    ${Object.keys(intel.threat_categories).length > 0 ? `
+                        <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Click any category to view related alerts</span>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Threat Type</th>
+                                    <th>Alert Count</th>
+                                    <th>Percentage</th>
+                                    <th>Risk Level</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(intel.threat_categories)
+                                    .sort(([,a], [,b]) => b - a)
+                                    .map(([category, count]) => {
+                                        const percentage = intel.summary.total_alerts > 0 ? ((count / intel.summary.total_alerts) * 100).toFixed(1) : 0;
+                                        const riskLevel = category === 'intrusion' ? 'Critical' : 
+                                                        category === 'persistence' ? 'High' : 
+                                                        category === 'unknown' ? 'Medium' : 'Medium';
+                                        const riskColor = riskLevel === 'Critical' ? 'danger' : 
+                                                        riskLevel === 'High' ? 'warning' : 'info';
+                                        return `
+                                            <tr class="clickable" onclick="navigateToThreatCategory('${category}')">
+                                                <td style="text-transform: capitalize; font-weight: 500;">${category.replace('_', ' ')}</td>
+                                                <td><strong>${count}</strong> alerts</td>
+                                                <td>${percentage}%</td>
+                                                <td><span style="color: var(--${riskColor}); font-weight: 500;">${riskLevel}</span></td>
+                                                <td>
+                                                    <span style="color: var(--primary); font-size: 12px;">
+                                                        <i class="fas fa-external-link-alt"></i> View Alerts
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p>No threat categories detected</p>'}
+                    
+                    <h4>Security Recommendations</h4>
+                    <div class="analytics-grid">
+                        ${intel.recommendations.map((rec, index) => {
+                            const priority = rec.startsWith('CRITICAL') ? 'danger' : 
+                                           rec.startsWith('HIGH') ? 'warning' : 
+                                           rec.startsWith('MEDIUM') ? 'info' : 'secondary';
+                            const icon = rec.startsWith('CRITICAL') ? '🚨' : 
+                                       rec.startsWith('HIGH') ? '⚠️' : 
+                                       rec.startsWith('MEDIUM') ? '📋' : '💡';
+                            return `
+                                <div class="analytics-card">
+                                    <h5 style="color: var(--${priority}); margin-bottom: var(--space-sm);">
+                                        ${icon} Priority ${index + 1}
+                                    </h5>
+                                    <p style="margin: 0; font-size: var(--text-sm); line-height: 1.4;">${rec}</p>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    
+                    ${intel.summary.high_risk_alerts > 5 ? `
+                        <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); border-radius: var(--radius-md); cursor: pointer;" onclick="navigateToAlerts('risk_level', 'high')">
+                            <h5 style="color: var(--danger); margin: 0 0 var(--space-sm) 0;">🚨 High Alert Volume Warning</h5>
+                            <p style="margin: 0; font-size: var(--text-sm);">
+                                You have <strong>${intel.summary.high_risk_alerts} high-risk alerts</strong> in the last ${intel.summary.analysis_period_days} days. 
+                                This indicates potential security threats that require immediate attention.
+                            </p>
+                            <div class="breadcrumb-indicator" style="margin-top: var(--space-sm);">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view high-risk alerts</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+            } else {
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = `
+                    <div class="status-indicator error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load threat intelligence: ${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.warn('Threat intelligence unavailable:', error.message);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            content.innerHTML = `
+                <div class="status-indicator error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Threat intelligence service unavailable
+                </div>
+            `;
+        }
+    }
+
+    // Load patterns data with clickable elements
+    async function loadPatternsData() {
+        const content = document.getElementById('patterns-content');
+        const loading = document.querySelector('#patterns-section .loading');
+        
+        try {
+            const response = await fetch('/api/alert-patterns?days=30');
+            const data = await response.json();
+            
+            if (data.success) {
+                const patterns = data.patterns;
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                const patternCount = patterns.rule_frequency ? Object.keys(patterns.rule_frequency).length : 0;
+                
+                content.innerHTML = `
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h4>Unique Rule Patterns</h4>
+                            <div class="metric-large">${patternCount}</div>
+                            <div class="metric-label">Different rule types found</div>
+                        </div>
+                        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('time_range', '30d')">
+                            <h4>Total Alerts Analyzed</h4>
+                            <div class="metric-large clickable">${patterns.total_alerts || 0}</div>
+                            <div class="metric-label">Alerts in ${patterns.analysis_period_days || 30} days</div>
+                            <div class="breadcrumb-indicator">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Click to view analyzed alerts</span>
+                            </div>
+                            <div class="navigation-hint">View Alerts</div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Priority Categories</h4>
+                            <div class="metric-large">${patterns.priority_distribution ? Object.keys(patterns.priority_distribution).length : 0}</div>
+                            <div class="metric-label">Priority levels detected</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Top Alert Rule Patterns</h4>
+                    ${patterns.rule_frequency ? `
+                        <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Click any rule pattern to view matching alerts</span>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Rule Pattern</th>
+                                    <th>Frequency</th>
+                                    <th>Percentage</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(patterns.rule_frequency)
+                                    .sort(([,a], [,b]) => b - a)
+                                    .slice(0, 5)
+                                    .map(([rule, count]) => {
+                                        const percentage = patterns.total_alerts ? ((count / patterns.total_alerts) * 100).toFixed(1) : 0;
+                                        return `
+                                            <tr class="clickable" onclick="navigateToRulePattern('${rule}')">
+                                                <td style="font-weight: 500;">${rule}</td>
+                                                <td><strong>${count}</strong> alerts</td>
+                                                <td>${percentage}%</td>
+                                                <td>
+                                                    <span style="color: var(--primary); font-size: 12px;">
+                                                        <i class="fas fa-external-link-alt"></i> View Alerts
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p>No rule patterns available</p>'}
+                    
+                    <h4>Priority Distribution</h4>
+                    ${patterns.priority_distribution ? `
+                        <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Click any priority level to view matching alerts</span>
+                        </div>
+                        <div class="analytics-grid">
+                            ${Object.entries(patterns.priority_distribution).map(([priority, count]) => `
+                                <div class="analytics-card clickable-metric" onclick="navigateToPriorityAlerts('${priority}')">
+                                    <h5 style="text-transform: capitalize; color: var(--${priority === 'critical' ? 'danger' : priority === 'warning' ? 'warning' : 'info'});">
+                                        ${priority}
+                                    </h5>
+                                    <div class="metric-large clickable">${count}</div>
+                                    <div class="metric-label">alerts</div>
+                                    <div class="breadcrumb-indicator">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        <span>Click to view ${priority} alerts (7 days)</span>
+                                    </div>
+                                    <div class="navigation-hint">View ${priority}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p>No priority distribution available</p>'}
+                `;
+            } else {
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                content.innerHTML = `
+                    <div class="status-indicator error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load patterns: ${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.warn('Pattern data unavailable:', error.message);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            content.innerHTML = `
+                <div class="status-indicator error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Pattern analysis service unavailable
+                </div>
+            `;
+        }
+    }
+
+    // Load real-time data with clickable elements
+    async function loadRealtimeData() {
+        const content = document.getElementById('realtime-content');
+        const loading = document.querySelector('#realtime-section .loading');
+        
+        try {
+            const recentAlertsResponse = await fetch('/api/alerts?time_range=24h&limit=50');
+            const recentAlerts = await recentAlertsResponse.json();
+            
+            const healthResponse = await fetch('/api/weaviate/health');
+            const healthData = await healthResponse.json();
+            
+            const todayPatternsResponse = await fetch('/api/alert-patterns?days=1');
+            const todayPatterns = await todayPatternsResponse.json();
+            
+            const now = new Date();
+            const sixHoursAgo = new Date(now.getTime() - (6 * 60 * 60 * 1000));
+            const oneHourAgo = new Date(now.getTime() - (60 * 60 * 1000));
+            
+            const last6Hours = recentAlerts.filter(alert => {
+                const alertTime = new Date(alert.timestamp || alert.time);
+                return alertTime >= sixHoursAgo;
+            });
+            
+            const lastHour = recentAlerts.filter(alert => {
+                const alertTime = new Date(alert.timestamp || alert.time);
+                return alertTime >= oneHourAgo;
+            });
+            
+            const alertVelocity = last6Hours.length / 6;
+            
+            const recentPriorities = last6Hours.reduce((acc, alert) => {
+                acc[alert.priority] = (acc[alert.priority] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const latestAlert = recentAlerts.length > 0 ? recentAlerts[0] : null;
+            
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            content.innerHTML = `
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4>System Status</h4>
+                        <div class="status-indicator ${healthData.connected ? 'success' : 'error'}">
+                            <i class="fas fa-${healthData.connected ? 'check-circle' : 'exclamation-triangle'}"></i>
+                            ${healthData.connected ? 'Online & Processing' : 'System Issues'}
+                        </div>
+                        <div class="metric-label">Weaviate Analytics Engine</div>
+                    </div>
+                    <div class="analytics-card clickable-metric" onclick="navigateToRecentAlerts('6h')">
+                        <h4>Alert Velocity</h4>
+                        <div class="metric-large clickable">${alertVelocity.toFixed(1)}</div>
+                        <div class="metric-label">alerts per hour (6h avg)</div>
+                        <div class="breadcrumb-indicator">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Click to view recent alerts</span>
+                        </div>
+                        <div class="navigation-hint">View 6h Alerts</div>
+                    </div>
+                    <div class="analytics-card clickable-metric" onclick="navigateToRecentAlerts('1h')">
+                        <h4>Last Hour Activity</h4>
+                        <div class="metric-large clickable">${lastHour.length}</div>
+                        <div class="metric-label">new alerts received</div>
+                        <div class="breadcrumb-indicator">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Click to view last hour alerts</span>
+                        </div>
+                        <div class="navigation-hint">View 1h Alerts</div>
+                    </div>
+                    <div class="analytics-card clickable-metric" onclick="navigateToUnprocessedAlerts()">
+                        <h4>Processing Queue</h4>
+                        <div class="metric-large clickable">${recentAlerts.filter(a => !a.ai_analysis).length}</div>
+                        <div class="metric-label">alerts pending AI analysis</div>
+                        <div class="breadcrumb-indicator">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Click to view recent unprocessed alerts</span>
+                        </div>
+                        <div class="navigation-hint">View Pending</div>
+                    </div>
+                </div>
+                
+                ${latestAlert ? `
+                    <h4>Latest Alert Activity</h4>
+                    <div style="padding: var(--space-lg); background: var(--bg-cards); border-radius: var(--radius-lg); border-left: 4px solid var(--${latestAlert.priority === 'critical' ? 'danger' : latestAlert.priority === 'warning' ? 'warning' : 'info'}); margin-bottom: var(--space-lg); cursor: pointer;" onclick="navigateToRulePattern('${latestAlert.rule}')">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                            <h5 style="margin: 0; color: var(--text-heading);">${latestAlert.rule}</h5>
+                            <span style="color: var(--${latestAlert.priority === 'critical' ? 'danger' : latestAlert.priority === 'warning' ? 'warning' : 'info'}); font-weight: 500; text-transform: uppercase; font-size: var(--text-xs);">
+                                ${latestAlert.priority}
+                            </span>
+                        </div>
+                        <p style="margin: 0 0 var(--space-sm) 0; font-size: var(--text-sm); color: var(--text-secondary);">
+                            ${latestAlert.output}
+                        </p>
+                        <small style="color: var(--text-muted);">
+                            <i class="fas fa-clock"></i> ${new Date(latestAlert.timestamp || latestAlert.time).toLocaleString()}
+                            <span style="margin-left: var(--space-md);">
+                                <i class="fas fa-server"></i> ${latestAlert.source || 'Unknown'}
+                            </span>
+                        </small>
+                        <div class="breadcrumb-indicator" style="margin-top: var(--space-sm);">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Click to view similar alerts by rule</span>
+                        </div>
+                    </div>
+                ` : '<p>No recent alerts</p>'}
+                
+                <h4>6-Hour Activity Breakdown</h4>
+                <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Click any priority level to view matching alerts</span>
+                </div>
+                <div class="analytics-grid">
+                    ${Object.keys(recentPriorities).length > 0 ? 
+                        Object.entries(recentPriorities)
+                            .sort(([,a], [,b]) => b - a)
+                            .map(([priority, count]) => `
+                                <div class="analytics-card clickable-metric" onclick="navigateToRecentAlerts('6h')">
+                                    <h5 style="text-transform: capitalize; color: var(--${priority === 'critical' ? 'danger' : priority === 'warning' ? 'warning' : 'info'});">
+                                        ${priority === 'critical' ? '🔴' : priority === 'warning' ? '🟡' : '🔵'} ${priority}
+                                    </h5>
+                                    <div class="metric-large clickable">${count}</div>
+                                    <div class="metric-label">alerts</div>
+                                    <div class="breadcrumb-indicator">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        <span>Click to view recent ${priority} alerts (6h)</span>
+                                    </div>
+                                    <div class="navigation-hint">View Recent</div>
+                                </div>
+                            `).join('') : 
+                        '<div class="analytics-card"><p>No alerts in the last 6 hours</p></div>'
+                    }
+                </div>
+                
+                <h4>Recent Alert Sources</h4>
+                ${last6Hours.length > 0 ? `
+                    <div class="breadcrumb-indicator" style="margin-bottom: var(--space-md);">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Click any source to view its alerts</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Alert Count</th>
+                                <th>Latest Activity</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(
+                                last6Hours.reduce((acc, alert) => {
+                                    const source = alert.source || 'unknown';
+                                    if (!acc[source]) {
+                                        acc[source] = {
+                                            count: 0,
+                                            latest: alert.timestamp || alert.time,
+                                            priority: alert.priority
+                                        };
+                                    }
+                                    acc[source].count++;
+                                    if (new Date(alert.timestamp || alert.time) > new Date(acc[source].latest)) {
+                                        acc[source].latest = alert.timestamp || alert.time;
+                                        acc[source].priority = alert.priority;
+                                    }
+                                    return acc;
+                                }, {})
+                            )
+                            .sort(([,a], [,b]) => b.count - a.count)
+                            .slice(0, 5)
+                            .map(([source, data]) => {
+                                const timeDiff = Math.floor((now - new Date(data.latest)) / (1000 * 60));
+                                const timeAgo = timeDiff < 60 ? `${timeDiff}m ago` : `${Math.floor(timeDiff/60)}h ago`;
+                                return `
+                                    <tr class="clickable" onclick="navigateToSourceAlerts('${source}')">
+                                        <td style="font-weight: 500;">${source}</td>
+                                        <td><strong>${data.count}</strong> alerts</td>
+                                        <td>${timeAgo}</td>
+                                        <td><span style="color: var(--${data.priority === 'critical' ? 'danger' : data.priority === 'warning' ? 'warning' : 'info'}); font-weight: 500;">${data.priority}</span></td>
+                                        <td>
+                                            <span style="color: var(--primary); font-size: 12px;">
+                                                <i class="fas fa-external-link-alt"></i> View Alerts
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                ` : '<p>No recent source activity</p>'}
+                
+                <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: rgba(0, 174, 199, 0.1); border-radius: var(--radius-md); border: 1px solid rgba(0, 174, 199, 0.2);">
+                    <h5 style="color: var(--primary); margin: 0 0 var(--space-sm) 0;">⚡ Real-time Processing Status</h5>
+                    <p style="margin: 0; font-size: var(--text-sm);">
+                        System is actively monitoring security events and providing immediate threat classification. 
+                        All new alerts are automatically analyzed for patterns, risks, and recommended actions.
+                    </p>
+                    <div style="margin-top: var(--space-md); font-size: var(--text-xs); color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                        <span>Last updated: ${new Date().toLocaleTimeString()}</span>
+                        <span id="refresh-status" style="color: var(--success); display: flex; align-items: center; gap: var(--space-xs);">
+                            <i class="fas fa-sync fa-spin" style="font-size: 10px;"></i>
+                            Auto-refresh: ON
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.warn('Real-time data unavailable:', error.message);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            content.innerHTML = `
+                <div class="status-indicator error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Real-time monitoring service unavailable
+                </div>
+            `;
+        }
+    }
+</script>
+{% endblock %} 

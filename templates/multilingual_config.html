@@ -1,29 +1,27 @@
-{% extends "settings_base.html" %}
+{% extends "falco_base.html" %}
 
-{% block title %}Multi-Language Configuration{% endblock %}
+{% block title %}Translation & Multilingual AI Configuration{% endblock %}
 {% block page_icon %}<i class="fas fa-globe"></i>{% endblock %}
-{% block page_title %}Multi-Language Configuration{% endblock %}
-{% block page_description %}Configure multilingual AI analysis, language preferences, and Babel LLM settings for global security monitoring{% endblock %}
+{% block page_title %}Translation & Multilingual AI Configuration{% endblock %}
+{% block page_description %}Configure multilingual AI analysis, translation services, and language preferences for global security monitoring{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Master toggle styling */
+    /* Master toggle styling - consistent with falco design */
     .master-toggle {
-        background: var(--primary-10, rgba(0, 174, 199, 0.1));
-        border: 2px solid var(--primary-color);
-        border-radius: var(--radius-md);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .master-toggle .form-check {
-        margin: 0;
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border: 2px solid var(--falco-primary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        box-shadow: var(--shadow-lg);
     }
 
     .master-toggle .form-check-label {
-        font-size: 1.1rem;
+        font-size: var(--text-lg);
         font-weight: 600;
-        color: var(--primary-color);
+        color: var(--falco-primary);
     }
 
     .disabled-section {
@@ -31,15 +29,15 @@
         pointer-events: none;
     }
 
-    /* Provider Tabs similar to AI config */
+    /* Provider Tabs - consistent with falco design */
     .provider-tabs {
         display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        padding: 0.5rem;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-xl);
+        padding: var(--space-sm);
         background: var(--bg-card);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-color);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-light);
         box-shadow: var(--shadow-sm);
     }
 
@@ -47,43 +45,45 @@
         flex: 1;
         background: transparent;
         border: none;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius-sm);
-        color: var(--text-light);
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
         font-weight: 500;
         transition: all 0.3s ease;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: var(--space-sm);
+        font-size: var(--text-sm);
     }
 
     .provider-tab:hover {
         background: rgba(0, 174, 199, 0.1);
-        color: var(--primary-color);
+        color: var(--falco-primary);
         transform: translateY(-1px);
     }
 
     .provider-tab.active {
-        background: var(--primary-color);
-        color: white;
+        background: var(--primary-gradient);
+        color: var(--falco-white);
         box-shadow: var(--shadow-md);
+        font-weight: 600;
     }
 
-    /* Language grid */
+    /* Language grid - consistent spacing */
     .language-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
+        gap: var(--space-lg);
+        margin-top: var(--space-lg);
     }
 
     .language-card {
-        background: white;
-        border: 2px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 1rem;
+        background: var(--bg-card);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
         text-align: center;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -91,84 +91,318 @@
     }
 
     .language-card:hover {
-        border-color: var(--primary-color);
+        border-color: var(--falco-primary);
         transform: translateY(-2px);
         box-shadow: var(--shadow-md);
     }
 
     .language-card.active {
-        border-color: var(--primary-color);
+        border-color: var(--falco-primary);
         background: rgba(0, 174, 199, 0.1);
     }
 
     .language-flag {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
+        font-size: var(--text-3xl);
+        margin-bottom: var(--space-sm);
     }
 
     .language-name {
         font-weight: 600;
-        color: var(--text-dark);
-        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-size: var(--text-sm);
     }
 
     .language-speakers {
-        font-size: 0.8rem;
-        color: var(--text-light);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
     }
 
     /* Status indicators */
     .status-indicator {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: var(--radius-sm);
+        gap: var(--space-sm);
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-md);
         font-weight: 600;
-        font-size: 0.875rem;
+        font-size: var(--text-sm);
     }
 
     .status-available {
-        background: rgba(72, 187, 120, 0.1);
-        color: #22543d;
-        border: 1px solid #48bb78;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 2px solid var(--success);
     }
 
     .status-unavailable {
-        background: rgba(245, 101, 101, 0.1);
-        color: #742a2a;
-        border: 1px solid #f56565;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 2px solid var(--danger);
     }
 
     .status-downloading {
-        background: rgba(66, 153, 225, 0.1);
-        color: #2a4365;
-        border: 1px solid #4299e1;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border: 2px solid var(--info);
     }
 
-    /* Model management */
-    .model-info {
-        background: rgba(0, 174, 199, 0.05);
-        border: 1px solid rgba(0, 174, 199, 0.2);
-        border-radius: var(--radius-sm);
-        padding: 1rem;
-        margin-top: 1rem;
+    /* Enhanced Progress Bar Styles */
+    #languageActivationProgress {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        margin-top: var(--space-lg);
+        box-shadow: var(--shadow-md);
     }
 
-    .progress-container {
-        margin-top: 1rem;
+    #languageActivationProgress .progress-header h5 {
+        color: var(--falco-primary);
+        margin-bottom: var(--space-sm);
+        font-size: var(--text-lg);
+    }
+
+    #languageActivationProgress .progress {
+        height: 2rem;
+        background: var(--border-light);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        position: relative;
+    }
+
+    #languageActivationProgress .progress-bar {
+        background: var(--primary-gradient);
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: var(--text-sm);
+        transition: width 0.3s ease;
+    }
+
+    .progress-details {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        margin-top: var(--space-lg);
+    }
+
+    .progress-stat {
+        text-align: center;
+    }
+
+    .progress-number {
+        font-size: var(--text-4xl);
+        font-weight: 700;
+        color: var(--falco-primary);
+        margin-bottom: var(--space-xs);
+    }
+
+    .progress-label {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+
+    #currentSystemLanguage {
+        padding: var(--space-lg);
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid var(--success);
+        border-radius: var(--radius-md);
+        color: var(--success);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    #globalLanguageSelector {
+        padding: var(--space-md);
+        font-size: var(--text-base);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--falco-white);
+        transition: all 0.2s ease;
+    }
+
+    #globalLanguageSelector:focus {
+        border-color: var(--falco-primary);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+        outline: none;
+    }
+
+    #globalLanguageSelector:disabled {
+        background: var(--bg-secondary);
+        color: var(--text-muted);
+        cursor: not-allowed;
+    }
+
+    .tab-content {
         display: none;
     }
 
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Config cards within tabs - use consistent falco design */
+    .tab-content .config-card {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--falco-primary);
+        margin-bottom: var(--space-xl);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tab-content .config-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--falco-primary-light);
+        border-top-color: var(--falco-primary-dark);
+    }
+
+    .tab-content .config-card .config-card-header {
+        padding: var(--space-xl) var(--space-xl) var(--space-lg);
+        border-bottom: 1px solid var(--border-light);
+        background: var(--bg-cards);
+    }
+
+    .tab-content .config-card .config-card-body {
+        padding: var(--space-xl);
+    }
+
+    .tab-content .config-card .config-card-title {
+        color: var(--text-heading);
+        font-size: var(--text-xl);
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    /* Form styling within tabs */
+    .tab-content .form-group {
+        margin-bottom: var(--space-xl);
+    }
+
+    .tab-content .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .tab-content .form-control,
+    .tab-content .form-select {
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        font-size: var(--text-base);
+        transition: border-color 0.2s ease;
+    }
+
+    .tab-content .form-control:focus,
+    .tab-content .form-select:focus {
+        border-color: var(--falco-primary);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .tab-content .alert {
+        border-radius: var(--radius-md);
+        border: none;
+        padding: var(--space-lg);
+    }
+
+    .tab-content .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border-left: 4px solid var(--info);
+    }
+
+    /* Action bar styling */
+    .action-bar {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: var(--space-lg);
+        flex-wrap: wrap;
+    }
+
+    .save-status {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+    }
+
+    /* Additional status and model display styles */
+    .status-display {
+        padding: var(--space-sm);
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        font-size: var(--text-sm);
+        color: var(--text-heading);
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .model-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        margin-bottom: var(--space-md);
+        transition: all 0.2s ease;
+    }
+
+    .model-card:hover {
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .model-card:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Progress bar enhancements */
     .progress {
-        height: 8px;
-        border-radius: 4px;
-        background: rgba(0, 0, 0, 0.1);
+        height: 1.5rem;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        overflow: hidden;
     }
 
     .progress-bar {
         background: var(--primary-gradient);
-        border-radius: 4px;
         transition: width 0.3s ease;
     }
 
@@ -180,33 +414,56 @@
         .provider-tabs {
             flex-direction: column;
         }
+
+        .action-bar .d-flex {
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+
+        .action-buttons {
+            justify-content: center;
+        }
     }
-    </style>
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- Sticky Action Bar -->
-<div class="sticky-action-bar">
+<!-- Beta Warning Banner -->
+<div class="alert alert-warning border-warning mb-4" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <div>
+            <h4 class="alert-heading mb-2">⚠️ EXPERIMENTAL FEATURE - Use with Caution</h4>
+            <p class="mb-2">
+                <strong>This multilingual system is experimental and may not work reliably.</strong> 
+                It uses AI models for real-time translation which can be slow, inconsistent, and resource-intensive.
+            </p>
+            <ul class="mb-0">
+                <li>🐛 <strong>May cause performance issues</strong> - LLM translation is resource-intensive</li>
+                <li>🔄 <strong>Translations may be inconsistent</strong> - AI responses can vary</li>
+                <li>⚡ <strong>Can be slow</strong> - Real-time translation takes time</li>
+                <li>🚫 <strong>Not recommended for production</strong> - Use at your own risk</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Action Bar -->
+<div class="action-bar">
     <div class="d-flex justify-content-between align-items-center">
         <div class="action-buttons">
-            <button class="btn btn-primary btn-lg" onclick="saveAllConfig()">
+            <button class="btn btn-primary" onclick="saveAllConfig()" id="saveAllBtn">
                 <i class="fas fa-save"></i>
-                Save All Changes
+                Save All Configuration
             </button>
-            <button class="btn btn-success" onclick="testBabelConnection()">
+            <button class="btn btn-outline" onclick="testTranslationService()">
                 <i class="fas fa-check-circle"></i>
-                Test Babel LLM
-            </button>
-            <button class="btn btn-secondary" onclick="downloadBabelModel('babel-9b')">
-                <i class="fas fa-download"></i>
-                Download Model
+                Test Translation Service
             </button>
         </div>
         <div class="save-status" id="saveStatus">
-            <small class="text-muted">
-                <i class="fas fa-info-circle"></i>
-                Remember to save your changes
-            </small>
+            <i class="fas fa-info-circle"></i>
+            <span>Make changes and click Save All Configuration</span>
         </div>
     </div>
 </div>
@@ -214,349 +471,543 @@
 <!-- Master Enable/Disable Toggle -->
 <div class="master-toggle">
     <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="enableMultilingual" checked onchange="toggleMultilingual()">
+        <input class="form-check-input" type="checkbox" id="enableMultilingual" onchange="toggleMultilingual()">
         <label class="form-check-label" for="enableMultilingual">
             <i class="fas fa-globe me-2"></i>
             <strong data-translate>Enable Multilingual Features</strong>
+            <span class="badge bg-warning ms-2">EXPERIMENTAL</span>
             <div class="text-muted small mt-1" data-translate>
-                Turn off to save compute resources - system will use English-only AI analysis
+                ⚠️ Experimental feature - Disabled by default. May cause performance issues or inconsistent translations.
             </div>
         </label>
     </div>
 </div>
 
 <div id="multilingualContent">
-    <!-- System Status -->
-    <div class="config-card">
-        <div class="config-card-header">
-                            <h3 class="config-card-title">
-                    <i class="fas fa-chart-line"></i>
-                    <span data-translate>System Status</span>
-                    <span class="collapse-icon">
-                        <i class="fas fa-chevron-down"></i>
-                    </span>
-                </h3>
+    <!-- Global Language Control -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-globe"></i>
+                <span data-translate="Global System Language">Global System Language</span>
+            </h3>
         </div>
-        <div class="config-card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="text-center">
-                        <div class="status-indicator" id="babelStatus">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            Checking...
-                        </div>
-                        <div class="mt-2">
-                            <strong>Babel LLM</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="text-center">
-                        <div class="status-indicator" id="languageCount">
-                            <i class="fas fa-language"></i>
-                            24 Languages
-                        </div>
-                        <div class="mt-2">
-                            <strong>Supported</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="text-center">
-                        <div class="status-indicator" id="currentLanguage">
-                            <i class="fas fa-flag"></i>
-                            English
-                        </div>
-                        <div class="mt-2">
-                            <strong>Current Language</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuration Tabs -->
-    <div class="provider-tabs">
-        <button class="provider-tab active" onclick="switchTab('general')">
-            <i class="fas fa-cog"></i>
-            <span data-translate>General Settings</span>
-        </button>
-        <button class="provider-tab" onclick="switchTab('babel')">
-            <i class="fas fa-brain"></i>
-            <span data-translate>Babel LLM</span>
-        </button>
-        <button class="provider-tab" onclick="switchTab('languages')">
-            <i class="fas fa-language"></i>
-            <span data-translate>Languages</span>
-        </button>
-        <button class="provider-tab" onclick="switchTab('models')">
-            <i class="fas fa-download"></i>
-            <span data-translate>Model Management</span>
-        </button>
-    </div>
-
-    <!-- General Settings Tab -->
-    <div id="general-tab" class="provider-config active">
-        <div class="config-card">
-            <div class="config-card-header">
-                <h3 class="config-card-title">
-                    <i class="fas fa-cog"></i>
-                    General Language Settings
-                </h3>
-            </div>
-            <div class="config-card-body">
-                <form id="generalSettingsForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="defaultLanguage">
-                                    <i class="fas fa-globe"></i>
-                                    Default System Language
-                                </label>
-                                <select class="form-select" id="defaultLanguage" name="default_language">
-                                    <option value="en" selected>🇺🇸 English (Default)</option>
-                                    <option value="es">🇪🇸 Español</option>
-                                    <option value="fr">🇫🇷 Français</option>
-                                    <option value="de">🇩🇪 Deutsch</option>
-                                    <option value="pt">🇵🇹 Português</option>
-                                    <option value="zh">🇨🇳 中文</option>
-                                    <!-- More options populated by JS -->
-                                </select>
-                                <div class="form-text">Default language for new users and fallback scenarios</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="autoDetectLanguage">
-                                    <i class="fas fa-search"></i>
-                                    Auto-Detect User Language
-                                </label>
-                                <select class="form-select" id="autoDetectLanguage" name="auto_detect_language">
-                                    <option value="true" selected>Enabled - Use browser language preference</option>
-                                    <option value="false">Disabled - Always use default language</option>
-                                </select>
-                                <div class="form-text">Automatically detect user's preferred language from browser</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="enableUITranslation">
-                                    <i class="fas fa-language"></i>
-                                    UI Translation Mode
-                                </label>
-                                <select class="form-select" id="enableUITranslation" name="enable_ui_translation">
-                                    <option value="babel" selected>Babel LLM - Native AI translation</option>
-                                    <option value="static">Static - Pre-defined translations only</option>
-                                    <option value="disabled">Disabled - English only</option>
-                                </select>
-                                <div class="form-text">How to handle user interface translations</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="fallbackBehavior">
-                                    <i class="fas fa-shield-alt"></i>
-                                    Fallback Behavior
-                                </label>
-                                <select class="form-select" id="fallbackBehavior" name="fallback_behavior">
-                                    <option value="english" selected>Fall back to English analysis</option>
-                                    <option value="regular_ai">Use regular AI provider in English</option>
-                                    <option value="error">Show error message</option>
-                                </select>
-                                <div class="form-text">What to do when multilingual analysis fails</div>
-                            </div>
-                        </div>
-                    </div>
-
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
                     <div class="form-group">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="persistLanguage" name="persist_language" checked>
-                            <label class="form-check-label" for="persistLanguage">
-                                <strong>Remember Language Preference</strong>
-                            </label>
-                            <div class="form-text">Store user's language choice in session/database</div>
+                        <label class="form-label" for="globalLanguageSelector">
+                            <i class="fas fa-flag"></i>
+                            <span data-translate="Active System Language">Active System Language</span>
+                        </label>
+                        <select class="form-select" id="globalLanguageSelector" onchange="activateGlobalLanguage(this.value)">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                        <div class="form-text" data-translate="This changes the language for all users system-wide">This changes the language for all users system-wide</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-center">
+                        <div class="status-indicator status-available" id="currentSystemLanguage">
+                            <i class="fas fa-flag"></i>
+                            <span id="currentLanguageDisplay">English</span>
+                        </div>
+                        <div class="mt-2">
+                            <strong data-translate="Current System Language">Current System Language</strong>
+                            <div class="small text-muted" data-translate="Applied to all interface elements">Applied to all interface elements</div>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
-            <div class="action-area">
-                <button type="button" class="btn btn-primary" onclick="saveGeneralSettings()">
-                    <i class="fas fa-save"></i>
-                    Save General Settings
+            
+            <!-- Language Activation Progress -->
+            <div id="languageActivationProgress" class="mt-4" style="display: none;">
+                <div class="progress-header">
+                    <h5>
+                        <i class="fas fa-sync fa-spin"></i>
+                        <span data-translate="Activating Language Translation">Activating Language Translation</span>
+                    </h5>
+                    <p class="text-muted" data-translate="Please wait while we translate the entire system interface">Please wait while we translate the entire system interface...</p>
+                </div>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         id="languageProgressBar" 
+                         role="progressbar" 
+                         style="width: 0%"
+                         aria-valuenow="0" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        <span id="progressText">0%</span>
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="progress-stat">
+                                <div class="progress-number" id="translatedCount">0</div>
+                                <div class="progress-label" data-translate="Translated">Translated</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="progress-stat">
+                                <div class="progress-number" id="totalStrings">80</div>
+                                <div class="progress-label" data-translate="Total Strings">Total Strings</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="progress-stat">
+                                <div class="progress-number" id="estimatedTime">~5s</div>
+                                <div class="progress-label" data-translate="Estimated Time">Estimated Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Provider Selection and Configuration -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-cogs"></i>
+                <span data-translate="AI Provider Configuration">AI Provider Configuration</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Provider Tabs -->
+            <div class="provider-tabs">
+                <button class="provider-tab active" data-provider="ollama" onclick="switchProvider('ollama')">
+                    <i class="fas fa-server"></i>
+                    <span data-translate="Ollama (Local)">Ollama (Local)</span>
+                </button>
+                <button class="provider-tab" data-provider="openai" onclick="switchProvider('openai')">
+                    <i class="fas fa-robot"></i>
+                    <span data-translate="OpenAI/GPT">OpenAI/GPT</span>
+                </button>
+                <button class="provider-tab" data-provider="gemini" onclick="switchProvider('gemini')">
+                    <i class="fas fa-brain"></i>
+                    <span data-translate="Google Gemini">Google Gemini</span>
                 </button>
             </div>
-        </div>
-    </div>
 
-        <!-- Babel LLM Tab -->
-        <div id="babel-tab" class="tab-content">
-            <div class="config-card">
-                <div class="config-section-title">
-                    <i class="fas fa-brain"></i>
-                    Babel LLM Configuration
-                </div>
-                <form id="babelSettingsForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="babelModel">Babel LLM Model</label>
-                                <select class="form-select" id="babelModel" name="babel_model">
-                                    <option value="babel-9b">babel-9b (Recommended - 9B parameters)</option>
-                                    <option value="babel-83b">babel-83b (Advanced - 83B parameters)</option>
-                                </select>
-                                <small class="text-muted">babel-9b is faster, babel-83b is more accurate</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="babelTimeout">Request Timeout (seconds)</label>
-                                <input type="number" class="form-control" id="babelTimeout" name="babel_timeout" value="60" min="10" max="300">
-                                <small class="text-muted">Maximum time to wait for Babel LLM response</small>
-                            </div>
-                        </div>
+            <!-- Tab Content -->
+            <div class="tab-content active" id="ollama-tab">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h4 class="config-card-title">
+                            <i class="fas fa-server"></i>
+                            <span data-translate="Ollama Local Configuration">Ollama Local Configuration</span>
+                        </h4>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="babelTemperature">Temperature</label>
-                                <input type="range" class="form-range" id="babelTemperature" name="babel_temperature" value="0.7" min="0.1" max="1.0" step="0.1">
-                                <div class="d-flex justify-content-between">
-                                    <small class="text-muted">Conservative (0.1)</small>
-                                    <small class="text-muted" id="temperatureValue">0.7</small>
-                                    <small class="text-muted">Creative (1.0)</small>
-                                </div>
-                            </div>
+                    <div class="config-card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span data-translate="Ollama runs AI models locally on your infrastructure. This provides privacy and control but requires sufficient computing resources.">
+                                Ollama runs AI models locally on your infrastructure. This provides privacy and control but requires sufficient computing resources.
+                            </span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label" for="babelMaxTokens">Max Tokens</label>
-                                <input type="number" class="form-control" id="babelMaxTokens" name="babel_max_tokens" value="1000" min="100" max="4000">
-                                <small class="text-muted">Maximum response length for security analysis</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="ollamaEndpoint">Ollama API Endpoint</label>
-                        <input type="url" class="form-control" id="ollamaEndpoint" name="ollama_endpoint" value="http://ollama:11434">
-                        <small class="text-muted">URL to your Ollama server (where Babel LLM runs)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="enableBabelLLM" name="enable_babel_llm" checked>
-                            <label class="form-check-label" for="enableBabelLLM">
-                                <strong>Enable Babel LLM</strong>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="ollamaHost">
+                                <i class="fas fa-server"></i>
+                                <span data-translate="Ollama Host URL">Ollama Host URL</span>
                             </label>
-                            <div class="text-muted">Use Babel LLM for multilingual AI analysis (requires model to be downloaded)</div>
+                            <input type="text" class="form-control" id="ollamaHost" 
+                                   placeholder="http://localhost:11434" 
+                                   value="http://ollama:11434">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="ollamaModel">
+                                <i class="fas fa-cube"></i>
+                                <span data-translate="Multilingual Model">Multilingual Model</span>
+                            </label>
+                            <select class="form-select" id="ollamaModel">
+                                <option value="qwen2:7b">Qwen2 7B (Recommended)</option>
+                                <option value="llama3:latest">Llama3 (Latest)</option>
+                                <option value="aya:latest">Aya (Multilingual)</option>
+                                <option value="gemma:latest">Gemma (Latest)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="Model Management">Model Management</span>
+                            </label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" onclick="downloadModel()">
+                                    <i class="fas fa-download"></i>
+                                    <span data-translate="Download Model">Download Model</span>
+                                </button>
+                                <button class="btn btn-outline" onclick="testOllamaConnection()">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span data-translate="Test Connection">Test Connection</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Save Babel Settings
-                    </button>
-                    <button type="button" class="btn btn-outline-primary ms-2" onclick="testBabelConnection()">
-                        <i class="fas fa-vial"></i>
-                        Test Connection
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Languages Tab -->
-        <div id="languages-tab" class="tab-content">
-            <div class="config-card">
-                <div class="config-section-title">
-                    <i class="fas fa-language"></i>
-                    Supported Languages
-                </div>
-                <p class="text-muted mb-4">
-                    Babel LLM supports 24 languages covering over 90% of global speakers. Select which languages to enable for your users.
-                </p>
-                
-                <div class="mb-3">
-                    <button type="button" class="btn btn-outline-primary" onclick="selectAllLanguages()">
-                        <i class="fas fa-check-double"></i>
-                        Select All
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary ms-2" onclick="selectNoneLanguages()">
-                        <i class="fas fa-times"></i>
-                        Select None
-                    </button>
-                    <button type="button" class="btn btn-outline-primary ms-2" onclick="selectTopLanguages()">
-                        <i class="fas fa-star"></i>
-                        Top 10 Languages
-                    </button>
-                </div>
-
-                <div class="language-grid" id="languageGrid">
-                    <!-- Populated by JavaScript -->
-                </div>
-
-                <div class="mt-4">
-                    <button type="button" class="btn btn-primary" onclick="saveLanguageSettings()">
-                        <i class="fas fa-save"></i>
-                        Save Language Settings
-                    </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Model Management Tab -->
-        <div id="models-tab" class="tab-content">
-            <div class="config-card">
-                <div class="config-section-title">
-                    <i class="fas fa-download"></i>
-                    Babel LLM Model Management
-                </div>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Model Information:</strong> Babel LLM models are downloaded and stored locally via Ollama. This ensures privacy and eliminates API costs.
-                </div>
-
-                <div class="model-info">
-                    <h5>Available Models</h5>
-                    <div class="row" id="modelsContainer">
-                        <!-- Populated by JavaScript -->
+            <div class="tab-content" id="openai-tab">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h4 class="config-card-title">
+                            <i class="fas fa-robot"></i>
+                            <span data-translate="OpenAI Configuration">OpenAI Configuration</span>
+                        </h4>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span data-translate="OpenAI provides powerful cloud-based AI models. Requires API access and credits.">
+                                OpenAI provides powerful cloud-based AI models. Requires API access and credits.
+                            </span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="openaiKey">
+                                <i class="fas fa-key"></i>
+                                <span data-translate="OpenAI API Key">OpenAI API Key</span>
+                            </label>
+                            <input type="password" class="form-control" id="openaiKey" 
+                                   placeholder="sk-...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="openaiModel">
+                                <i class="fas fa-brain"></i>
+                                <span data-translate="GPT Model">GPT Model</span>
+                            </label>
+                            <select class="form-select" id="openaiModel">
+                                <option value="gpt-4">GPT-4 (Recommended)</option>
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button class="btn btn-outline" onclick="testOpenAIConnection()">
+                                <i class="fas fa-check-circle"></i>
+                                <span data-translate="Test API Connection">Test API Connection</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="mt-4">
-                    <h5>Download Progress</h5>
-                    <div id="downloadProgress" style="display: none;">
-                        <div class="mb-2">
-                            <span id="downloadStatus">Downloading babel-9b...</span>
+            <div class="tab-content" id="gemini-tab">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h4 class="config-card-title">
+                            <i class="fas fa-brain"></i>
+                            <span data-translate="Google Gemini Configuration">Google Gemini Configuration</span>
+                        </h4>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span data-translate="Google Gemini provides advanced AI capabilities with strong multilingual support.">
+                                Google Gemini provides advanced AI capabilities with strong multilingual support.
+                            </span>
                         </div>
-                        <div class="progress">
-                            <div class="progress-bar" id="downloadProgressBar" style="width: 0%"></div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="geminiKey">
+                                <i class="fas fa-key"></i>
+                                <span data-translate="Gemini API Key">Gemini API Key</span>
+                            </label>
+                            <input type="password" class="form-control" id="geminiKey" 
+                                   placeholder="Enter your Gemini API key">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="geminiModel">
+                                <i class="fas fa-brain"></i>
+                                <span data-translate="Gemini Model">Gemini Model</span>
+                            </label>
+                            <select class="form-select" id="geminiModel">
+                                <option value="gemini-pro">Gemini Pro</option>
+                                <option value="gemini-ultra">Gemini Ultra</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button class="btn btn-outline" onclick="testGeminiConnection()">
+                                <i class="fas fa-check-circle"></i>
+                                <span data-translate="Test API Connection">Test API Connection</span>
+                            </button>
                         </div>
                     </div>
-                </div>
-
-                <div class="mt-4">
-                    <button type="button" class="btn btn-primary" onclick="downloadBabelModel('babel-9b')">
-                        <i class="fas fa-download"></i>
-                        Download babel-9b (Recommended)
-                    </button>
-                    <button type="button" class="btn btn-outline-primary ms-2" onclick="downloadBabelModel('babel-83b')">
-                        <i class="fas fa-download"></i>
-                        Download babel-83b (Advanced)
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary ms-2" onclick="checkModelStatus()">
-                        <i class="fas fa-sync"></i>
-                        Refresh Status
-                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- General Settings -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-cogs"></i>
+                <span data-translate="General Settings">General Settings</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="defaultLanguage">
+                            <i class="fas fa-language"></i>
+                            <span data-translate="Default Language">Default Language</span>
+                        </label>
+                        <select class="form-select" id="defaultLanguage">
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="pt">Português</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="fallbackBehavior">
+                            <i class="fas fa-undo"></i>
+                            <span data-translate="Fallback Behavior">Fallback Behavior</span>
+                        </label>
+                        <select class="form-select" id="fallbackBehavior">
+                            <option value="english">English</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoDetectLanguage" checked>
+                        <label class="form-check-label" for="autoDetectLanguage">
+                            <span data-translate="Auto-detect Language">Auto-detect Language</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="enableUITranslation" checked>
+                        <label class="form-check-label" for="enableUITranslation">
+                            <span data-translate="Enable UI Translation">Enable UI Translation</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="persistLanguage" checked>
+                        <label class="form-check-label" for="persistLanguage">
+                            <span data-translate="Persist Language">Persist Language</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Model Configuration -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-brain"></i>
+                <span data-translate="AI Model Configuration">AI Model Configuration</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="aiModel">
+                            <i class="fas fa-cube"></i>
+                            <span data-translate="AI Model">AI Model</span>
+                        </label>
+                        <select class="form-select" id="aiModel">
+                            <option value="qwen2:7b">Qwen2 7B (Recommended)</option>
+                            <option value="llama3:latest">Llama3 Latest</option>
+                            <option value="aya:latest">Aya Multilingual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" for="ollamaEndpoint">
+                            <i class="fas fa-server"></i>
+                            <span data-translate="Ollama Endpoint">Ollama Endpoint</span>
+                        </label>
+                        <input type="text" class="form-control" id="ollamaEndpoint" value="http://ollama:11434">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label" for="aiTimeout">
+                            <i class="fas fa-clock"></i>
+                            <span data-translate="Timeout (seconds)">Timeout (seconds)</span>
+                        </label>
+                        <input type="number" class="form-control" id="aiTimeout" value="60" min="10" max="300">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label" for="aiTemperature">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span data-translate="Temperature">Temperature</span>
+                        </label>
+                        <input type="number" class="form-control" id="aiTemperature" value="0.7" min="0.0" max="1.0" step="0.1">
+                        <div class="form-text">
+                            <span data-translate="Current value">Current value</span>: <span id="temperatureValue">0.7</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label" for="aiMaxTokens">
+                            <i class="fas fa-list"></i>
+                            <span data-translate="Max Tokens">Max Tokens</span>
+                        </label>
+                        <input type="number" class="form-control" id="aiMaxTokens" value="1000" min="100" max="4000">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="enableAI" checked>
+                        <label class="form-check-label" for="enableAI">
+                            <span data-translate="Enable AI">Enable AI</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-heartbeat"></i>
+                <span data-translate="System Status">System Status</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-cogs"></i>
+                            <span data-translate="Translation Service">Translation Service</span>
+                        </label>
+                        <div id="translationStatus" class="status-indicator status-unavailable">
+                            <i class="fas fa-spinner fa-spin"></i> Checking...
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-language"></i>
+                            <span data-translate="Current Language">Current Language</span>
+                        </label>
+                        <div id="currentLanguage" class="status-display">
+                            <i class="fas fa-flag"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-cube"></i>
+                            <span data-translate="Current Model">Current Model</span>
+                        </label>
+                        <div id="modelName" class="status-display">
+                            Model: Loading...
+                        </div>
+                        <div id="currentModelDisplay" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Management -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-download"></i>
+                <span data-translate="Model Management">Model Management</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <div id="modelsContainer">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span data-translate="Loading model information...">Loading model information...</span>
+                </div>
+            </div>
+            
+            <!-- Download Progress -->
+            <div id="downloadProgress" class="mt-4" style="display: none;">
+                <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong id="downloadStatus">Downloading model...</strong>
+                    </div>
+                    <div class="progress">
+                        <div id="downloadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Language Selection -->
+    <div class="falco-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-language"></i>
+                <span data-translate="Supported Languages">Supported Languages</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted" data-translate="Select the languages you want to support for alert analysis and interface translation">
+                Select the languages you want to support for alert analysis and interface translation
+            </p>
+            
+            <!-- Language Grid -->
+            <div id="languageGrid" class="language-grid">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span data-translate="Loading languages...">Loading languages...</span>
+                </div>
+            </div>
+            
+            <!-- Language Actions -->
+            <div class="mt-3">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllLanguages()">
+                    <i class="fas fa-check-double"></i>
+                    <span data-translate="Select All">Select All</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary mx-2" onclick="selectNoneLanguages()">
+                    <i class="fas fa-times"></i>
+                    <span data-translate="Select None">Select None</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="selectTopLanguages()">
+                    <i class="fas fa-star"></i>
+                    <span data-translate="Top 10 Languages">Top 10 Languages</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
@@ -565,23 +1016,25 @@
     // Global state
     let languages = {};
     let enabledLanguages = new Set();
-    let babelStatus = {};
+    let translationStatus = {};
     let currentConfig = {};
     let isMultilingualEnabled = true;
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
         loadConfiguration();
-        checkBabelStatus();
+        checkTranslationStatus();
         loadLanguages();
         setupEventListeners();
         
-        // Check URL for initial language
-        const urlParams = new URLSearchParams(window.location.search);
-        const langParam = urlParams.get('lang');
-        if (langParam) {
-            setLanguage(langParam);
+        // Restore last active tab
+        const lastTab = sessionStorage.getItem('currentMultilingualTab');
+        if (lastTab && lastTab !== 'general') {
+            switchTab(lastTab);
         }
+        
+        // Initialize translation system
+        initializeTranslationSystem();
     });
 
     // Master multilingual toggle
@@ -597,15 +1050,12 @@
             content.classList.add('disabled-section');
             showAlert('Multilingual features disabled - system will use English-only analysis', 'warning');
         }
-        
-        // Save state
-        updateMultilingualConfig('master_enabled', isMultilingualEnabled ? 'true' : 'false');
     }
 
     // Tab switching
     function switchTab(tabName) {
         // Hide all tabs
-        document.querySelectorAll('.provider-config').forEach(tab => {
+        document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
         document.querySelectorAll('.provider-tab').forEach(tab => {
@@ -614,7 +1064,17 @@
 
         // Show selected tab
         document.getElementById(tabName + '-tab').classList.add('active');
-        event.target.classList.add('active');
+        
+        // Find and activate the correct tab button
+        const tabButtons = document.querySelectorAll('.provider-tab');
+        tabButtons.forEach(button => {
+            if (button.getAttribute('onclick') === `switchTab('${tabName}')`) {
+                button.classList.add('active');
+            }
+        });
+        
+        // Store current tab in session storage
+        sessionStorage.setItem('currentMultilingualTab', tabName);
         
         // Load specific content for the tab
         if (tabName === 'models') {
@@ -622,342 +1082,210 @@
         }
     }
 
-    // Language switching with actual UI translation
-    async function setLanguage(langCode) {
-        if (!languages[langCode]) {
-            console.warn('Language not supported:', langCode);
-            return;
-        }
-
+    // Load configuration
+    async function loadConfiguration() {
         try {
-            // Set language in session
-            const response = await fetch(`/api/lang/${langCode}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
-            });
-
+            const response = await fetch('/api/multilingual/config');
             if (response.ok) {
-                const result = await response.json();
-                
-                // Update current language display
-                const currentLangEl = document.getElementById('currentLanguage');
-                const langInfo = languages[langCode];
-                if (currentLangEl && langInfo) {
-                    currentLangEl.innerHTML = `<i class="fas fa-flag"></i> ${langInfo.flag} ${langInfo.name}`;
-                    currentLangEl.className = 'status-indicator status-available';
-                }
-
-                // Translate UI elements if enabled
-                if (isMultilingualEnabled && currentConfig.general_enable_ui_translation === 'babel') {
-                    await translateUIElements(langCode);
-                }
-
-                showAlert(`Language changed to ${langInfo.name}`, 'success');
+                const config = await response.json();
+                populateConfigForm(config);
             }
         } catch (error) {
-            console.error('Language switch error:', error);
-            showAlert('Failed to change language', 'danger');
+            console.error('Error loading configuration:', error);
         }
     }
 
-    // Translate UI elements
-    async function translateUIElements(langCode) {
-        if (langCode === 'en') return; // No translation needed for English
-
-        const elementsToTranslate = [
-            { selector: '[data-translate]', attribute: 'textContent' },
-            { selector: '[data-translate-placeholder]', attribute: 'placeholder' },
-            { selector: '[data-translate-title]', attribute: 'title' }
-        ];
-
-        for (const elementType of elementsToTranslate) {
-            const elements = document.querySelectorAll(elementType.selector);
-            
-            for (const element of elements) {
-                const originalText = element.getAttribute('data-original') || element[elementType.attribute];
-                if (!element.getAttribute('data-original')) {
-                    element.setAttribute('data-original', originalText);
-                }
-
-                try {
-                    const response = await fetch('/api/translate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            text: originalText,
-                            language: langCode
-                        })
-                    });
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.success && result.translated !== originalText) {
-                            element[elementType.attribute] = result.translated;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Translation error for element:', error);
-                }
+    // Check AI Translation Service status
+    async function checkTranslationStatus() {
+        try {
+            const response = await fetch('/api/translation/status');
+            if (response.ok) {
+                translationStatus = await response.json();
+                updateStatusIndicators();
+                updateModelDisplay(); // Add this to load model information
             }
+        } catch (error) {
+            console.error('Error checking translation status:', error);
+            updateStatusIndicators(false);
+            updateModelDisplay(); // Also call when there's an error to show proper state
         }
     }
 
-        // Load configuration
-        async function loadConfiguration() {
-            try {
-                const response = await fetch('/api/multilingual/config');
-                if (response.ok) {
-                    const config = await response.json();
-                    populateConfigForm(config);
-                }
-            } catch (error) {
-                console.error('Error loading configuration:', error);
+    // Load languages
+    async function loadLanguages() {
+        try {
+            const response = await fetch('/api/lang');
+            if (response.ok) {
+                const data = await response.json();
+                languages = data.languages;
+                populateLanguageGrid();
+                populateLanguageSelects();
             }
+        } catch (error) {
+            console.error('Error loading languages:', error);
+        }
+    }
+
+    // Update status indicators
+    function updateStatusIndicators(available = null) {
+        const translationStatusEl = document.getElementById('translationStatus');
+        const currentLanguageEl = document.getElementById('currentLanguage');
+        const modelNameEl = document.getElementById('modelName');
+        const currentModelDisplay = document.getElementById('currentModelDisplay');
+
+        if (available === null) {
+            available = translationStatus.available;
         }
 
-        // Check Babel LLM status
-        async function checkBabelStatus() {
-            try {
-                const response = await fetch('/api/babel/status');
-                if (response.ok) {
-                    babelStatus = await response.json();
-                    updateStatusIndicators();
-                }
-            } catch (error) {
-                console.error('Error checking Babel status:', error);
-                updateStatusIndicators(false);
-            }
+        if (available) {
+            translationStatusEl.innerHTML = '<i class="fas fa-check-circle"></i> Available';
+            translationStatusEl.className = 'status-indicator status-available';
+        } else {
+            translationStatusEl.innerHTML = '<i class="fas fa-times-circle"></i> Unavailable';
+            translationStatusEl.className = 'status-indicator status-unavailable';
         }
 
-        // Load languages
-        async function loadLanguages() {
-            try {
-                const response = await fetch('/api/lang');
-                if (response.ok) {
-                    const data = await response.json();
-                    languages = data.languages;
-                    populateLanguageGrid();
-                    populateLanguageSelects();
-                }
-            } catch (error) {
-                console.error('Error loading languages:', error);
-            }
+        // Update model name display
+        if (modelNameEl) {
+            const currentModel = translationStatus.current_model || 'None';
+            modelNameEl.textContent = `Model: ${currentModel}`;
         }
 
-        // Update status indicators
-        function updateStatusIndicators(available = null) {
-            const babelStatusEl = document.getElementById('babelStatus');
-            const currentLanguageEl = document.getElementById('currentLanguage');
-
-            if (available === null) {
-                available = babelStatus.available;
-            }
-
-            if (available) {
-                babelStatusEl.innerHTML = '<i class="fas fa-check-circle"></i> Available';
-                babelStatusEl.className = 'status-indicator status-available';
-            } else {
-                babelStatusEl.innerHTML = '<i class="fas fa-times-circle"></i> Unavailable';
-                babelStatusEl.className = 'status-indicator status-unavailable';
-            }
-
-            // Update current language
-            const currentLang = sessionStorage.getItem('currentLanguage') || 'en';
-            const langInfo = languages[currentLang];
-            if (langInfo) {
-                currentLanguageEl.innerHTML = `<i class="fas fa-flag"></i> ${langInfo.flag} ${langInfo.name}`;
-            }
+        if (currentModelDisplay) {
+            const currentModel = translationStatus.current_model || 'None';
+            currentModelDisplay.textContent = currentModel;
         }
 
-        // Populate language grid
-        function populateLanguageGrid() {
-            const grid = document.getElementById('languageGrid');
-            grid.innerHTML = '';
-
-            const languageData = {
-                'en': { speakers: '1.5B', priority: 1 },
-                'zh': { speakers: '1.4B', priority: 2 },
-                'hi': { speakers: '700M', priority: 3 },
-                'es': { speakers: '595M', priority: 4 },
-                'ar': { speakers: '400M', priority: 5 },
-                'fr': { speakers: '300M', priority: 6 },
-                'bn': { speakers: '300M', priority: 7 },
-                'pt': { speakers: '270M', priority: 8 },
-                'ru': { speakers: '260M', priority: 9 },
-                'ur': { speakers: '230M', priority: 10 },
-                'id': { speakers: '200M', priority: 11 },
-                'de': { speakers: '135M', priority: 12 },
-                'ja': { speakers: '130M', priority: 13 },
-                'sw': { speakers: '100M', priority: 14 },
-                'tl': { speakers: '100M', priority: 15 },
-                'ta': { speakers: '90M', priority: 16 },
-                'vi': { speakers: '86M', priority: 17 },
-                'tr': { speakers: '85M', priority: 18 },
-                'it': { speakers: '85M', priority: 19 },
-                'ko': { speakers: '80M', priority: 20 },
-                'ha': { speakers: '80M', priority: 21 },
-                'fa': { speakers: '80M', priority: 22 },
-                'th': { speakers: '80M', priority: 23 },
-                'my': { speakers: '50M', priority: 24 }
-            };
-
-            Object.entries(languages).forEach(([code, lang]) => {
-                const data = languageData[code] || { speakers: 'N/A', priority: 99 };
-                const card = document.createElement('div');
-                card.className = 'language-card';
-                card.dataset.lang = code;
-                card.onclick = () => toggleLanguage(code);
-
-                card.innerHTML = `
-                    <div class="language-flag">${lang.flag}</div>
-                    <div class="language-name">${lang.name}</div>
-                    <div class="language-speakers">${data.speakers} speakers</div>
-                `;
-
-                grid.appendChild(card);
-
-                // Enable by default for top 10 languages
-                if (data.priority <= 10) {
-                    enabledLanguages.add(code);
-                    card.classList.add('active');
-                }
-            });
+        // Update current language
+        const currentLang = sessionStorage.getItem('currentLanguage') || 'en';
+        const langInfo = languages[currentLang];
+        if (langInfo) {
+            currentLanguageEl.innerHTML = `<i class="fas fa-flag"></i> ${langInfo.flag} ${langInfo.name}`;
         }
+    }
 
-        // Populate language selects
-        function populateLanguageSelects() {
-            const defaultLanguageSelect = document.getElementById('defaultLanguage');
-            defaultLanguageSelect.innerHTML = '';
+    // Populate language grid
+    function populateLanguageGrid() {
+        const grid = document.getElementById('languageGrid');
+        grid.innerHTML = '';
 
-            Object.entries(languages).forEach(([code, lang]) => {
-                const option = document.createElement('option');
-                option.value = code;
-                option.textContent = `${lang.flag} ${lang.name}`;
-                defaultLanguageSelect.appendChild(option);
-            });
-        }
+        const languageData = {
+            'en': { speakers: '1.5B', priority: 1 },
+            'zh': { speakers: '1.4B', priority: 2 },
+            'hi': { speakers: '700M', priority: 3 },
+            'es': { speakers: '595M', priority: 4 },
+            'ar': { speakers: '400M', priority: 5 },
+            'fr': { speakers: '300M', priority: 6 },
+            'bn': { speakers: '300M', priority: 7 },
+            'pt': { speakers: '270M', priority: 8 },
+            'ru': { speakers: '260M', priority: 9 },
+            'ur': { speakers: '230M', priority: 10 },
+            'id': { speakers: '200M', priority: 11 },
+            'de': { speakers: '135M', priority: 12 },
+            'ja': { speakers: '130M', priority: 13 },
+            'sw': { speakers: '100M', priority: 14 },
+            'tl': { speakers: '100M', priority: 15 },
+            'ta': { speakers: '90M', priority: 16 },
+            'vi': { speakers: '86M', priority: 17 },
+            'tr': { speakers: '85M', priority: 18 },
+            'it': { speakers: '85M', priority: 19 },
+            'ko': { speakers: '80M', priority: 20 },
+            'ha': { speakers: '80M', priority: 21 },
+            'fa': { speakers: '80M', priority: 22 },
+            'th': { speakers: '80M', priority: 23 },
+            'my': { speakers: '50M', priority: 24 }
+        };
 
-        // Toggle language selection
-        function toggleLanguage(code) {
-            const card = document.querySelector(`[data-lang="${code}"]`);
-            if (enabledLanguages.has(code)) {
-                enabledLanguages.delete(code);
-                card.classList.remove('active');
-            } else {
+        Object.entries(languages).forEach(([code, lang]) => {
+            const data = languageData[code] || { speakers: 'N/A', priority: 99 };
+            const card = document.createElement('div');
+            card.className = 'language-card';
+            card.dataset.lang = code;
+            card.onclick = () => toggleLanguage(code);
+
+            card.innerHTML = `
+                <div class="language-flag">${lang.flag}</div>
+                <div class="language-name">${lang.name}</div>
+                <div class="language-speakers">${data.speakers} speakers</div>
+            `;
+
+            grid.appendChild(card);
+
+            // Enable by default for top 10 languages
+            if (data.priority <= 10) {
                 enabledLanguages.add(code);
                 card.classList.add('active');
             }
-        }
+        });
+    }
 
-        // Language selection helpers
-        function selectAllLanguages() {
-            enabledLanguages.clear();
-            Object.keys(languages).forEach(code => {
+    // Populate language selects
+    function populateLanguageSelects() {
+        const defaultLanguageSelect = document.getElementById('defaultLanguage');
+        defaultLanguageSelect.innerHTML = '';
+
+        Object.entries(languages).forEach(([code, lang]) => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `${lang.flag} ${lang.name}`;
+            if (code === 'en') option.selected = true;
+            defaultLanguageSelect.appendChild(option);
+        });
+    }
+
+    // Toggle language selection
+    function toggleLanguage(code) {
+        const card = document.querySelector(`[data-lang="${code}"]`);
+        if (enabledLanguages.has(code)) {
+            enabledLanguages.delete(code);
+            card.classList.remove('active');
+        } else {
+            enabledLanguages.add(code);
+            card.classList.add('active');
+        }
+    }
+
+    // Language selection helpers
+    function selectAllLanguages() {
+        enabledLanguages.clear();
+        Object.keys(languages).forEach(code => {
+            enabledLanguages.add(code);
+            document.querySelector(`[data-lang="${code}"]`).classList.add('active');
+        });
+    }
+
+    function selectNoneLanguages() {
+        enabledLanguages.clear();
+        document.querySelectorAll('.language-card').forEach(card => {
+            card.classList.remove('active');
+        });
+    }
+
+    function selectTopLanguages() {
+        selectNoneLanguages();
+        const topLanguages = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'bn', 'pt', 'ru', 'ur'];
+        topLanguages.forEach(code => {
+            if (languages[code]) {
                 enabledLanguages.add(code);
                 document.querySelector(`[data-lang="${code}"]`).classList.add('active');
-            });
-        }
+            }
+        });
+    }
 
-        function selectNoneLanguages() {
-            enabledLanguages.clear();
-            document.querySelectorAll('.language-card').forEach(card => {
-                card.classList.remove('active');
-            });
-        }
-
-        function selectTopLanguages() {
-            selectNoneLanguages();
-            const topLanguages = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'bn', 'pt', 'ru', 'ur'];
-            topLanguages.forEach(code => {
-                if (languages[code]) {
-                    enabledLanguages.add(code);
-                    document.querySelector(`[data-lang="${code}"]`).classList.add('active');
-                }
-            });
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Temperature slider
-            const tempSlider = document.getElementById('babelTemperature');
-            const tempValue = document.getElementById('temperatureValue');
+    // Setup event listeners
+    function setupEventListeners() {
+        // Temperature slider
+        const tempSlider = document.getElementById('aiTemperature');
+        const tempValue = document.getElementById('temperatureValue');
+        if (tempSlider && tempValue) {
             tempSlider.addEventListener('input', function() {
                 tempValue.textContent = this.value;
             });
-
-            // Form submissions
-            document.getElementById('generalSettingsForm').addEventListener('submit', saveGeneralSettings);
-            document.getElementById('babelSettingsForm').addEventListener('submit', saveBabelSettings);
         }
+    }
 
-        // Save settings functions
-        async function saveGeneralSettings(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const settings = Object.fromEntries(formData);
-
-            try {
-                const response = await fetch('/api/multilingual/config/general', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(settings)
-                });
-
-                if (response.ok) {
-                    showAlert('General settings saved successfully!', 'success');
-                } else {
-                    throw new Error('Failed to save settings');
-                }
-            } catch (error) {
-                showAlert('Error saving general settings: ' + error.message, 'danger');
-            }
-        }
-
-        async function saveBabelSettings(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const settings = Object.fromEntries(formData);
-
-            try {
-                const response = await fetch('/api/multilingual/config/babel', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(settings)
-                });
-
-                if (response.ok) {
-                    showAlert('Babel LLM settings saved successfully!', 'success');
-                } else {
-                    throw new Error('Failed to save settings');
-                }
-            } catch (error) {
-                showAlert('Error saving Babel settings: ' + error.message, 'danger');
-            }
-        }
-
-        async function saveLanguageSettings() {
-            try {
-                const response = await fetch('/api/multilingual/config/languages', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        enabled_languages: Array.from(enabledLanguages)
-                    })
-                });
-
-                if (response.ok) {
-                    showAlert('Language settings saved successfully!', 'success');
-                } else {
-                    throw new Error('Failed to save language settings');
-                }
-            } catch (error) {
-                showAlert('Error saving language settings: ' + error.message, 'danger');
-            }
-        }
-
-    // Enhanced model management functions
-    async function downloadBabelModel(modelName) {
+    // Enhanced model management functions  
+    async function downloadModel(modelName) {
         const progressEl = document.getElementById('downloadProgress');
         const statusEl = document.getElementById('downloadStatus');
         const progressBar = document.getElementById('downloadProgressBar');
@@ -967,19 +1295,14 @@
         progressBar.style.width = '0%';
 
         try {
-            const response = await fetch('/api/babel/pull-model', {
+            const response = await fetch('/api/translation/pull-model', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({model_name: modelName})
             });
 
             if (response.ok) {
-                const result = await response.json();
-                
-                // Show download initiated
                 showAlert(`Download initiated for ${modelName}`, 'info');
-                
-                // Poll for progress
                 pollDownloadProgress(modelName);
             } else {
                 throw new Error('Failed to initiate model download');
@@ -1005,7 +1328,7 @@
                 await refreshModelStatus();
                 
                 // Check if model is now available
-                if (babelStatus.models && babelStatus.models.some(m => m.includes(modelName))) {
+                if (translationStatus.models && translationStatus.models.some(m => m.toLowerCase().includes(modelName.toLowerCase()))) {
                     statusEl.textContent = `${modelName} downloaded successfully!`;
                     progressBar.style.width = '100%';
                     setTimeout(() => {
@@ -1017,7 +1340,6 @@
                 
                 attempts++;
                 if (attempts < maxAttempts) {
-                    // Update progress bar
                     const progress = Math.min((attempts / maxAttempts) * 100, 95);
                     progressBar.style.width = progress + '%';
                     statusEl.textContent = `Downloading ${modelName}... (${Math.round(progress)}%)`;
@@ -1039,12 +1361,12 @@
 
     async function refreshModelStatus() {
         try {
-            const response = await fetch('/api/babel/status');
+            const response = await fetch('/api/translation/status');
             if (response.ok) {
-                babelStatus = await response.json();
+                translationStatus = await response.json();
                 updateModelDisplay();
                 updateStatusIndicators();
-                return babelStatus;
+                return translationStatus;
             }
         } catch (error) {
             console.error('Error refreshing model status:', error);
@@ -1056,60 +1378,88 @@
         const modelsContainer = document.getElementById('modelsContainer');
         if (!modelsContainer) return;
 
-        const availableModels = babelStatus.models || [];
+        // Check if translation status is available
+        if (!translationStatus || !translationStatus.available) {
+            modelsContainer.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>AI Translation Service Unavailable</strong><br>
+                    The multilingual AI service is not currently available. This may be because:
+                    <ul class="mt-2 mb-0">
+                        <li>Ollama service is not running</li>
+                        <li>No AI models are downloaded</li>
+                        <li>Multilingual features are disabled</li>
+                    </ul>
+                </div>
+            `;
+            return;
+        }
+
+        const availableModels = translationStatus.models || [];
         const modelData = [
             {
-                name: 'babel-9b',
-                title: 'Babel 9B (Recommended)',
-                description: 'Fast and efficient - ideal for most use cases',
-                size: '~5GB',
+                name: 'llama3:latest',
+                title: 'Llama3 (Recommended)',
+                description: 'Excellent general-purpose model with strong multilingual capabilities',
+                size: '~4.7GB',
                 performance: 'Fast',
-                accuracy: 'Good'
+                accuracy: 'Excellent',
+                provider: 'Meta'
             },
             {
-                name: 'babel-83b',
-                title: 'Babel 83B (Advanced)',
-                description: 'Maximum accuracy - for demanding scenarios',
-                size: '~50GB',
-                performance: 'Slow',
-                accuracy: 'Excellent'
+                name: 'qwen2:7b',
+                title: 'Qwen2:7B (Alternative)',
+                description: 'Specialized multilingual model optimized for translation tasks',
+                size: '~4.4GB',
+                performance: 'Fast',
+                accuracy: 'Excellent',
+                provider: 'Alibaba Cloud'
             }
         ];
 
         modelsContainer.innerHTML = modelData.map(model => {
-            const isDownloaded = availableModels.some(m => m.includes(model.name));
+            const isDownloaded = availableModels.some(m => m.toLowerCase().includes(model.name.toLowerCase()));
             const statusClass = isDownloaded ? 'status-available' : 'status-unavailable';
             const statusText = isDownloaded ? 'Downloaded' : 'Not Downloaded';
             const statusIcon = isDownloaded ? 'fas fa-check-circle' : 'fas fa-download';
 
             return `
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">${model.title}</h5>
-                            <p class="card-text">${model.description}</p>
-                            <ul class="list-unstyled">
-                                <li><strong>Size:</strong> ${model.size}</li>
-                                <li><strong>Performance:</strong> ${model.performance}</li>
-                                <li><strong>Accuracy:</strong> ${model.accuracy}</li>
-                            </ul>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="status-indicator ${statusClass}">
-                                    <i class="${statusIcon}"></i>
-                                    ${statusText}
-                                </span>
-                                ${!isDownloaded ? `
-                                    <button class="btn btn-primary btn-sm" onclick="downloadBabelModel('${model.name}')">
-                                        <i class="fas fa-download"></i>
-                                        Download
-                                    </button>
-                                ` : `
-                                    <button class="btn btn-outline-secondary btn-sm" disabled>
-                                        <i class="fas fa-check"></i>
-                                        Ready
-                                    </button>
-                                `}
+                <div class="model-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">${model.title}</h5>
+                            <p class="text-muted mb-2">${model.description}</p>
+                            <div class="row">
+                                <div class="col-3">
+                                    <small class="text-muted">Size: <strong>${model.size}</strong></small>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted">Performance: <strong>${model.performance}</strong></small>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted">Accuracy: <strong>${model.accuracy}</strong></small>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted">Provider: <strong>${model.provider}</strong></small>
+                                </div>
                             </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="status-indicator ${statusClass} mb-2">
+                                <i class="${statusIcon}"></i>
+                                ${statusText}
+                            </div>
+                            ${!isDownloaded ? `
+                                <button class="btn btn-primary btn-sm" onclick="downloadModel('${model.name}')">
+                                    <i class="fas fa-download"></i>
+                                    Download
+                                </button>
+                            ` : `
+                                <button class="btn btn-outline-success btn-sm" disabled>
+                                    <i class="fas fa-check"></i>
+                                    Ready
+                                </button>
+                            `}
                         </div>
                     </div>
                 </div>
@@ -1117,112 +1467,135 @@
         }).join('');
     }
 
-        // Test Babel connection
-        async function testBabelConnection() {
-            try {
-                const response = await fetch('/api/translate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        text: 'Hello, this is a test.',
-                        language: 'es'
-                    })
-                });
+    // Test Translation Service
+    async function testTranslationService() {
+        try {
+            const response = await fetch('/api/translate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    text: 'Hello, this is a test.',
+                    language: 'es'
+                })
+            });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    showAlert('Babel LLM connection test successful!', 'success');
-                } else {
-                    throw new Error('Connection test failed');
-                }
-            } catch (error) {
-                showAlert('Babel LLM connection test failed: ' + error.message, 'danger');
+            if (response.ok) {
+                const result = await response.json();
+                showAlert('Translation service test successful!', 'success');
+            } else {
+                throw new Error('Connection test failed');
             }
+        } catch (error) {
+            showAlert('Translation service test failed: ' + error.message, 'danger');
         }
+    }
 
-    // Save functions
+    // Unified save function
     async function saveAllConfig() {
-        const saveBtn = document.querySelector('button[onclick="saveAllConfig()"]');
+        const saveBtn = document.getElementById('saveAllBtn');
+        const saveStatus = document.getElementById('saveStatus');
         const originalText = saveBtn.innerHTML;
         
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         saveBtn.disabled = true;
+        
+        saveStatus.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin"></i> Saving all settings...</small>';
 
         try {
-            await Promise.all([
-                saveGeneralSettings(),
-                saveBabelSettings(),
-                saveLanguageSettings()
-            ]);
+            const allSettings = {
+                general: {},
+                translation: {},
+                languages: Array.from(enabledLanguages),
+                master_enabled: isMultilingualEnabled ? 'true' : 'false'
+            };
+
+            // Collect general settings
+            const generalFields = ['defaultLanguage', 'autoDetectLanguage', 'enableUITranslation', 'fallbackBehavior', 'persistLanguage'];
+            generalFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    const key = field.replace(/([A-Z])/g, '_$1').toLowerCase();
+                    if (element.type === 'checkbox') {
+                        allSettings.general[key] = element.checked ? 'true' : 'false';
+                    } else {
+                        allSettings.general[key] = element.value;
+                    }
+                }
+            });
+
+            // Collect AI settings
+            const aiFields = ['aiModel', 'aiTimeout', 'aiTemperature', 'aiMaxTokens', 'ollamaEndpoint', 'enableAI'];
+            aiFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    let key = field.replace(/([A-Z])/g, '_$1').toLowerCase();
+                    // Fix field name mapping
+                    if (key === 'ai_model') key = 'default_model';
+                    if (key === 'ai_timeout') key = 'timeout';
+                    if (key === 'ai_temperature') key = 'temperature';
+                    if (key === 'ai_max_tokens') key = 'max_tokens';
+                    if (key === 'ollama_endpoint') key = 'ollama_endpoint';
+                    if (key === 'enable_ai') key = 'enabled';
+                    
+                    if (element.type === 'checkbox') {
+                        allSettings.translation[key] = element.checked ? 'true' : 'false';
+                    } else {
+                        allSettings.translation[key] = element.value;
+                    }
+                }
+            });
+
+            // Save all settings
+            const promises = [
+                fetch('/api/multilingual/config/general', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(allSettings.general)
+                }),
+                fetch('/api/multilingual/config/ai', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(allSettings.translation)
+                }),
+                fetch('/api/multilingual/config/languages', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({enabled_languages: allSettings.languages})
+                }),
+                // Save master_enabled directly to the correct field
+                fetch('/api/multilingual/config/master', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({master_enabled: allSettings.master_enabled})
+                })
+            ];
+
+            const responses = await Promise.all(promises);
             
-            showAlert('All settings saved successfully!', 'success');
-            document.getElementById('saveStatus').innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> All changes saved</small>';
+            // Check all responses
+            const allSuccessful = responses.every(response => response.ok);
+            
+            if (allSuccessful) {
+                showAlert('All configuration saved successfully!', 'success');
+                saveStatus.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> All settings saved successfully</small>';
+                
+                // Reload configuration to reflect changes
+                await loadConfiguration();
+                await checkTranslationStatus();
+            } else {
+                throw new Error('Some settings failed to save');
+            }
         } catch (error) {
-            showAlert('Error saving some settings: ' + error.message, 'danger');
+            showAlert('Error saving configuration: ' + error.message, 'danger');
+            saveStatus.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-circle"></i> Error saving settings</small>';
         } finally {
             saveBtn.innerHTML = originalText;
             saveBtn.disabled = false;
-        }
-    }
-
-    async function saveGeneralSettings() {
-        const form = document.getElementById('generalSettingsForm');
-        const formData = new FormData(form);
-        const settings = Object.fromEntries(formData);
-
-        const response = await fetch('/api/multilingual/config/general', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(settings)
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to save general settings');
-        }
-    }
-
-    async function saveBabelSettings() {
-        const form = document.getElementById('babelSettingsForm');
-        if (!form) return; // Form might not be loaded yet
-        
-        const formData = new FormData(form);
-        const settings = Object.fromEntries(formData);
-
-        const response = await fetch('/api/multilingual/config/babel', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(settings)
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to save Babel settings');
-        }
-    }
-
-    async function saveLanguageSettings() {
-        const response = await fetch('/api/multilingual/config/languages', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                enabled_languages: Array.from(enabledLanguages)
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to save language settings');
-        }
-    }
-
-    // Helper function to update individual config
-    async function updateMultilingualConfig(key, value) {
-        try {
-            await fetch('/api/multilingual/config/general', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({[key]: value})
-            });
-        } catch (error) {
-            console.error('Config update error:', error);
+            
+            // Reset status message after 5 seconds
+            setTimeout(() => {
+                saveStatus.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle"></i> Make changes and click Save All Configuration</small>';
+            }, 5000);
         }
     }
 
@@ -1255,25 +1628,486 @@
     function populateConfigForm(config) {
         currentConfig = config;
         
+        // Map database settings to form fields
+        const fieldMapping = {
+            'general_default_language': 'defaultLanguage',
+            'general_auto_detect_language': 'autoDetectLanguage',
+            'general_enable_ui_translation': 'enableUITranslation',
+            'general_fallback_behavior': 'fallbackBehavior',
+            'general_persist_language': 'persistLanguage',
+            'ai_default_model': 'aiModel',
+            'ai_timeout': 'aiTimeout',
+            'ai_temperature': 'aiTemperature',
+            'ai_max_tokens': 'aiMaxTokens',
+            'ai_ollama_endpoint': 'ollamaEndpoint',
+            'ai_enabled': 'enableAI'
+        };
+
         // Populate form fields
-        Object.entries(config).forEach(([key, value]) => {
-            const element = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
-            if (element) {
+        Object.entries(fieldMapping).forEach(([dbKey, fieldId]) => {
+            const element = document.getElementById(fieldId);
+            const value = config[dbKey];
+            
+            if (element && value !== undefined) {
                 if (element.type === 'checkbox') {
-                    element.checked = value === true || value === 'true';
+                    element.checked = value === 'true' || value === true;
                 } else {
                     element.value = value;
                 }
             }
         });
 
-        // Set master toggle
-        const masterEnabled = config.master_enabled !== 'false';
+        // Update temperature display
+        const tempSlider = document.getElementById('aiTemperature');
+        const tempValue = document.getElementById('temperatureValue');
+        if (tempSlider && tempValue) {
+            tempValue.textContent = tempSlider.value;
+        }
+
+        // Set master toggle - check both old and new field names (prioritize the main one)
+        const masterEnabled = config.master_enabled !== 'false' && config.master_enabled !== false;
         document.getElementById('enableMultilingual').checked = masterEnabled;
         isMultilingualEnabled = masterEnabled;
         
         if (!masterEnabled) {
             document.getElementById('multilingualContent').classList.add('disabled-section');
+        }
+
+        // Load enabled languages
+        try {
+            const enabledLangs = JSON.parse(config.enabled_languages || '[]');
+            enabledLanguages = new Set(enabledLangs);
+            
+            // Update language grid
+            setTimeout(() => {
+                document.querySelectorAll('.language-card').forEach(card => {
+                    const lang = card.dataset.lang;
+                    if (enabledLanguages.has(lang)) {
+                        card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
+                    }
+                });
+            }, 100);
+        } catch (e) {
+            console.error('Error parsing enabled languages:', e);
+        }
+    }
+
+    // Translation System for this page
+    let currentTranslations = {};
+    let currentLanguage = 'en';
+
+    // Initialize translation system
+    async function initializeTranslationSystem() {
+        try {
+            // Load current language
+            const langResponse = await fetch('/api/lang');
+            if (langResponse.ok) {
+                const langData = await langResponse.json();
+                currentLanguage = langData.current;
+                
+                // Populate global language selector
+                populateGlobalLanguageSelector();
+            }
+            
+            // Load translations for current language
+            await loadTranslations(currentLanguage);
+            
+            // Apply translations to existing elements
+            applyTranslations();
+            
+        } catch (error) {
+            console.error('Error initializing translation system:', error);
+        }
+    }
+
+    // Populate global language selector
+    function populateGlobalLanguageSelector() {
+        const selector = document.getElementById('globalLanguageSelector');
+        const currentDisplay = document.getElementById('currentLanguageDisplay');
+        
+        if (selector && languages) {
+            selector.innerHTML = '';
+            
+            Object.entries(languages).forEach(([code, lang]) => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = `${lang.flag} ${lang.name}`;
+                if (code === currentLanguage) {
+                    option.selected = true;
+                    if (currentDisplay) {
+                        currentDisplay.textContent = `${lang.flag} ${lang.name}`;
+                    }
+                }
+                selector.appendChild(option);
+            });
+        }
+    }
+
+    // Global language activation with progress
+    async function activateGlobalLanguage(languageCode) {
+        try {
+            const selector = document.getElementById('globalLanguageSelector');
+            const progressDiv = document.getElementById('languageActivationProgress');
+            const progressBar = document.getElementById('languageProgressBar');
+            const progressText = document.getElementById('progressText');
+            const translatedCount = document.getElementById('translatedCount');
+            const currentDisplay = document.getElementById('currentLanguageDisplay');
+            
+            // Disable selector during activation
+            if (selector) selector.disabled = true;
+            
+            // Show progress
+            if (progressDiv) progressDiv.style.display = 'block';
+            
+            // Reset progress
+            updateProgress(0, 0, 80);
+            
+            // Step 1: Set system language (10% progress)
+            updateProgress(10, 8, 80);
+            const langResponse = await fetch(`/api/lang/${languageCode}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            
+            if (!langResponse.ok) {
+                throw new Error('Failed to set system language');
+            }
+            
+            const langResult = await langResponse.json();
+            console.log('System language set:', langResult);
+            
+            // Step 2: Pre-load translations (30% progress)
+            updateProgress(30, 24, 80);
+            const translationResponse = await fetch(`/api/translate/ui?lang=${languageCode}`);
+            
+            if (!translationResponse.ok) {
+                throw new Error('Failed to load translations');
+            }
+            
+            const translationData = await translationResponse.json();
+            console.log('Translations loaded:', translationData);
+            
+            // Step 3: Simulate translation processing (60% progress)
+            updateProgress(60, 48, 80);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Step 4: Apply translations (80% progress)
+            updateProgress(80, 64, 80);
+            currentTranslations = translationData.translations || {};
+            currentLanguage = languageCode;
+            applyTranslations();
+            
+            // Step 5: Update UI elements (90% progress)
+            updateProgress(90, 72, 80);
+            
+            // Update current language display
+            if (languages[languageCode] && currentDisplay) {
+                const lang = languages[languageCode];
+                currentDisplay.textContent = `${lang.flag} ${lang.name}`;
+            }
+            
+            // Update all selectors
+            populateGlobalLanguageSelector();
+            
+            // Step 6: Complete (100% progress)
+            updateProgress(100, 80, 80);
+            
+            // Show success message
+            showAlert(`🌍 System language changed to ${langResult.language_name}`, 'success');
+            
+            // Step 7: Refresh all open pages/tabs to apply new language
+            updateProgress(100, 80, 80);
+            
+            // Hide progress after a delay and refresh page
+            setTimeout(() => {
+                if (progressDiv) progressDiv.style.display = 'none';
+                if (selector) selector.disabled = false;
+                
+                // Refresh the current page to apply new language
+                showAlert('🔄 Refreshing page to apply new language...', 'info');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Error activating global language:', error);
+            showAlert(`❌ Failed to activate language: ${error.message}`, 'error');
+            
+            // Reset selector and hide progress
+            const selector = document.getElementById('globalLanguageSelector');
+            const progressDiv = document.getElementById('languageActivationProgress');
+            
+            if (selector) {
+                selector.disabled = false;
+                selector.value = currentLanguage; // Reset to current language
+            }
+            
+            if (progressDiv) progressDiv.style.display = 'none';
+        }
+    }
+
+    // Update progress bar
+    function updateProgress(percent, translated, total) {
+        const progressBar = document.getElementById('languageProgressBar');
+        const progressText = document.getElementById('progressText');
+        const translatedCount = document.getElementById('translatedCount');
+        
+        if (progressBar) {
+            progressBar.style.width = `${percent}%`;
+            progressBar.setAttribute('aria-valuenow', percent);
+        }
+        
+        if (progressText) {
+            progressText.textContent = `${percent}%`;
+        }
+        
+        if (translatedCount) {
+            translatedCount.textContent = translated;
+        }
+    }
+
+    // Load translations for a specific language
+    async function loadTranslations(languageCode) {
+        try {
+            const response = await fetch(`/api/translate/ui?lang=${languageCode}`);
+            if (response.ok) {
+                const data = await response.json();
+                currentTranslations = data.translations || {};
+                currentLanguage = languageCode;
+                console.log(`✅ Loaded ${Object.keys(currentTranslations).length} translations for ${languageCode}`);
+                return true;
+            } else {
+                console.error('Failed to load translations:', response.statusText);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error loading translations:', error);
+            return false;
+        }
+    }
+
+    // Apply translations to all elements with data-translate attributes
+    function applyTranslations() {
+        const elements = document.querySelectorAll('[data-translate]');
+        
+        elements.forEach(element => {
+            const key = element.getAttribute('data-translate');
+            const translatedText = currentTranslations[key];
+            
+            if (translatedText && translatedText !== key) {
+                // Check if element has children - if so, be careful not to overwrite them
+                if (element.children.length === 0) {
+                    element.textContent = translatedText;
+                } else {
+                    // Find text nodes and translate them
+                    const walker = document.createTreeWalker(
+                        element,
+                        NodeFilter.SHOW_TEXT,
+                        null,
+                        false
+                    );
+                    
+                    let node;
+                    while (node = walker.nextNode()) {
+                        if (node.textContent.trim() === key) {
+                            node.textContent = translatedText;
+                        }
+                    }
+                }
+                
+                // Also translate common attributes
+                if (element.title && element.title === key) {
+                    element.title = translatedText;
+                }
+                if (element.placeholder && element.placeholder === key) {
+                    element.placeholder = translatedText;
+                }
+            }
+        });
+    }
+
+    // Utility function to translate a string
+    function translate(key, fallback = null) {
+        return currentTranslations[key] || fallback || key;
+    }
+
+    // Re-apply translations when new content is loaded
+    const observer = new MutationObserver(function(mutations) {
+        let shouldApplyTranslations = false;
+        
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                // Check if any added nodes have data-translate attributes
+                for (let node of mutation.addedNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.hasAttribute && node.hasAttribute('data-translate')) {
+                            shouldApplyTranslations = true;
+                            break;
+                        }
+                        if (node.querySelector && node.querySelector('[data-translate]')) {
+                            shouldApplyTranslations = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+        
+        if (shouldApplyTranslations) {
+            setTimeout(applyTranslations, 100);
+        }
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Provider switching functionality
+    function switchProvider(provider) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.provider-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(provider + '-tab').classList.add('active');
+        
+        // Add active class to selected tab
+        document.querySelector(`[data-provider="${provider}"]`).classList.add('active');
+    }
+
+    // Test connection functions
+    async function testOllamaConnection() {
+        try {
+            const response = await fetch('/api/multilingual/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'ai_connection'
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('✅ Ollama connection successful! ' + result.message, 'success');
+                } else {
+                    throw new Error(result.message || 'Connection failed');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Connection failed');
+            }
+        } catch (error) {
+            showAlert('❌ Ollama connection failed: ' + error.message, 'danger');
+        }
+    }
+
+    async function testOpenAIConnection() {
+        try {
+            const response = await fetch('/api/multilingual/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'ai_connection'
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('✅ OpenAI connection successful! ' + result.message, 'success');
+                } else {
+                    throw new Error(result.message || 'Connection failed');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Connection failed');
+            }
+        } catch (error) {
+            showAlert('❌ OpenAI connection failed: ' + error.message, 'danger');
+        }
+    }
+
+    async function testGeminiConnection() {
+        try {
+            const response = await fetch('/api/multilingual/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'ai_connection'
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('✅ Gemini connection successful! ' + result.message, 'success');
+                } else {
+                    throw new Error(result.message || 'Connection failed');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Connection failed');
+            }
+        } catch (error) {
+            showAlert('❌ Gemini connection failed: ' + error.message, 'danger');
+        }
+    }
+
+    async function downloadModel() {
+        const modelName = document.getElementById('ollamaModel').value;
+        try {
+            const response = await fetch('/api/ollama/pull', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({model: modelName})
+            });
+            
+            if (response.ok) {
+                showAlert('📥 Model download initiated for ' + modelName, 'info');
+            } else {
+                throw new Error('Download failed');
+            }
+        } catch (error) {
+            showAlert('❌ Model download failed: ' + error.message, 'danger');
+        }
+    }
+
+    async function testTranslationService() {
+        try {
+            const response = await fetch('/api/multilingual/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'translation',
+                    text: 'Security Alert: This is a test translation',
+                    language: 'es'
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    showAlert(`✅ Translation successful! "${result.original}" → "${result.translated}"`, 'success');
+                } else {
+                    throw new Error(result.message || 'Translation failed');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Translation failed');
+            }
+        } catch (error) {
+            showAlert('❌ Translation test failed: ' + error.message, 'danger');
         }
     }
 </script>

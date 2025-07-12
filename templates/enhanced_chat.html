@@ -1,0 +1,603 @@
+{% extends "falco_base.html" %}
+
+{% block title %}AI Security Assistant{% endblock %}
+{% block page_icon %}<i class="fas fa-robot"></i>{% endblock %}
+{% block page_title %}AI Security Assistant{% endblock %}
+{% block page_description %}Chat with AI about security alerts and get intelligent analysis{% endblock %}
+
+{% block extra_css %}
+<!-- Add Marked.js for markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+    /* Optimized full-screen chat layout */
+    .chat-layout {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 140px);
+        max-width: 1000px;
+        width: 100%;
+        margin: 0 auto;
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--falco-primary);
+        overflow: hidden;
+    }
+
+    /* Chat header */
+    .chat-header {
+        padding: var(--space-lg) var(--space-xl);
+        border-bottom: 1px solid var(--border-light);
+        background: var(--bg-cards);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-title {
+        font-size: var(--text-lg);
+        font-weight: 600;
+        color: var(--text-heading);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .language-selector {
+        padding: var(--space-sm) var(--space-md);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--bg-cards);
+        color: var(--text-primary);
+        font-size: var(--text-sm);
+    }
+
+    /* Messages area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--space-lg);
+        background: var(--bg-secondary);
+    }
+
+    .message {
+        margin-bottom: var(--space-lg);
+        display: flex;
+        gap: var(--space-md);
+    }
+
+    .message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message.user .message-content {
+        background: var(--falco-primary);
+        color: white;
+        margin-left: var(--space-2xl);
+    }
+
+    .message.assistant .message-content {
+        background: var(--bg-cards);
+        border: 1px solid var(--border-light);
+        margin-right: var(--space-2xl);
+    }
+
+    .message-content {
+        padding: var(--space-lg);
+        border-radius: var(--radius-lg);
+        line-height: 1.6;
+        font-size: var(--text-base);
+        word-wrap: break-word;
+    }
+
+    /* Markdown formatting styles */
+    .message-content h1,
+    .message-content h2,
+    .message-content h3,
+    .message-content h4,
+    .message-content h5,
+    .message-content h6 {
+        margin: var(--space-md) 0 var(--space-sm) 0;
+        color: var(--text-heading);
+        font-weight: 600;
+    }
+
+    .message-content h1 { font-size: 1.5em; }
+    .message-content h2 { font-size: 1.3em; }
+    .message-content h3 { font-size: 1.1em; }
+
+    .message-content ul,
+    .message-content ol {
+        margin: var(--space-sm) 0;
+        padding-left: var(--space-xl);
+    }
+
+    .message-content li {
+        margin: var(--space-xs) 0;
+    }
+
+    .message-content code {
+        background: var(--bg-secondary);
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+        color: var(--falco-primary);
+    }
+
+    .message-content pre {
+        background: var(--bg-secondary);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        overflow-x: auto;
+        margin: var(--space-sm) 0;
+        border: 1px solid var(--border-light);
+    }
+
+    .message-content pre code {
+        background: none;
+        padding: 0;
+        color: var(--text-primary);
+    }
+
+    .message-content blockquote {
+        border-left: 4px solid var(--falco-primary);
+        padding-left: var(--space-md);
+        margin: var(--space-sm) 0;
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    .message-content strong {
+        font-weight: 600;
+        color: var(--text-heading);
+    }
+
+    .message-content em {
+        font-style: italic;
+    }
+
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--text-sm);
+        flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+        background: var(--falco-primary);
+        color: white;
+    }
+
+    .message.assistant .message-avatar {
+        background: var(--falco-accent);
+        color: white;
+    }
+
+    /* Input area */
+    .chat-input-area {
+        padding: var(--space-lg) var(--space-xl);
+        border-top: 1px solid var(--border-light);
+        background: var(--bg-cards);
+    }
+
+    .input-container {
+        display: flex;
+        gap: var(--space-md);
+        align-items: end;
+    }
+
+    .message-input {
+        flex: 1;
+        min-height: 44px;
+        max-height: 120px;
+        padding: var(--space-md);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        resize: none;
+        font-size: var(--text-base);
+        font-family: inherit;
+        line-height: 1.4;
+        background: var(--bg-cards);
+        color: var(--text-primary);
+    }
+
+    .message-input:focus {
+        outline: none;
+        border-color: var(--falco-primary);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .send-button {
+        padding: var(--space-md) var(--space-lg);
+        background: var(--falco-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        transition: all 0.2s ease;
+        min-height: 44px;
+    }
+
+    .send-button:hover {
+        background: var(--falco-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+        display: none;
+        margin-bottom: var(--space-lg);
+    }
+
+    .typing-indicator.show {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .typing-dots {
+        display: flex;
+        gap: var(--space-xs);
+        align-items: center;
+        padding: var(--space-lg);
+        background: var(--bg-cards);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        margin-right: var(--space-2xl);
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        animation: typingAnimation 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typingAnimation {
+        0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Welcome message */
+    .welcome-message {
+        text-align: center;
+        padding: var(--space-2xl);
+        color: var(--text-secondary);
+    }
+
+    .welcome-message h3 {
+        color: var(--text-heading);
+        margin-bottom: var(--space-lg);
+    }
+
+    /* Scrollbar */
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--border-medium);
+        border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .chat-layout {
+            height: calc(100vh - 120px);
+            margin: 0;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+
+        .message.user .message-content {
+            margin-left: var(--space-sm);
+        }
+
+        .message.assistant .message-content {
+            margin-right: var(--space-sm);
+        }
+
+        .chat-header {
+            padding: var(--space-md);
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .chat-messages {
+            padding: var(--space-md);
+        }
+
+        .chat-input-area {
+            padding: var(--space-md);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="chat-title">
+            <i class="fas fa-robot"></i> AI Security Assistant
+        </div>
+        <div class="chat-language-message" style="font-size: 0.95em; color: var(--text-secondary); font-style: italic; font-weight: 400; margin-left: 1.5em;">
+            Tip: You can chat in any language—AI will reply in the same language.
+        </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="chat-messages" id="messagesContainer">
+        <div class="welcome-message">
+            <h3>👋 Welcome to AI Security Assistant</h3>
+            <p>I'm here to help you analyze security alerts, understand threats, and provide security insights. Ask me anything about your Falco security events!</p>
+        </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="typing-dots">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+        <div class="input-container">
+            <textarea 
+                class="message-input" 
+                id="messageInput" 
+                placeholder="Ask about security alerts, threat analysis, or any security question..."
+                rows="1"
+                onkeydown="handleKeyDown(event)"
+                oninput="adjustTextareaHeight(this)"
+            ></textarea>
+            <button class="send-button" id="sendButton" onclick="sendMessage()">
+                <span>Send</span>
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let conversationHistory = [];
+    let isTyping = false;
+    let currentLanguage = 'en';
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('messageInput').focus();
+        loadConversationHistory();
+    });
+    
+    // Handle keyboard input
+    function handleKeyDown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+    
+    // Auto-resize textarea
+    function adjustTextareaHeight(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+    
+    // Send message
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        
+        if (!message || isTyping) return;
+        
+        // Clear input and reset height
+        input.value = '';
+        input.style.height = 'auto';
+        
+        // Add user message
+        addMessage('user', message);
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        try {
+            const response = await fetch('/api/enhanced-chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    persona: 'security_analyst',
+                    history: conversationHistory,
+                    language: currentLanguage
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to get AI response');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                addMessage('assistant', data.response);
+                
+                // Update conversation history
+                conversationHistory.push({
+                    role: 'user',
+                    content: message
+                });
+                conversationHistory.push({
+                    role: 'assistant', 
+                    content: data.response
+                });
+                
+                // Keep only last 20 messages
+                if (conversationHistory.length > 20) {
+                    conversationHistory = conversationHistory.slice(-20);
+                }
+                
+                saveConversationHistory();
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+            
+        } catch (error) {
+            console.error('Chat error:', error);
+            addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
+        } finally {
+            hideTypingIndicator();
+        }
+    }
+    
+    // Add message to chat
+    function addMessage(sender, content) {
+        const messagesContainer = document.getElementById('messagesContainer');
+        
+        // Remove welcome message if it exists
+        const welcome = messagesContainer.querySelector('.welcome-message');
+        if (welcome) {
+            welcome.remove();
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        
+        // Parse markdown for assistant messages, escape HTML for user messages
+        const formattedContent = sender === 'assistant' ? 
+            marked.parse(content) : 
+            escapeHtml(content);
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                ${sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>'}
+            </div>
+            <div class="message-content">${formattedContent}</div>
+        `;
+        
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Show typing indicator
+    function showTypingIndicator() {
+        isTyping = true;
+        document.getElementById('typingIndicator').classList.add('show');
+        document.getElementById('sendButton').disabled = true;
+        
+        // Scroll to bottom
+        const messagesContainer = document.getElementById('messagesContainer');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Hide typing indicator
+    function hideTypingIndicator() {
+        isTyping = false;
+        document.getElementById('typingIndicator').classList.remove('show');
+        document.getElementById('sendButton').disabled = false;
+    }
+    
+    // Change language
+    function changeLanguage(language) {
+        currentLanguage = language;
+        localStorage.setItem('chatLanguage', language);
+    }
+    
+    // Load conversation history
+    function loadConversationHistory() {
+        const saved = localStorage.getItem('chatHistory');
+        if (saved) {
+            try {
+                conversationHistory = JSON.parse(saved);
+                
+                // Restore messages
+                conversationHistory.forEach(msg => {
+                    if (msg.role === 'user' || msg.role === 'assistant') {
+                        addMessage(msg.role, msg.content);
+                    }
+                });
+            } catch (e) {
+                console.error('Error loading chat history:', e);
+            }
+        }
+        
+        // Load language preference
+        const savedLanguage = localStorage.getItem('chatLanguage');
+        if (savedLanguage) {
+            currentLanguage = savedLanguage;
+        }
+    }
+    
+    // Save conversation history
+    function saveConversationHistory() {
+        try {
+            localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+        } catch (e) {
+            console.error('Error saving chat history:', e);
+        }
+    }
+    
+    // Clear chat history
+    function clearChat() {
+        conversationHistory = [];
+        localStorage.removeItem('chatHistory');
+        document.getElementById('messagesContainer').innerHTML = `
+            <div class="welcome-message">
+                <h3>👋 Welcome to AI Security Assistant</h3>
+                <p>I'm here to help you analyze security alerts, understand threats, and provide security insights. Ask me anything about your Falco security events!</p>
+            </div>
+        `;
+    }
+    
+    // Utility function
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %} 

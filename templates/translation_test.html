@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translation System Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Translation System Test</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Test Elements</h3>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <strong data-translate="Security Dashboard">Security Dashboard</strong>
+                    </li>
+                    <li class="list-group-item">
+                        <span data-translate="Total Alerts">Total Alerts</span>
+                    </li>
+                    <li class="list-group-item">
+                        <span data-translate="Critical Alerts">Critical Alerts</span>
+                    </li>
+                    <li class="list-group-item">
+                        <span data-translate="General Configuration">General Configuration</span>
+                    </li>
+                    <li class="list-group-item">
+                        <span data-translate="AI Configuration">AI Configuration</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>System Info</h3>
+                <div class="alert alert-info">
+                    <strong>Current Language:</strong> <span id="currentLang">Loading...</span><br>
+                    <strong>Translations Loaded:</strong> <span id="translationsCount">0</span><br>
+                    <strong>Elements Found:</strong> <span id="elementsCount">0</span><br>
+                    <strong>Translations Applied:</strong> <span id="appliedCount">0</span>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="langSelect" class="form-label">Test Language:</label>
+                    <select id="langSelect" class="form-select" onchange="testLanguage(this.value)">
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="ja">Japanese</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="testTranslations()">Test Translations</button>
+                <button class="btn btn-success" onclick="debugTranslations()">Debug Info</button>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Debug Output</h3>
+                <pre id="debugOutput" class="bg-light p-3" style="height: 300px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translation system variables
+        let currentTranslations = {};
+        let currentLanguage = 'en';
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Translation test page loaded');
+            initTranslationSystem();
+        });
+        
+        // Initialize translation system
+        async function initTranslationSystem() {
+            try {
+                log('🔄 Initializing translation system...');
+                
+                // Load current language
+                const langResponse = await fetch('/api/lang');
+                if (langResponse.ok) {
+                    const langData = await langResponse.json();
+                    currentLanguage = langData.current;
+                    log(`🌍 Current language: ${currentLanguage}`);
+                    document.getElementById('currentLang').textContent = currentLanguage;
+                    document.getElementById('langSelect').value = currentLanguage;
+                } else {
+                    log('❌ Failed to load current language');
+                }
+                
+                // Load translations
+                await loadTranslations(currentLanguage);
+                
+                // Apply translations
+                applyTranslations();
+                
+            } catch (error) {
+                log(`❌ Error initializing translation system: ${error.message}`);
+            }
+        }
+        
+        // Load translations for a specific language
+        async function loadTranslations(languageCode) {
+            try {
+                log(`📥 Loading translations for ${languageCode}...`);
+                
+                const response = await fetch(`/api/translate/ui?lang=${languageCode}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    currentTranslations = data.translations || {};
+                    currentLanguage = languageCode;
+                    
+                    const count = Object.keys(currentTranslations).length;
+                    log(`✅ Loaded ${count} translations for ${languageCode}`);
+                    document.getElementById('translationsCount').textContent = count;
+                    
+                    return true;
+                } else {
+                    log(`❌ Failed to load translations: ${response.statusText}`);
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Error loading translations: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // Apply translations to elements
+        function applyTranslations() {
+            const elements = document.querySelectorAll('[data-translate]');
+            log(`🔄 Applying translations to ${elements.length} elements...`);
+            document.getElementById('elementsCount').textContent = elements.length;
+            
+            let applied = 0;
+            
+            elements.forEach(element => {
+                const key = element.getAttribute('data-translate');
+                const translatedText = currentTranslations[key];
+                
+                if (translatedText && translatedText !== key && currentLanguage !== 'en') {
+                    element.textContent = translatedText;
+                    applied++;
+                    log(`✅ Translated "${key}" → "${translatedText}"`);
+                } else if (currentLanguage === 'en') {
+                    element.textContent = key;
+                }
+            });
+            
+            log(`✅ Applied ${applied} translations`);
+            document.getElementById('appliedCount').textContent = applied;
+        }
+        
+        // Test language change
+        async function testLanguage(langCode) {
+            log(`🧪 Testing language change to ${langCode}...`);
+            
+            // Set language
+            const response = await fetch(`/api/lang/${langCode}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                log(`✅ Language changed to ${result.language_name}`);
+                
+                // Reload and apply translations
+                await loadTranslations(langCode);
+                applyTranslations();
+            } else {
+                log(`❌ Failed to change language`);
+            }
+        }
+        
+        // Test translations
+        async function testTranslations() {
+            log('🧪 Testing translation functionality...');
+            
+            // Test a few specific translations
+            const testStrings = ['Security Dashboard', 'Total Alerts', 'Critical Alerts'];
+            
+            for (const str of testStrings) {
+                const translated = currentTranslations[str];
+                if (translated) {
+                    log(`✅ "${str}" → "${translated}"`);
+                } else {
+                    log(`❌ No translation for "${str}"`);
+                }
+            }
+        }
+        
+        // Debug translations
+        async function debugTranslations() {
+            log('🔍 Getting debug information...');
+            
+            try {
+                const response = await fetch('/api/translate/debug');
+                if (response.ok) {
+                    const debug = await response.json();
+                    log('📊 Debug Info:');
+                    log(JSON.stringify(debug, null, 2));
+                } else {
+                    log('❌ Failed to get debug info');
+                }
+            } catch (error) {
+                log(`❌ Debug error: ${error.message}`);
+            }
+        }
+        
+        // Log function
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const output = document.getElementById('debugOutput');
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+    </script>
+</body>
+</html> 

@@ -43,7 +43,7 @@ def send_slack_message(message_content, slack_client, slack_channel_name):
         return response
     except SlackApiError as e:
         logging.error(f"Error sending basic Slack message: {e.response['error']}")
-        return None
+        raise  # Re-raise the exception so the caller can handle it
 
 
 def post_to_slack(falco_alert, explanation_sections, slack_client, slack_channel_name):
@@ -129,7 +129,7 @@ def post_to_slack(falco_alert, explanation_sections, slack_client, slack_channel
         return response
     except SlackApiError as e:
         logging.error(f"Error sending Slack message: {e.response['error']}")
-        return None
+        raise  # Re-raise the exception so the caller can handle it
 
 
 def replace_template_variables(block, template_vars):

@@ -1,0 +1,584 @@
+{% extends "falco_base.html" %}
+
+{% block title %}Falco Integration Configuration{% endblock %}
+{% block page_icon %}<i class="fas fa-shield-alt"></i>{% endblock %}
+{% block page_title %}Falco Integration Setup{% endblock %}
+{% block page_description %}Configure Falco to send security alerts to the AI gateway{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Falco Config Page Styles */
+    .falco-config-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--space-xl);
+    }
+
+    .config-section {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+    }
+
+    .config-section:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary);
+    }
+
+    .config-section h5 {
+        color: var(--text-heading);
+        font-size: var(--text-lg);
+        font-weight: 600;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .config-section h5 i {
+        color: var(--primary);
+    }
+
+    .config-section p {
+        color: var(--text-secondary);
+        margin-bottom: var(--space-lg);
+    }
+
+    .config-value-container {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+    }
+
+    .config-value {
+        flex: 1;
+        padding: var(--space-md);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--bg-cards);
+        color: var(--text-heading);
+        font-family: monospace;
+        font-size: var(--text-sm);
+        transition: all 0.2s ease;
+    }
+
+    .config-value:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .config-yaml-container {
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background: var(--bg-secondary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .yaml-header {
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-light);
+        padding: var(--space-md) var(--space-lg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: var(--text-sm);
+        font-weight: 600;
+    }
+
+    .yaml-filename {
+        color: var(--text-heading);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .yaml-filename i {
+        color: var(--primary);
+    }
+
+    .config-yaml {
+        background: var(--bg-cards);
+        color: var(--text-heading);
+        padding: var(--space-lg);
+        margin: 0;
+        font-family: 'Fira Code', 'Monaco', 'Menlo', 'Consolas', monospace;
+        font-size: var(--text-sm);
+        line-height: 1.6;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        border: none;
+        tab-size: 2;
+        -moz-tab-size: 2;
+        -o-tab-size: 2;
+    }
+
+    .config-yaml::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .config-yaml::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+
+    .config-yaml::-webkit-scrollbar-thumb {
+        background: var(--border-medium);
+        border-radius: var(--radius-sm);
+    }
+
+    .config-yaml::-webkit-scrollbar-thumb:hover {
+        background: var(--border-strong);
+    }
+
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: var(--space-xl);
+        margin-bottom: var(--space-xl);
+    }
+
+    .info-alert {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-xl);
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-md);
+    }
+
+    .info-alert i {
+        color: #3b82f6;
+        font-size: var(--text-lg);
+        margin-top: 2px;
+    }
+
+    .info-alert strong {
+        color: var(--text-heading);
+    }
+
+    .info-alert p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .test-result {
+        margin-top: var(--space-md);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        font-size: var(--text-sm);
+    }
+
+    .test-result.success {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(21, 128, 61, 0.05));
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        color: #15803d;
+    }
+
+    .test-result.error {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        color: #dc2626;
+    }
+
+    .copy-success {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-xl);
+        z-index: 1000;
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2s;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .config-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .falco-config-container {
+            padding: var(--space-lg);
+        }
+        
+        .config-value-container {
+            flex-direction: column;
+        }
+        
+        .config-yaml {
+            font-size: var(--text-xs);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="falco-config-container">
+    <!-- Information Alert -->
+    <div class="info-alert">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <strong>Configure Falco to send alerts to this system</strong>
+            <p>Use the webhook URLs below in your Falco configuration to start receiving security alerts with AI analysis.</p>
+        </div>
+    </div>
+
+    <!-- Webhook URLs and Test Section -->
+    <div class="config-grid">
+        <div class="config-section">
+            <h5><i class="fas fa-link"></i> Webhook URLs</h5>
+            <p class="text-muted">Use these URLs to configure Falco HTTP output</p>
+            
+            <div class="mb-3">
+                <label class="fw-bold">🌐 External/Ingress URL:</label>
+                <div class="config-value-container">
+                    <input type="text" class="config-value" id="externalWebhookUrl" value="" readonly>
+                    <button class="btn btn-outline" onclick="copyToClipboard('externalWebhookUrl')" title="Copy URL">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Use this URL if Falco runs outside Kubernetes or you have external access configured</small>
+            </div>
+            
+            <div class="mb-3">
+                <label class="fw-bold">🏠 Internal/Kubernetes URL:</label>
+                <div class="config-value-container">
+                    <input type="text" class="config-value" id="internalWebhookUrl" value="" readonly>
+                    <button class="btn btn-outline" onclick="copyToClipboard('internalWebhookUrl')" title="Copy URL">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Use this URL if Falco runs inside the same Kubernetes cluster</small>
+            </div>
+        </div>
+        
+        <div class="config-section">
+            <h5><i class="fas fa-chart-line"></i> Test Webhook</h5>
+            <p class="text-muted">Send a test alert to verify configuration</p>
+            
+            <button class="btn btn-primary w-100" onclick="sendTestAlert()">
+                <i class="fas fa-paper-plane"></i>
+                Send Test Alert
+            </button>
+            
+            <div id="testResult" class="test-result" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <!-- YAML Configuration Section -->
+    <div class="config-grid">
+        <div class="config-section">
+            <h5><i class="fas fa-file-code"></i> Falco Configuration (YAML)</h5>
+            <p class="text-muted">Basic falco.yaml configuration for HTTP output</p>
+            
+            <div class="config-yaml-container">
+                <div class="yaml-header">
+                    <span class="yaml-filename">
+                        <i class="fas fa-file"></i>
+                        falco.yaml
+                    </span>
+                    <button class="btn btn-outline" onclick="copyToClipboard('falcoYamlConfig')" title="Copy Configuration">
+                        <i class="fas fa-copy"></i>
+                        Copy
+                    </button>
+                </div>
+                <pre class="config-yaml" id="falcoYamlConfig">Loading...</pre>
+            </div>
+        </div>
+        
+        <div class="config-section">
+            <h5><i class="fas fa-dharmachakra"></i> Kubernetes ConfigMap</h5>
+            <p class="text-muted">ConfigMap for Kubernetes deployment</p>
+            
+            <div class="config-yaml-container">
+                <div class="yaml-header">
+                    <span class="yaml-filename">
+                        <i class="fab fa-kubernetes"></i>
+                        falco-config.yaml
+                    </span>
+                    <button class="btn btn-outline" onclick="copyToClipboard('falcoK8sConfig')" title="Copy Configuration">
+                        <i class="fas fa-copy"></i>
+                        Copy
+                    </button>
+                </div>
+                <pre class="config-yaml" id="falcoK8sConfig">Loading...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        generateWebhookUrls();
+        loadFalcoConfigurations();
+    });
+
+    // Generate webhook URLs
+    function generateWebhookUrls() {
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        const externalUrl = `${protocol}//${host}/falco-webhook`;
+        
+        // For internal URL, use service name if available
+        const internalUrl = `http://falco-ai-gateway:8080/falco-webhook`;
+        
+        document.getElementById('externalWebhookUrl').value = externalUrl;
+        document.getElementById('internalWebhookUrl').value = internalUrl;
+    }
+
+    // Load Falco configurations
+    function loadFalcoConfigurations() {
+        const externalUrl = document.getElementById('externalWebhookUrl').value;
+        const internalUrl = document.getElementById('internalWebhookUrl').value;
+        
+        // Generate Falco YAML configuration
+        const falcoYaml = `# Falco Configuration - HTTP Output
+# This configuration enables Falco to send alerts to the AI Gateway
+
+# HTTP Output Configuration
+http_output:
+  enabled: true
+  url: "${externalUrl}"
+  # Use the internal URL if running in Kubernetes:
+  # url: "${internalUrl}"
+
+# Optional: Add custom headers for authentication
+# headers:
+#   Authorization: "Bearer your-token-here"
+#   X-Custom-Header: "your-value"
+
+# JSON Output Configuration
+json_output: true
+json_include_output_property: true
+json_include_tags_property: true
+
+# Buffered Output (recommended for production)
+buffered_outputs: true
+
+# Priority Configuration
+priority: debug
+# Change to 'warning' or 'error' to reduce noise in production
+
+# Output Fields
+output_fields:
+  - user.name
+  - container.name
+  - proc.name
+  - fd.name
+  - evt.type
+  - evt.time
+  - k8s.pod.name
+  - k8s.ns.name`;
+
+        // Generate Kubernetes ConfigMap
+        const k8sConfig = `# Kubernetes ConfigMap for Falco AI Gateway Integration
+# Apply this configuration to your Kubernetes cluster
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-config
+  namespace: falco
+  labels:
+    app: falco
+    component: config
+data:
+  falco.yaml: |
+    # Falco Configuration with AI Gateway Integration
+    
+    # HTTP Output Configuration
+    http_output:
+      enabled: true
+      url: "${internalUrl}"
+      # For external access, use:
+      # url: "${externalUrl}"
+    
+    # JSON Output Configuration
+    json_output: true
+    json_include_output_property: true
+    json_include_tags_property: true
+    
+    # Buffered Output for better performance
+    buffered_outputs: true
+    
+    # Priority level (debug, info, notice, warning, error, critical)
+    priority: warning
+    
+    # Output formatting
+    output_fields:
+      - user.name
+      - container.name
+      - proc.name
+      - fd.name
+      - evt.type
+      - evt.time
+      - k8s.pod.name
+      - k8s.ns.name
+      - k8s.deployment.name
+      - k8s.service.name
+    
+    # Additional configuration options
+    stdout_output:
+      enabled: true
+    
+    # Performance settings
+    syscall_event_drops:
+      actions:
+        - log
+        - alert
+      rate: 0.03333
+      max_burst: 1000
+    
+    # Metadata configuration
+    metadata:
+      enabled: true
+      hostname: true
+      
+---
+# Deployment instructions:
+# 1. Save this as falco-config.yaml
+# 2. Apply: kubectl apply -f falco-config.yaml
+# 3. Restart Falco pods: kubectl rollout restart daemonset/falco -n falco
+# 4. Check logs: kubectl logs -n falco -l app=falco --tail=50`;
+
+        document.getElementById('falcoYamlConfig').textContent = falcoYaml;
+        document.getElementById('falcoK8sConfig').textContent = k8sConfig;
+    }
+
+    // Copy to clipboard function
+    async function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        const text = element.value || element.textContent;
+        
+        try {
+            // Modern browser API
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                showCopySuccess();
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showCopySuccess();
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    showCopyError();
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            showCopyError();
+        }
+    }
+
+    // Show copy success notification
+    function showCopySuccess() {
+        const notification = document.createElement('div');
+        notification.className = 'copy-success';
+        notification.innerHTML = '<i class="fas fa-check"></i> Copied to clipboard!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+
+    // Show copy error notification
+    function showCopyError() {
+        const notification = document.createElement('div');
+        notification.className = 'copy-success';
+        notification.style.background = '#ef4444';
+        notification.innerHTML = '<i class="fas fa-times"></i> Copy failed';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+
+    // Send test alert
+    async function sendTestAlert() {
+        const testButton = document.querySelector('button[onclick="sendTestAlert()"]');
+        const testResult = document.getElementById('testResult');
+        
+        // Show loading state
+        testButton.disabled = true;
+        testButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        try {
+            const response = await fetch('/api/test-alert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    test: true,
+                    rule: 'Test Alert from Falco Configuration',
+                    output: 'This is a test alert to verify the webhook configuration is working correctly.',
+                    priority: 'notice',
+                    time: new Date().toISOString()
+                })
+            });
+            
+            if (response.ok) {
+                testResult.className = 'test-result success';
+                testResult.innerHTML = '<i class="fas fa-check-circle"></i> Test alert sent successfully! Check your dashboard for the alert.';
+                testResult.style.display = 'block';
+            } else {
+                testResult.className = 'test-result error';
+                testResult.innerHTML = '<i class="fas fa-exclamation-circle"></i> Test failed. Please check your configuration.';
+                testResult.style.display = 'block';
+            }
+        } catch (error) {
+            testResult.className = 'test-result error';
+            testResult.innerHTML = '<i class="fas fa-exclamation-circle"></i> Test failed: ' + error.message;
+            testResult.style.display = 'block';
+        } finally {
+            // Reset button state
+            testButton.disabled = false;
+            testButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Test Alert';
+        }
+    }
+</script>
+{% endblock %} 

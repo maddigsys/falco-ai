@@ -9,8 +9,26 @@ json_include_tags_property: true
 # HTTP output configuration for webhook
 http_output:
   enabled: true
-  url: "http://localhost:8080/falco-webhook"  # Change to your server IP if needed
+  url: "http://falco-ai-alerts:8080/webhook"
   user_agent: "falco-webhook"
+  ca_file: ""
+  ca_cert: ""
+  ca_bundle: ""
+  client_cert: ""
+  client_key: ""
+  client_ca: ""
+  headers: {}
+  insecure: false
+  echo: false
+  compress: false
+  format: json
+  max_body_size: 1048576
+  keep_alive: false
+  batching:
+    enabled: false
+    max_size: 1048576
+    max_events: 1000
+    timeout: 1s
 
 # Alternative: If running Falco in Docker and the AI system is on host
 # http_output:
@@ -28,7 +46,7 @@ log_stderr: true
 log_syslog: false
 
 # Priority threshold - only send alerts at or above this level
-priority: warning  # Options: emergency, alert, critical, error, warning, notice, info, debug
+priority: debug
 
 # Output format settings
 time_format_iso_8601: true
@@ -42,13 +60,14 @@ rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/k8s_audit_rules.yaml
+  - /etc/falco/rules.d
 
 # Syscall settings
 syscall_event_drops:
   actions:
     - log
     - alert
-  rate: .03333
+  rate: 0.03333
   max_burst: 1000
 
 # Performance settings
@@ -63,7 +82,81 @@ metadata:
 # Modern eBPF driver (recommended)
 modern_bpf:
   enabled: true
+  cpus_for_each_syscall_buffer: 2
 
 # WebUI integration hints
 webserver:
   enabled: false  # We use our own web UI 
+
+# File output configuration
+file_output:
+  enabled: false
+
+# Stdout output configuration  
+stdout_output:
+  enabled: true
+
+# Syslog output configuration
+syslog_output:
+  enabled: false
+
+# gRPC output configuration
+grpc_output:
+  enabled: false
+
+# Program output configuration
+program_output:
+  enabled: false
+
+# Monitoring configuration
+metrics:
+  enabled: false
+
+# Load plugins
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config:
+      maxEventSize: 1048576
+      webhookMaxBatchSize: 12582912
+      sslCertificate: /etc/ssl/certs/ca-certificates.crt
+    open_params: "http://:9765/k8s-audit"
+  - name: cloudtrail
+    library_path: libcloudtrail.so
+  - name: json
+    library_path: libjson.so
+
+# Some additional rules for testing
+custom_rules: |
+  # Custom rule to catch shell activity in containers
+  - rule: Shell spawned in container
+    desc: A shell was spawned in a container
+    condition: >
+      spawned_process and container and
+      ((proc.name in (bash, sh, zsh, csh, ksh, tcsh, ash, dash)) or
+       (proc.name = "python" and proc.args contains "-c"))
+    output: >
+      Shell spawned in container (user=%user.name user_loginuid=%user.loginuid
+      container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag
+      parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_start_ts=%container.start_ts)
+    priority: WARNING
+    tags: [container, shell, mitre_execution]
+    
+  # Rule to catch file writes in sensitive directories
+  - rule: Write below container sensitive directory
+    desc: A file was written below a sensitive container directory
+    condition: >
+      open_write and container and
+      (fd.name startswith "/etc" or
+       fd.name startswith "/root" or
+       fd.name startswith "/boot" or
+       fd.name startswith "/usr/bin" or
+       fd.name startswith "/usr/sbin" or
+       fd.name startswith "/sbin" or
+       fd.name startswith "/bin")
+    output: >
+      File written below a sensitive directory (user=%user.name user_loginuid=%user.loginuid
+      file=%fd.name parent=%proc.pname cmdline=%proc.cmdline container_id=%container.id container_name=%container.name
+      image=%container.image.repository:%container.image.tag)
+    priority: WARNING
+    tags: [container, filesystem, mitre_persistence] 

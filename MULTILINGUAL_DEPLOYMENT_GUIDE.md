@@ -6,7 +6,7 @@ This guide provides step-by-step instructions for deploying the **Falco AI Alert
 
 ### ✨ Key Features
 - **24 Languages Supported** (covering 90% of global speakers)
-- **Native AI Security Analysis** in multiple languages via Babel LLM
+- **Native AI Security Analysis** in multiple languages via multilingual AI models
 - **Zero External API Costs** (fully local deployment)
 - **Intelligent Fallback** mechanisms
 - **Advanced Vector Search** via Weaviate
@@ -21,7 +21,7 @@ This guide provides step-by-step instructions for deploying the **Falco AI Alert
 - **Docker** and **docker-compose** (for local testing)
 - **kubectl** configured for your cluster
 - **Helm 3.x** (optional but recommended)
-- **4GB RAM minimum** (8GB+ recommended for Babel LLM)
+- **4GB RAM minimum** (8GB+ recommended for multilingual AI models)
 - **20GB storage** (for models and vector database)
 
 ### Supported Languages
@@ -99,19 +99,19 @@ Access the configuration at: `http://your-domain/config/multilingual`
 ```yaml
 default_language: "en"              # Default system language
 auto_detect_language: true          # Auto-detect from browser
-enable_ui_translation: "babel"      # Use Babel LLM for translations
+enable_ui_translation: "ai"         # Use AI models for translations
 fallback_behavior: "english"        # Fallback to English if needed
 persist_language: true              # Remember user language choice
 ```
 
-#### Babel LLM Configuration
+#### Multilingual AI Model Configuration
 ```yaml
-babel_model: "babel-9b"             # Model: babel-9b (fast) or babel-83b (accurate)
-babel_timeout: 60                   # Request timeout in seconds
-babel_temperature: 0.7              # Creativity level (0.1-1.0)
-babel_max_tokens: 1000              # Maximum response length
+ai_model: "qwen2:7b"                # Model: qwen2:7b (fast) or llama3:latest (accurate)
+ai_timeout: 60                      # Request timeout in seconds
+ai_temperature: 0.7                 # Creativity level (0.1-1.0)
+ai_max_tokens: 1000                 # Maximum response length
 ollama_endpoint: "http://ollama:11434"  # Ollama API endpoint
-enable_babel_llm: true              # Enable/disable Babel LLM
+enable_multilingual_ai: true        # Enable/disable multilingual AI models
 ```
 
 #### Language Selection
@@ -121,26 +121,26 @@ enable_babel_llm: true              # Enable/disable Babel LLM
 
 ### 2. Model Management
 
-#### Download Babel LLM Models
+#### Download Multilingual AI Models
 ```bash
 # Via the UI (recommended)
 # Go to: http://your-domain/config/multilingual
 # Click "Model Management" tab
-# Click "Download babel-9b" button
+# Click "Download qwen2:7b" button
 
 # Via API
-curl -X POST http://your-domain/api/babel/pull-model \
+curl -X POST http://your-domain/api/translation/pull-model \
   -H "Content-Type: application/json" \
-  -d '{"model_name": "babel-9b"}'
+  -d '{"model_name": "qwen2:7b"}'
 
 # Via kubectl (direct to Ollama)
 kubectl exec -n falco-ai-system deployment/ollama -- \
-  ollama pull babel-9b
+  ollama pull qwen2:7b
 ```
 
 #### Model Storage Requirements
-- **babel-9b**: ~5GB storage (recommended for most deployments)
-- **babel-83b**: ~50GB storage (for maximum accuracy)
+- **qwen2:7b**: ~4.4GB storage (recommended for most deployments)
+- **llama3:latest**: ~4.7GB storage (for maximum accuracy)
 
 ### 3. Environment Variables
 
@@ -151,8 +151,8 @@ WEB_UI_ENABLED=true                     # Enable web dashboard
 LOG_LEVEL=INFO                          # Logging level
 
 # Multilingual Settings
-BABEL_MODEL=babel-9b                    # Default Babel model
-BABEL_ENABLED=true                      # Enable multilingual support
+AI_MODEL=qwen2:7b                       # Default multilingual AI model
+AI_MULTILINGUAL_ENABLED=true            # Enable multilingual support
 DEFAULT_LANGUAGE=en                     # System default language
 
 # Weaviate Configuration
@@ -164,7 +164,7 @@ WEAVIATE_PORT=8080                      # Weaviate port
 MIN_PRIORITY=warning                    # Minimum alert priority
 IGNORE_OLDER=1                          # Ignore alerts older than X minutes
 
-# Optional: Cloud AI (if not using local Babel LLM)
+# Optional: Cloud AI (if not using local multilingual AI models)
 PORTKEY_API_KEY=your_portkey_key       # For OpenAI/Gemini fallback
 OPENAI_VIRTUAL_KEY=your_openai_key     # OpenAI via Portkey
 GEMINI_VIRTUAL_KEY=your_gemini_key     # Gemini via Portkey
@@ -243,11 +243,11 @@ spec:
         averageUtilization: 80
 ```
 
-### Babel LLM Optimization
+### Multilingual AI Model Optimization
 
 #### Model Selection Guidelines
-- **babel-9b**: Best for most use cases (faster, lower memory)
-- **babel-83b**: Use when maximum accuracy is required
+- **qwen2:7b**: Best for most use cases (faster, lower memory)
+- **llama3:latest**: Use when maximum accuracy is required
 
 #### Performance Settings
 ```yaml
@@ -391,7 +391,7 @@ readinessProbe:
 - **Translation Success Rate**: `translation_success_rate`
 - **Weaviate Operations**: `weaviate_operations_total`
 - **Memory Usage**: `container_memory_usage_bytes`
-- **Model Performance**: `babel_llm_requests_total`
+- **Model Performance**: `multilingual_ai_requests_total`
 
 ### 3. Logging Configuration
 
@@ -411,16 +411,16 @@ logging:
 
 ### Common Issues
 
-#### 1. Babel LLM Model Not Available
+#### 1. Multilingual AI Model Not Available
 ```bash
 # Check if model is downloaded
 kubectl exec -n falco-ai-system deployment/ollama -- ollama list
 
 # Download model manually
-kubectl exec -n falco-ai-system deployment/ollama -- ollama pull babel-9b
+kubectl exec -n falco-ai-system deployment/ollama -- ollama pull qwen2:7b
 
 # Check model status via API
-curl http://your-domain/api/babel/status
+curl http://your-domain/api/translation/status
 ```
 
 #### 2. Weaviate Connection Issues
@@ -446,8 +446,8 @@ curl -X POST http://your-domain/api/lang/es \
 # Check multilingual configuration
 curl http://your-domain/api/multilingual/config
 
-# Verify Babel LLM status
-curl http://your-domain/api/babel/status
+# Verify multilingual AI status
+curl http://your-domain/api/translation/status
 ```
 
 #### 4. Performance Issues
@@ -533,7 +533,7 @@ kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-system
 ### Post-Deployment
 - [ ] Verify all services are healthy
 - [ ] Test multilingual functionality
-- [ ] Download required Babel LLM models
+- [ ] Download required multilingual AI models
 - [ ] Configure language preferences
 - [ ] Test alert processing pipeline
 - [ ] Verify Weaviate vector search
@@ -556,7 +556,7 @@ kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-system
 
 ### Documentation
 - **Main Repository**: https://github.com/maddigsys/falco-rag-ai-gateway
-- **Babel LLM Project**: https://github.com/babel-llm/babel-llm
+- **Qwen2 Model**: https://huggingface.co/Qwen/Qwen2-7B-Instruct
 - **Weaviate Documentation**: https://weaviate.io/developers/weaviate
 - **Falco Documentation**: https://falco.org/docs/
 
@@ -567,7 +567,7 @@ kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-system
 
 ### Commercial Support
 - **Enterprise Support**: Available for production deployments
-- **Custom Language Models**: Tailored Babel LLM training
+- **Custom Language Models**: Tailored multilingual AI model training
 - **Professional Services**: Implementation and optimization
 
 ---
@@ -575,7 +575,7 @@ kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-system
 ## 📝 Changelog
 
 ### v1.5.7 - Multilingual Release
-- ✅ Added comprehensive 24-language support via Babel LLM
+- ✅ Added comprehensive 24-language support via multilingual AI models
 - ✅ Implemented native language AI security analysis
 - ✅ Added multilingual configuration interface
 - ✅ Enhanced Weaviate integration with proper vectorization
@@ -589,7 +589,7 @@ kubectl rollout restart deployment/falco-ai-alerts -n falco-ai-system
 
 1. **Access your deployment**: `http://your-domain/dashboard`
 2. **Configure languages**: `http://your-domain/config/multilingual`
-3. **Download Babel models**: Use the Model Management tab
+3. **Download multilingual models**: Use the Model Management tab
 4. **Test with sample alerts**: Use the test scripts in `test scripts/`
 5. **Monitor system health**: Set up Prometheus/Grafana dashboards
 6. **Customize for your environment**: Adjust settings via configuration APIs
