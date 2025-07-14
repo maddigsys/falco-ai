@@ -78,8 +78,10 @@ check_prerequisites() {
     
     # Show image tag information
     print_info "Image versions per environment:"
-    echo "   • Development: maddigsys/falco-ai-alerts:latest"
-    echo "   • Production: maddigsys/falco-ai-alerts:v2.0.0"
+    echo "   • Development: maddigsys/falco-ai-alerts:v2.0.4"
+    echo "   • Production: maddigsys/falco-ai-alerts:v2.0.4"
+
+    print_info "New in v2.0.4: Dark/Light mode toggle in the top navigation bar!"
 }
 
 # Function to validate environment config

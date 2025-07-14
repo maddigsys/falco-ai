@@ -4,6 +4,9 @@ metadata:
   name: weaviate
   labels:
     app: weaviate
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: weaviate
+    app.kubernetes.io/part-of: falco-ecosystem
 spec:
   replicas: 1
   selector:
@@ -79,6 +82,9 @@ metadata:
   name: weaviate
   labels:
     app: weaviate
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: weaviate
+    app.kubernetes.io/part-of: falco-ecosystem
 spec:
   type: ClusterIP
   ports:
@@ -99,10 +105,13 @@ metadata:
   name: weaviate-pvc
   labels:
     app: weaviate
+    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/component: weaviate
+    app.kubernetes.io/part-of: falco-ecosystem
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
-  storageClassName: gp2  # Use appropriate storage class for your cluster 
+  storageClassName: hostpath  # Use hostpath storage class for local development 

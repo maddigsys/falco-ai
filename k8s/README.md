@@ -1,5 +1,7 @@
 # Kubernetes Deployment Guide - Falco AI Alert System
 
+**Version: v2.0.5** (with enhanced UI/UX and improved runtime events page)
+
 This guide provides comprehensive instructions for deploying the Falco AI Alert System on Kubernetes.
 
 ## 📋 Prerequisites
@@ -753,4 +755,13 @@ For deployment issues:
 
 🎉 **Your Falco AI Alert System is now ready for Kubernetes deployment!**
 
-Start with the development overlay for testing, then move to production when ready. 
+Start with the development overlay for testing, then move to production when ready.
+
+## 🌗 Dark/Light Mode Toggle
+
+- The UI now includes a theme toggle button (moon/sun icon) in the top navigation bar.
+- Click to instantly switch between dark and light mode.
+- Your preference is saved and persists across sessions.
+- All major UI elements are styled for both themes.
+
+--- 

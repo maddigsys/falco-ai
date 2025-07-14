@@ -6,10 +6,12 @@ A comprehensive security alert system that combines Falco runtime security with 
 
 - **Real-time Falco webhook processing** - Receives and processes security alerts
 - **AI-powered alert analysis** - Uses OpenAI, Gemini, or Ollama for intelligent analysis
-- **Interactive Web Dashboard** - Real-time alert visualization and statistics
+- **Interactive Web Dashboard** - Real-time alert visualization with dark/light mode
 - **MCP Integration** - 15 security tools with Model Context Protocol support
 - **Slack Integration** - Sends analyzed alerts to Slack channels
 - **Kubernetes Ready** - Production-ready deployment with auto-scaling
+- **Multilingual Support** - AI analysis in multiple languages
+- **Enhanced UI/UX** - Modern interface with responsive design
 
 ## Quick Start
 
@@ -29,7 +31,7 @@ open http://localhost:8080/dashboard
 ### Docker Run (Quick Start)
 ```bash
 # Run the latest version
-docker run -d -p 8080:8080 --name falco-ai-alerts maddigsys/falco-ai-alerts:v2.0.0
+docker run -d -p 8080:8080 --name falco-ai-alerts maddigsys/falco-ai-alerts:v2.0.5
 
 # Access Web UI
 open http://localhost:8080/dashboard
@@ -77,6 +79,7 @@ http_output:
 - `GET /api/alerts` - Get alerts with filtering
 - `POST /api/chat` - AI chat interface
 - `GET /mcp-dashboard` - MCP management interface
+- `GET /runtime-events` - Enhanced events page with pagination
 
 ## MCP Tools
 
@@ -86,6 +89,14 @@ The system includes 15 functional MCP (Model Context Protocol) tools:
 - **Threat Intelligence**: `get_threat_intelligence`, `predict_threats`
 - **Analytics**: `cluster_alerts`, `get_alert_statistics`, `search_security_events`
 - **Configuration**: `get_ai_config`, `get_slack_config`, `get_system_health`
+
+## Recent Updates (v2.0.5)
+
+- **UI/UX Improvements**: Enhanced dark/light mode compatibility
+- **Runtime Events**: Fixed pagination and layout issues
+- **Notifications**: Improved visibility and styling
+- **Responsive Design**: Better mobile and desktop experience
+- **Code Quality**: Removed debug styles and improved maintainability
 
 ## License
 

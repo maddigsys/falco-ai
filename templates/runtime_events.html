@@ -9,6 +9,21 @@
 <!-- Add Marked.js for markdown parsing -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
+    /* Override falco-main for runtime events page */
+    .falco-main {
+        flex: 1;
+        padding: 0;
+        overflow: visible;
+        background: transparent;
+        background-image: none;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        height: 100%;
+        min-height: 0;
+    }
+
     /* Enhanced Runtime Events Layout */
     .events-container {
         max-width: 1400px;
@@ -16,18 +31,26 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: var(--space-xl);
-        height: calc(100vh - 140px);
+        height: 100%;
         transition: all 0.3s ease;
+        /* Use flexbox approach instead of calc */
+        flex: 1;
+        min-height: 0;
     }
 
     .events-container.with-sidebar {
         grid-template-columns: 2fr 3fr;
+        grid-template-rows: 1fr;
+        align-items: stretch;
     }
 
     .events-main {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        min-height: 0;
+        height: 100%;
+        padding-top: var(--space-lg);
     }
 
     .events-sidebar {
@@ -42,6 +65,8 @@
         animation: slideIn 0.3s ease;
         min-width: 400px;
         max-width: none;
+        height: 100%;
+        min-height: 0;
     }
 
     .events-sidebar.active {
@@ -377,6 +402,8 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
+        height: 100%;
+        min-height: 400px;
     }
 
     .alerts-header {
@@ -387,6 +414,7 @@
         justify-content: space-between;
         background: var(--bg-cards);
         flex-shrink: 0;
+        min-height: 60px;
     }
 
     .alerts-title {
@@ -416,12 +444,16 @@
         display: flex;
         gap: var(--space-sm);
         align-items: center;
+        flex-shrink: 0;
+        min-width: 0;
     }
 
     .pagination-info {
         font-size: var(--text-sm);
         color: var(--text-secondary);
         margin-right: var(--space-md);
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 
     .alerts-body {
@@ -429,6 +461,17 @@
         overflow-y: auto;
         padding: var(--space-md);
         min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #alertsList {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 200px;
     }
 
     .alert-item {
@@ -845,7 +888,6 @@
         color: var(--text-secondary);
         background: var(--bg-secondary);
         border-radius: var(--radius-sm);
-        border: 1px dashed var(--border-light);
     }
 
     .ai-analysis-error {
@@ -911,6 +953,8 @@
         display: flex;
         gap: var(--space-sm);
         align-items: center;
+        flex-shrink: 0;
+        min-width: 0;
     }
 
     .pagination button {
@@ -922,11 +966,16 @@
         cursor: pointer;
         font-size: var(--text-sm);
         transition: all 0.2s ease;
+        min-width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .pagination button:hover:not(:disabled) {
-        border-color: var(--primary);
-        color: var(--primary);
+        border-color: var(--falco-primary);
+        color: var(--falco-primary);
     }
 
     .pagination button:disabled {
@@ -935,9 +984,10 @@
     }
 
     .pagination button.active {
-        background: var(--primary);
+        background: var(--falco-primary);
         color: white;
-        border-color: var(--primary);
+        border-color: var(--falco-primary);
+        font-weight: 600;
     }
 
     /* Loading & Empty States */
@@ -1008,7 +1058,7 @@
     @media (max-width: 1200px) {
         .events-container {
             grid-template-columns: 1fr;
-            height: auto;
+            height: 100%;
         }
         
         .events-container.with-sidebar {
@@ -1033,6 +1083,7 @@
         .events-container {
             margin: 0;
             gap: var(--space-md);
+            height: 100%;
         }
         
         .events-container.with-sidebar {
@@ -1114,9 +1165,10 @@
                 <div class="filter-group">
                     <label class="filter-label">Per Page</label>
                     <select id="limitFilter" class="filter-select">
-                        <option value="25">25 events</option>
+                        <option value="10">10 events</option>
+                        <option value="25" selected>25 events</option>
                         <option value="50">50 events</option>
-                        <option value="100" selected>100 events</option>
+                        <option value="100">100 events</option>
                         <option value="200">200 events</option>
                     </select>
                 </div>
@@ -1126,9 +1178,9 @@
                         <i class="fas fa-filter"></i>
                         Apply
                     </button>
-                    <button class="btn-clear" onclick="clearFilters()">
-                        <i class="fas fa-times"></i>
-                        Clear
+                    <button class="btn-reset" onclick="resetFilters()">
+                        <i class="fas fa-undo"></i>
+                        Reset
                     </button>
                 </div>
             </div>
@@ -1207,7 +1259,7 @@
     let alerts = [];
     let filteredAlerts = [];
     let currentPage = 1;
-    let itemsPerPage = 100;
+    let itemsPerPage = 25;
     let totalPages = 1;
     let selectedAlert = null;
     let chatMessages = [];
@@ -1350,8 +1402,8 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--primary);
-            color: white;
+            background: var(--falco-primary);
+            color: var(--text-inverse);
             padding: var(--space-md) var(--space-lg);
             border-radius: var(--radius-md);
             z-index: 9999;
@@ -1359,6 +1411,7 @@
             box-shadow: var(--shadow-lg);
             animation: slideInRight 0.3s ease;
             max-width: 300px;
+            border: 2px solid var(--falco-primary-dark);
         `;
         
         const filterCount = Object.keys(currentFilters).filter(key => 
@@ -1656,7 +1709,7 @@
                 <div class="detail-content">
                     <div class="ai-analysis-content" style="font-size: var(--text-sm); color: var(--text-heading); line-height: 1.5;">${formatAIAnalysis(alert.ai_analysis)}</div>
                     ${hasEmptyAIContent(alert.ai_analysis) ? `
-                    <div class="ai-regenerate-section" style="margin-top: var(--space-md); padding: var(--space-sm); background: var(--bg-secondary); border-radius: var(--radius-sm); border: 1px dashed var(--border-light);">
+                    <div class="ai-regenerate-section" style="margin-top: var(--space-md); padding: var(--space-sm); background: var(--bg-secondary); border-radius: var(--radius-sm);">
                         <p style="margin: 0 0 var(--space-sm) 0; font-size: var(--text-xs); color: var(--text-secondary);">
                             <i class="fas fa-info-circle"></i> AI analysis was generated but appears to be incomplete.
                         </p>
@@ -1972,6 +2025,21 @@
     }
 
     // Clear all filters
+    function resetFilters() {
+        // Remove active class from all stat items
+        document.querySelectorAll('.stat-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        document.getElementById('timeRange').value = '24h';
+        document.getElementById('priorityFilter').value = 'all';
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('limitFilter').value = '25';
+        applyFilters();
+        
+        showFilterFeedback('all');
+    }
+
     function clearFilters() {
         // Remove active class from all stat items
         document.querySelectorAll('.stat-item').forEach(item => {
@@ -1981,7 +2049,7 @@
         document.getElementById('timeRange').value = '24h';
         document.getElementById('priorityFilter').value = 'all';
         document.getElementById('statusFilter').value = 'all';
-        document.getElementById('limitFilter').value = '100';
+        document.getElementById('limitFilter').value = '25';
         applyFilters();
         
         showFilterFeedback('all');
