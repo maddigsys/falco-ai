@@ -1,6 +1,6 @@
 # Kubernetes Deployment Guide - Falco AI Alert System
 
-**Version: v2.0.5** (with enhanced UI/UX and improved runtime events page)
+**Version: v2.0.0** (with enhanced UI/UX and improved runtime events page)
 
 This guide provides comprehensive instructions for deploying the Falco AI Alert System on Kubernetes.
 

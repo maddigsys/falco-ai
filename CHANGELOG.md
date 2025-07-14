@@ -5,7 +5,7 @@ All notable changes to the Falco AI Alert System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.5] - 2024-12-19
+## [2.0.0] - 2024-12-19
 
 ### Added
 - Enhanced dark/light mode compatibility across all UI components
@@ -27,12 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved code maintainability and readability
 
 ### Technical
-- Updated Docker image version to v2.0.5
+- Updated Docker image version to v2.0.0
 - Enhanced CSS variable usage for better theme consistency
 - Improved error handling and user feedback
 - Streamlined UI component structure
 
-## [2.0.0] - 2024-12-18
+## [1.6.0] - 2024-12-18
 
 ### Added
 - Complete MCP (Model Context Protocol) integration with 15 security tools
@@ -66,6 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **v2.0.5**: UI/UX improvements and bug fixes
-- **v2.0.0**: Major release with MCP integration and enhanced features
+- **v2.0.0**: Major release with UI/UX improvements, MCP integration and enhanced features
+- **v1.6.0**: MCP integration and multilingual support
 - **v1.0.0**: Initial release with basic functionality 

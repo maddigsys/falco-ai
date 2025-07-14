@@ -31,7 +31,7 @@ open http://localhost:8080/dashboard
 ### Docker Run (Quick Start)
 ```bash
 # Run the latest version
-docker run -d -p 8080:8080 --name falco-ai-alerts maddigsys/falco-ai-alerts:v2.0.5
+docker run -d -p 8080:8080 --name falco-ai-alerts maddigsys/falco-ai-alerts:v2.0.0
 
 # Access Web UI
 open http://localhost:8080/dashboard
@@ -90,7 +90,7 @@ The system includes 15 functional MCP (Model Context Protocol) tools:
 - **Analytics**: `cluster_alerts`, `get_alert_statistics`, `search_security_events`
 - **Configuration**: `get_ai_config`, `get_slack_config`, `get_system_health`
 
-## Recent Updates (v2.0.5)
+## Recent Updates (v2.0.0)
 
 - **UI/UX Improvements**: Enhanced dark/light mode compatibility
 - **Runtime Events**: Fixed pagination and layout issues

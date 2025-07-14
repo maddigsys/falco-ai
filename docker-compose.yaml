@@ -7,7 +7,7 @@ services:
     # image: maddigsys/falco-ai-alerts:latest
     # Option 2: Build locally (for development with new features)
     build: .
-    image: maddigsys/falco-ai-alerts:v2.0.5
+    image: maddigsys/falco-ai-alerts:v2.0.0
     ports:
       - "8080:8080"  # Main webhook and Web UI port
     environment:
