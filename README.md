@@ -1,5 +1,8 @@
 # Falco AI Alert System
 
+> **⚠️ EXPERIMENTAL REPOSITORY DISCLAIMER**  
+> This repository is currently under active development and is considered experimental. Some features may not work as expected, and breaking changes may occur without notice. Use at your own risk in production environments. Please report issues and contribute feedback to help improve the system.
+
 A comprehensive security alert system that combines Falco runtime security with AI-powered analysis and an interactive web dashboard.
 
 ## Features
@@ -14,6 +17,8 @@ A comprehensive security alert system that combines Falco runtime security with 
 - **Enhanced UI/UX** - Modern interface with responsive design
 
 ## Quick Start
+
+> **Note**: This is experimental software. Please test thoroughly before using in production environments.
 
 ### Docker Compose (Recommended)
 ```bash
@@ -97,6 +102,19 @@ The system includes 15 functional MCP (Model Context Protocol) tools:
 - **Notifications**: Improved visibility and styling
 - **Responsive Design**: Better mobile and desktop experience
 - **Code Quality**: Removed debug styles and improved maintainability
+
+## Known Limitations & Issues
+
+This is an experimental project with the following known limitations:
+
+- **MCP Integration**: Some MCP features may not work as expected
+- **Weaviate Connection**: Vector database connectivity may be unstable
+- **AI Provider Configuration**: Complex setup required for cloud AI providers
+- **Performance**: Not optimized for high-volume production workloads
+- **Documentation**: Some features may lack complete documentation
+- **Testing**: Limited test coverage for all features
+
+**Reporting Issues**: Please report bugs and feature requests through GitHub Issues.
 
 ## License
 
