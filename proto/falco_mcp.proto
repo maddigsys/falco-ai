@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package falco.mcp;
+
+// Falco MCP gRPC Service
+service FalcoMCPService {
+  // Get available tools
+  rpc GetTools(GetToolsRequest) returns (GetToolsResponse);
+  
+  // Execute a tool
+  rpc ExecuteTool(ExecuteToolRequest) returns (ExecuteToolResponse);
+  
+  // Stream real-time security events
+  rpc StreamSecurityEvents(StreamEventsRequest) returns (stream SecurityEvent);
+  
+  // Bidirectional streaming for interactive sessions
+  rpc InteractiveSession(stream SessionRequest) returns (stream SessionResponse);
+  
+  // Get server health and status
+  rpc GetHealth(HealthRequest) returns (HealthResponse);
+}
+
+// Request messages
+message GetToolsRequest {
+  // Optional filter by tool category
+  optional string category = 1;
+}
+
+message ExecuteToolRequest {
+  string tool_name = 1;
+  map<string, string> parameters = 2;
+  optional string session_id = 3;
+}
+
+message StreamEventsRequest {
+  repeated string event_types = 1;
+  optional string min_priority = 2;
+  optional int32 max_events = 3;
+}
+
+message SessionRequest {
+  oneof request_type {
+    InitSession init = 1;
+    ToolExecution tool_exec = 2;
+    CloseSession close = 3;
+  }
+}
+
+message InitSession {
+  string client_name = 1;
+  string client_version = 2;
+  repeated string capabilities = 3;
+}
+
+message ToolExecution {
+  string tool_name = 1;
+  map<string, string> parameters = 2;
+}
+
+message CloseSession {
+  string reason = 1;
+}
+
+message HealthRequest {}
+
+// Response messages
+message GetToolsResponse {
+  repeated Tool tools = 1;
+  ServerInfo server_info = 2;
+}
+
+message ExecuteToolResponse {
+  bool success = 1;
+  oneof result {
+    ToolResult data = 2;
+    ErrorInfo error = 3;
+  }
+  int64 execution_time_ms = 4;
+}
+
+message SessionResponse {
+  oneof response_type {
+    SessionInitialized init_ack = 1;
+    ToolResult tool_result = 2;
+    ErrorInfo error = 3;
+    SessionClosed closed = 4;
+  }
+}
+
+message SessionInitialized {
+  string session_id = 1;
+  repeated Tool available_tools = 2;
+}
+
+message SessionClosed {
+  string reason = 1;
+}
+
+message HealthResponse {
+  bool healthy = 1;
+  string status = 2;
+  map<string, string> details = 3;
+}
+
+// Data structures
+message Tool {
+  string name = 1;
+  string description = 2;
+  ToolSchema schema = 3;
+  repeated string categories = 4;
+}
+
+message ToolSchema {
+  string type = 1; // "object"
+  map<string, ParameterInfo> properties = 2;
+  repeated string required = 3;
+}
+
+message ParameterInfo {
+  string type = 1;
+  string description = 2;
+  optional string default_value = 3;
+  repeated string enum_values = 4;
+}
+
+message ToolResult {
+  oneof content {
+    string text = 1;
+    bytes binary = 2;
+    SecurityAlerts alerts = 3;
+    SystemStatus status = 4;
+  }
+  map<string, string> metadata = 5;
+}
+
+message SecurityAlerts {
+  repeated SecurityAlert alerts = 1;
+  int32 total_count = 2;
+  string query_time = 3;
+}
+
+message SecurityAlert {
+  int64 id = 1;
+  string rule = 2;
+  string priority = 3;
+  string output = 4;
+  int64 timestamp = 5;
+  map<string, string> output_fields = 6;
+  string status = 7;
+}
+
+message SecurityEvent {
+  int64 id = 1;
+  string event_type = 2;
+  string priority = 3;
+  string message = 4;
+  int64 timestamp = 5;
+  map<string, string> metadata = 6;
+}
+
+message SystemStatus {
+  bool healthy = 1;
+  string falco_status = 2;
+  string mcp_status = 3;
+  int32 active_alerts = 4;
+  string last_alert_time = 5;
+  map<string, string> metrics = 6;
+}
+
+message ServerInfo {
+  string name = 1;
+  string version = 2;
+  repeated string capabilities = 3;
+  int64 startup_time = 4;
+}
+
+message ErrorInfo {
+  int32 code = 1;
+  string message = 2;
+  string details = 3;
+  map<string, string> metadata = 4;
+} 

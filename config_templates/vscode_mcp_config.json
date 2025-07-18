@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode-mcp/main/schemas/mcp-servers.json",
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/path/to/your/falco-rag-ai-gateway/jsonrpc_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080",
+        "LOG_LEVEL": "INFO"
+      },
+      "description": "Falco AI Alert System - Security monitoring and threat analysis tools",
+      "capabilities": {
+        "tools": true,
+        "resources": false,
+        "prompts": false
+      },
+      "metadata": {
+        "category": "security",
+        "tags": ["falco", "security", "alerts", "monitoring"],
+        "author": "Falco AI Alert System",
+        "version": "1.0.0"
+      }
+    }
+  }
+} 

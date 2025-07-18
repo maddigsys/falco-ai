@@ -1,0 +1,716 @@
+{% extends "falco_base.html" %}
+
+{% block title %}Audit Trail - Falco AI Alert System{% endblock %}
+{% block page_icon %}<i class="fas fa-search"></i>{% endblock %}
+{% block page_title %}Audit Trail{% endblock %}
+{% block page_description %}Complete audit trail of user activities and system access logs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .audit-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: var(--space-lg);
+    }
+
+    .audit-header {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        border-top: 4px solid var(--falco-primary);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .audit-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-lg);
+        margin-bottom: var(--space-xl);
+    }
+
+    .stat-card {
+        background: var(--bg-cards);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        text-align: center;
+        border: 2px solid var(--border-light);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--falco-primary);
+    }
+
+    .stat-number {
+        font-size: var(--text-3xl);
+        font-weight: 700;
+        color: var(--falco-primary);
+        margin-bottom: var(--space-sm);
+    }
+
+    .stat-label {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .audit-filters {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-xl);
+        border: 2px solid var(--border-light);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-lg);
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: var(--text-sm);
+    }
+
+    .filter-input, .filter-select {
+        padding: var(--space-sm);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: var(--text-sm);
+        transition: border-color 0.2s ease;
+    }
+
+    .filter-input:focus, .filter-select:focus {
+        border-color: var(--falco-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .audit-table-container {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        border: 2px solid var(--border-light);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .audit-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-cards);
+    }
+
+    .audit-table th {
+        background: linear-gradient(135deg, var(--falco-primary), var(--falco-primary-dark));
+        color: white;
+        padding: var(--space-md);
+        text-align: left;
+        font-weight: 600;
+        font-size: var(--text-sm);
+        border-bottom: 2px solid var(--falco-primary-dark);
+    }
+
+    .audit-table td {
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border-light);
+        font-size: var(--text-sm);
+        vertical-align: top;
+    }
+
+    .audit-table tbody tr:hover {
+        background: rgba(0, 174, 199, 0.05);
+    }
+
+    .audit-table tbody tr:nth-child(even) {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .audit-table tbody tr:nth-child(even):hover {
+        background: rgba(0, 174, 199, 0.08);
+    }
+
+    .action-badge {
+        display: inline-block;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .action-create { background: #dcfce7; color: #166534; }
+    .action-update { background: #dbeafe; color: #1d4ed8; }
+    .action-delete { background: #fee2e2; color: #dc2626; }
+    .action-read { background: #f3f4f6; color: #374151; }
+    .action-page-view { background: #fef3c7; color: #92400e; }
+    .action-audit-access { background: #e0e7ff; color: #3730a3; }
+
+    .success-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        font-size: var(--text-xs);
+        font-weight: 600;
+    }
+
+    .success-true { color: var(--success); }
+    .success-false { color: var(--danger); }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .user-id {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .user-type {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        background: var(--bg-secondary);
+        padding: 2px 6px;
+        border-radius: var(--radius-xs);
+        display: inline-block;
+    }
+
+    .resource-info {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .resource-type {
+        font-weight: 600;
+        color: var(--falco-primary);
+    }
+
+    .resource-id {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+        font-family: monospace;
+    }
+
+    .timestamp {
+        font-family: monospace;
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+    }
+
+    .details-toggle {
+        cursor: pointer;
+        color: var(--falco-primary);
+        text-decoration: underline;
+        font-size: var(--text-xs);
+    }
+
+    .details-content {
+        display: none;
+        margin-top: var(--space-sm);
+        padding: var(--space-sm);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+    }
+
+    .details-content.show {
+        display: block;
+    }
+
+    .details-json {
+        font-family: monospace;
+        font-size: var(--text-xs);
+        color: var(--text-primary);
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-top: var(--space-lg);
+        padding: var(--space-lg);
+    }
+
+    .pagination button {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--bg-cards);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pagination button:hover:not(:disabled) {
+        border-color: var(--falco-primary);
+        background: var(--falco-primary);
+        color: white;
+    }
+
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .loading {
+        text-align: center;
+        padding: var(--space-xl);
+        color: var(--text-secondary);
+    }
+
+    .error-message {
+        background: var(--danger);
+        color: white;
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        margin: var(--space-md) 0;
+    }
+
+    .current-user-info {
+        background: rgba(0, 174, 199, 0.1);
+        border: 2px solid var(--falco-primary);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        margin-bottom: var(--space-lg);
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+    }
+
+    .btn-export {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--falco-primary);
+        border-radius: var(--radius-sm);
+        background: var(--falco-primary);
+        color: white;
+        cursor: pointer;
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        transition: all 0.2s ease;
+    }
+
+    .btn-export:hover {
+        background: var(--falco-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .audit-container {
+            padding: var(--space-md);
+        }
+        
+        .audit-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .audit-table {
+            font-size: var(--text-xs);
+        }
+        
+        .audit-table th, .audit-table td {
+            padding: var(--space-sm);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="audit-container">
+    <!-- Current User Info -->
+    <div class="current-user-info">
+        <h3><i class="fas fa-user"></i> Current Session</h3>
+        <div><strong>User ID:</strong> {{ current_user_id }}</div>
+        <div><strong>Session ID:</strong> {{ current_session_id }}</div>
+        <div><strong>User Type:</strong> {{ 'Authenticated' if not current_user_id.startswith('anonymous_') else 'Anonymous' }}</div>
+    </div>
+
+    <!-- Audit Header -->
+    <div class="audit-header">
+        <h1><i class="fas fa-search"></i> System Audit Trail</h1>
+        <p>Complete log of user activities, system access, and security events for compliance and monitoring.</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="audit-stats">
+        <div class="stat-card">
+            <div class="stat-number" id="totalEvents">-</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="uniqueUsers">-</div>
+            <div class="stat-label">Unique Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="todayEvents">-</div>
+            <div class="stat-label">Today's Events</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="errorEvents">-</div>
+            <div class="stat-label">Error Events</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="audit-filters">
+        <h3><i class="fas fa-filter"></i> Filter Audit Records</h3>
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label class="filter-label">User ID</label>
+                <input type="text" id="userIdFilter" class="filter-input" placeholder="Enter user ID...">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Action Type</label>
+                <select id="actionTypeFilter" class="filter-select">
+                    <option value="">All Actions</option>
+                    <option value="alert_status_update">Alert Status Updates</option>
+                    <option value="page_view">Page Views</option>
+                    <option value="audit_access">Audit Access</option>
+                    <option value="bulk_action">Bulk Actions</option>
+                    <option value="api_call">API Calls</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Resource Type</label>
+                <select id="resourceTypeFilter" class="filter-select">
+                    <option value="">All Resources</option>
+                    <option value="alert">Alerts</option>
+                    <option value="audit_trail">Audit Trail</option>
+                    <option value="dashboard">Dashboard</option>
+                    <option value="config">Configuration</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Start Date</label>
+                <input type="datetime-local" id="startDateFilter" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">End Date</label>
+                <input type="datetime-local" id="endDateFilter" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Success Status</label>
+                <select id="successFilter" class="filter-select">
+                    <option value="">All</option>
+                    <option value="true">Success</option>
+                    <option value="false">Errors</option>
+                </select>
+            </div>
+        </div>
+        <div class="export-buttons">
+            <button class="btn-export" onclick="applyFilters()">
+                <i class="fas fa-search"></i> Apply Filters
+            </button>
+            <button class="btn-export" onclick="resetFilters()">
+                <i class="fas fa-times"></i> Reset
+            </button>
+            <button class="btn-export" onclick="exportAuditTrail('csv')">
+                <i class="fas fa-download"></i> Export CSV
+            </button>
+            <button class="btn-export" onclick="exportAuditTrail('json')">
+                <i class="fas fa-file-code"></i> Export JSON
+            </button>
+        </div>
+    </div>
+
+    <!-- Audit Table -->
+    <div class="audit-table-container">
+        <div id="loadingIndicator" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Loading audit records...
+        </div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        
+        <table class="audit-table" id="auditTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Resource</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="auditTableBody">
+                <!-- Data will be populated by JavaScript -->
+            </tbody>
+        </table>
+        
+        <div class="pagination" id="paginationControls" style="display: none;">
+            <button onclick="previousPage()" id="prevButton">Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button onclick="nextPage()" id="nextButton">Next</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let auditData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const itemsPerPage = 50;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAuditData();
+        loadAuditStats();
+        
+        // Set default date range (last 7 days)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        
+        document.getElementById('startDateFilter').value = formatDateForInput(startDate);
+        document.getElementById('endDateFilter').value = formatDateForInput(endDate);
+    });
+
+    async function loadAuditData() {
+        try {
+            showLoading(true);
+            
+            const filters = getFilters();
+            const queryParams = new URLSearchParams(filters).toString();
+            
+            const response = await fetch(`/api/audit/trail?${queryParams}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                auditData = data.audit_records || [];
+                applyClientFilters();
+                renderAuditTable();
+                showLoading(false);
+            } else {
+                throw new Error('Failed to load audit data');
+            }
+        } catch (error) {
+            showError('Failed to load audit data: ' + error.message);
+            showLoading(false);
+        }
+    }
+
+    async function loadAuditStats() {
+        try {
+            const response = await fetch('/api/audit/summary');
+            
+            if (response.ok) {
+                const data = await response.json();
+                updateStatsDisplay(data.summary);
+            }
+        } catch (error) {
+            console.error('Failed to load audit stats:', error);
+        }
+    }
+
+    function updateStatsDisplay(summary) {
+        const totalEvents = summary.activity_by_type.reduce((sum, item) => sum + item.count, 0);
+        const uniqueUsers = summary.top_users.length;
+        const todayEvents = summary.activity_by_type
+            .filter(item => item.action_type.includes('today'))
+            .reduce((sum, item) => sum + item.count, 0);
+        const errorEvents = summary.errors_by_type.reduce((sum, item) => sum + item.error_count, 0);
+
+        document.getElementById('totalEvents').textContent = totalEvents;
+        document.getElementById('uniqueUsers').textContent = uniqueUsers;
+        document.getElementById('todayEvents').textContent = todayEvents;
+        document.getElementById('errorEvents').textContent = errorEvents;
+    }
+
+    function getFilters() {
+        return {
+            user_id: document.getElementById('userIdFilter').value,
+            action_type: document.getElementById('actionTypeFilter').value,
+            resource_type: document.getElementById('resourceTypeFilter').value,
+            start_date: document.getElementById('startDateFilter').value,
+            end_date: document.getElementById('endDateFilter').value,
+            success: document.getElementById('successFilter').value,
+            limit: '1000'
+        };
+    }
+
+    function applyFilters() {
+        loadAuditData();
+    }
+
+    function resetFilters() {
+        document.getElementById('userIdFilter').value = '';
+        document.getElementById('actionTypeFilter').value = '';
+        document.getElementById('resourceTypeFilter').value = '';
+        document.getElementById('successFilter').value = '';
+        
+        // Reset to last 7 days
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        
+        document.getElementById('startDateFilter').value = formatDateForInput(startDate);
+        document.getElementById('endDateFilter').value = formatDateForInput(endDate);
+        
+        loadAuditData();
+    }
+
+    function applyClientFilters() {
+        filteredData = auditData.slice();
+        currentPage = 1;
+    }
+
+    function renderAuditTable() {
+        const tbody = document.getElementById('auditTableBody');
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageData = filteredData.slice(startIndex, endIndex);
+
+        tbody.innerHTML = pageData.map(record => `
+            <tr>
+                <td>
+                    <div class="timestamp">${formatTimestamp(record.timestamp)}</div>
+                </td>
+                <td>
+                    <div class="user-info">
+                        <div class="user-id">${record.user_id}</div>
+                        <div class="user-type">${record.user_id.startsWith('anonymous_') ? 'Anonymous' : 'Authenticated'}</div>
+                        <div class="timestamp">IP: ${record.client_ip}</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="action-badge action-${record.action_type.replace('_', '-')}">${record.action_type}</div>
+                    <div class="timestamp">${record.method} ${record.endpoint}</div>
+                </td>
+                <td>
+                    <div class="resource-info">
+                        <div class="resource-type">${record.resource_type}</div>
+                        ${record.resource_id ? `<div class="resource-id">${record.resource_id}</div>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <div class="success-indicator success-${record.success}">
+                        <i class="fas fa-${record.success ? 'check-circle' : 'times-circle'}"></i>
+                        ${record.success ? 'Success' : 'Error'}
+                    </div>
+                    ${record.error_message ? `<div class="timestamp">${record.error_message}</div>` : ''}
+                </td>
+                <td>
+                    ${record.action_details || record.old_values || record.new_values ? 
+                        `<span class="details-toggle" onclick="toggleDetails(${record.id})">Show Details</span>
+                         <div id="details-${record.id}" class="details-content">
+                             ${record.action_details ? `<strong>Details:</strong><br><div class="details-json">${JSON.stringify(record.action_details, null, 2)}</div>` : ''}
+                             ${record.old_values ? `<strong>Old Values:</strong><br><div class="details-json">${JSON.stringify(record.old_values, null, 2)}</div>` : ''}
+                             ${record.new_values ? `<strong>New Values:</strong><br><div class="details-json">${JSON.stringify(record.new_values, null, 2)}</div>` : ''}
+                         </div>`
+                        : '-'
+                    }
+                </td>
+            </tr>
+        `).join('');
+
+        updatePagination();
+        document.getElementById('auditTable').style.display = 'table';
+        document.getElementById('paginationControls').style.display = 'flex';
+    }
+
+    function toggleDetails(recordId) {
+        const detailsElement = document.getElementById(`details-${recordId}`);
+        detailsElement.classList.toggle('show');
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevButton').disabled = currentPage <= 1;
+        document.getElementById('nextButton').disabled = currentPage >= totalPages;
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderAuditTable();
+        }
+    }
+
+    function nextPage() {
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderAuditTable();
+        }
+    }
+
+    function showLoading(show) {
+        document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+        document.getElementById('auditTable').style.display = show ? 'none' : 'table';
+        document.getElementById('paginationControls').style.display = show ? 'none' : 'flex';
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorMessage').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('errorMessage').style.display = 'none';
+        }, 5000);
+    }
+
+    function formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+    }
+
+    function formatDateForInput(date) {
+        return date.toISOString().slice(0, 16);
+    }
+
+    async function exportAuditTrail(format) {
+        try {
+            const filters = getFilters();
+            const queryParams = new URLSearchParams({...filters, export: format}).toString();
+            
+            const response = await fetch(`/api/audit/export?${queryParams}`);
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `audit_trail_${new Date().toISOString().slice(0, 10)}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } else {
+                throw new Error('Failed to export audit trail');
+            }
+        } catch (error) {
+            showError('Failed to export audit trail: ' + error.message);
+        }
+    }
+</script>
+{% endblock %} 

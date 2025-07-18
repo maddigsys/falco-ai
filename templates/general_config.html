@@ -17,9 +17,32 @@
         padding: var(--space-xl);
         margin-bottom: var(--space-xl);
         position: sticky;
-        top: var(--space-md);
-        z-index: 100;
+        top: 10px;
+        z-index: 500;
         transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Enhanced sticky behavior when scrolled */
+    .sticky-action-bar.scrolled {
+        top: 5px;
+        padding: var(--space-lg) var(--space-xl);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary);
+        background: rgba(var(--bg-cards-rgb, 255, 255, 255), 0.95);
+    }
+
+    /* Dark mode backdrop support */
+    @media (prefers-color-scheme: dark) {
+        .sticky-action-bar {
+            background: rgba(var(--bg-cards-rgb, 33, 37, 41), 0.95);
+        }
+    }
+
+    [data-bs-theme="dark"] .sticky-action-bar,
+    .dark .sticky-action-bar {
+        background: rgba(var(--bg-cards-rgb, 33, 37, 41), 0.95);
     }
 
     .action-buttons {
@@ -27,7 +50,15 @@
         gap: var(--space-md);
         flex-wrap: wrap;
         align-items: center;
+        transition: all 0.3s ease;
     }
+
+    /* Compact action buttons when scrolled */
+    .sticky-action-bar.scrolled .action-buttons {
+        gap: var(--space-sm);
+    }
+
+
 
     .save-status {
         font-weight: 500;
@@ -66,6 +97,218 @@
         background: rgba(16, 185, 129, 0.1);
         color: var(--success);
         border-color: var(--success);
+    }
+
+    /* Summary Cards Styling - Button-like appearance */
+    .summary-card {
+        border-radius: var(--radius-lg);
+        border: 2px solid transparent;
+        margin-bottom: var(--space-lg);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .summary-card:active {
+        transform: translateY(0);
+        transition: transform 0.1s ease;
+    }
+
+    /* Active cards - Primary button style */
+    .summary-card.card-active {
+        background: var(--bs-primary, var(--primary));
+        border-color: var(--bs-primary, var(--primary));
+        color: white;
+    }
+
+    .summary-card.card-active .summary-header,
+    .summary-card.card-active .summary-header i,
+    .summary-card.card-active .summary-header h6 {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-card.card-active .summary-item .label,
+    .summary-card.card-active .summary-item .value {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .summary-card.card-active .summary-item {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Inactive cards - Muted/danger style */
+    .summary-card.card-inactive {
+        background: var(--bs-secondary, #6c757d);
+        border-color: var(--bs-secondary, #6c757d);
+        color: white;
+        opacity: 0.8;
+    }
+
+    .summary-card.card-inactive .summary-header,
+    .summary-card.card-inactive .summary-header i,
+    .summary-card.card-inactive .summary-header h6 {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-card.card-inactive .summary-item .label,
+    .summary-card.card-inactive .summary-item .value {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .summary-card.card-inactive .summary-item {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Dark mode adjustments */
+    @media (prefers-color-scheme: dark) {
+        .summary-card.card-active {
+            background: var(--bs-primary, #0d6efd);
+            border-color: var(--bs-primary, #0d6efd);
+        }
+        
+        .summary-card.card-inactive {
+            background: var(--bs-danger, #dc3545);
+            border-color: var(--bs-danger, #dc3545);
+        }
+    }
+
+    /* CSS custom property fallbacks for better theme support */
+    :root {
+        --summary-primary: var(--bs-primary, var(--primary, #0d6efd));
+        --summary-secondary: var(--bs-secondary, var(--secondary, #6c757d));
+        --summary-danger: var(--bs-danger, var(--danger, #dc3545));
+    }
+
+    [data-bs-theme="dark"] .summary-card.card-inactive,
+    .dark .summary-card.card-inactive {
+        background: var(--summary-danger);
+        border-color: var(--summary-danger);
+    }
+
+    .summary-header {
+        padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        position: relative;
+    }
+
+    .summary-arrow {
+        margin-left: auto;
+        font-size: 0.85rem;
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+
+    .summary-card:hover .summary-arrow {
+        opacity: 1;
+        transform: translateX(3px);
+    }
+
+    .summary-header i {
+        font-size: 1.2rem;
+    }
+
+    .summary-header h6 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .summary-content {
+        padding: var(--space-lg);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-sm) 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        min-height: 32px;
+    }
+
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+
+    .summary-item .label {
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-align: left;
+        flex: 1;
+    }
+
+    .summary-item .value {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-align: right;
+        flex: 0 0 auto;
+        max-width: 60%;
+        word-wrap: break-word;
+    }
+
+    .summary-item .value .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .summary-item .value .badge i {
+        font-size: 0.7rem;
+        margin-right: 2px;
+    }
+
+    /* Section highlight effect */
+    .section-highlight {
+        animation: highlightPulse 2s ease-out;
+    }
+
+    @keyframes highlightPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb, 13, 110, 253), 0.4);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 0 0 10px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.1);
+            transform: scale(1.01);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb, 13, 110, 253), 0);
+            transform: scale(1);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .summary-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--space-xs);
+        }
+        
+        .summary-item .label,
+        .summary-item .value {
+            text-align: left;
+            max-width: 100%;
+        }
     }
 
     .connection-status.error {
@@ -330,7 +573,7 @@
 </div>
 
 <!-- Alert Processing Configuration -->
-<div class="falco-card">
+<div class="falco-card" id="alert-processing">
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-filter"></i>
@@ -512,7 +755,7 @@
 </div>
 
 <!-- System Configuration -->
-<div class="falco-card">
+<div class="falco-card" id="system-config">
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-server"></i>
@@ -589,7 +832,7 @@
 </div>
 
 <!-- Data Management -->
-<div class="falco-card">
+<div class="falco-card" id="data-management">
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-database"></i>
@@ -664,7 +907,7 @@
 </div>
 
 <!-- Performance Tuning -->
-<div class="falco-card">
+<div class="falco-card" id="advanced-features">
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-tachometer-alt"></i>
@@ -746,6 +989,7 @@
         loadCurrentConfiguration();
         setupFormListeners();
         setupAutoSave();
+        setupStickyActionBar();
     });
 
     // Load current configuration
@@ -769,11 +1013,12 @@
     function populateForm(config) {
         Object.keys(config).forEach(key => {
             const element = document.getElementById(key);
-            if (element) {
+            if (element && config[key]) {
+                const value = config[key].value || config[key];
                 if (element.type === 'checkbox') {
-                    element.checked = config[key];
+                    element.checked = value === 'true' || value === true;
                 } else {
-                    element.value = config[key];
+                    element.value = value;
                 }
             }
         });
@@ -782,38 +1027,111 @@
     // Update configuration summary
     function updateConfigSummary() {
         const summaryDiv = document.getElementById('config-summary');
-        if (summaryDiv) {
+        if (summaryDiv && configData) {
+            // Extract values from the nested config structure
+            const getValue = (key) => configData[key]?.value || 'Not set';
+            const getBoolValue = (key) => configData[key]?.value === 'true';
+            const formatBool = (isEnabled) => isEnabled ? 
+                '<span class="badge bg-success"><i class="fas fa-check"></i> Enabled</span>' : 
+                '<span class="badge bg-secondary"><i class="fas fa-times"></i> Disabled</span>';
+            
+            // Determine card status based on key features
+            const alertProcessingActive = getBoolValue('deduplication_enabled') || getBoolValue('rate_limit_enabled');
+            const systemActive = getBoolValue('web_ui_enabled');
+            const dataManagementActive = getValue('max_alerts_storage') !== 'Not set';
+            const advancedActive = getBoolValue('batch_processing_enabled') || getBoolValue('alert_correlation_enabled');
+            
             summaryDiv.innerHTML = `
-                <div class="col-md-3">
-                    <div class="alert alert-info">
-                        <i class="fas fa-filter"></i>
-                        <strong>Alert Processing</strong><br>
-                        Min Priority: ${configData.min_priority || 'Not set'}<br>
-                        Rate Limiting: ${configData.rate_limit_enabled ? 'Enabled' : 'Disabled'}
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="summary-card ${alertProcessingActive ? 'card-active' : 'card-inactive'}" onclick="scrollToSection('alert-processing')" role="button" tabindex="0">
+                        <div class="summary-header">
+                            <i class="fas fa-filter"></i>
+                            <h6>Alert Processing</h6>
+                            <i class="fas fa-chevron-right summary-arrow"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-item">
+                                <span class="label">Min Priority:</span>
+                                <span class="value text-capitalize">${getValue('min_priority')}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Rate Limiting:</span>
+                                <span class="value">${formatBool(getBoolValue('rate_limit_enabled'))}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Deduplication:</span>
+                                <span class="value">${formatBool(getBoolValue('deduplication_enabled'))}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="alert alert-success">
-                        <i class="fas fa-server"></i>
-                        <strong>System</strong><br>
-                        Log Level: ${configData.log_level || 'Not set'}<br>
-                        Web UI: ${configData.web_ui_enabled ? 'Enabled' : 'Disabled'}
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="summary-card ${systemActive ? 'card-active' : 'card-inactive'}" onclick="scrollToSection('system-config')" role="button" tabindex="0">
+                        <div class="summary-header">
+                            <i class="fas fa-server"></i>
+                            <h6>System</h6>
+                            <i class="fas fa-chevron-right summary-arrow"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-item">
+                                <span class="label">Log Level:</span>
+                                <span class="value">${getValue('log_level')}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Web UI:</span>
+                                <span class="value">${formatBool(getBoolValue('web_ui_enabled'))}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Webhook Port:</span>
+                                <span class="value">${getValue('falco_ai_port')}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-database"></i>
-                        <strong>Data</strong><br>
-                        Max Alerts: ${configData.max_alerts_storage || 'Not set'}<br>
-                        Auto Cleanup: ${configData.auto_cleanup_enabled ? 'Enabled' : 'Disabled'}
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="summary-card ${dataManagementActive ? 'card-active' : 'card-inactive'}" onclick="scrollToSection('data-management')" role="button" tabindex="0">
+                        <div class="summary-header">
+                            <i class="fas fa-database"></i>
+                            <h6>Data Management</h6>
+                            <i class="fas fa-chevron-right summary-arrow"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-item">
+                                <span class="label">Max Alerts:</span>
+                                <span class="value">${getValue('max_alerts_storage')}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Retention:</span>
+                                <span class="value">${getValue('alert_retention_days')} days</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Ignore Older:</span>
+                                <span class="value">${getValue('ignore_older_minutes')} min</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="alert alert-info">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <strong>Performance</strong><br>
-                        Workers: ${configData.worker_processes || 'Not set'}<br>
-                        Caching: ${configData.cache_enabled ? 'Enabled' : 'Disabled'}
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="summary-card ${advancedActive ? 'card-active' : 'card-inactive'}" onclick="scrollToSection('advanced-features')" role="button" tabindex="0">
+                        <div class="summary-header">
+                            <i class="fas fa-cogs"></i>
+                            <h6>Advanced Features</h6>
+                            <i class="fas fa-chevron-right summary-arrow"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-item">
+                                <span class="label">Batch Processing:</span>
+                                <span class="value">${formatBool(getBoolValue('batch_processing_enabled'))}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Alert Correlation:</span>
+                                <span class="value">${formatBool(getBoolValue('alert_correlation_enabled'))}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Batch Size:</span>
+                                <span class="value">${getValue('batch_size')}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -866,7 +1184,11 @@
 
             if (response.ok) {
                 hasUnsavedChanges = false;
-                configData = config;
+                // Update configData to match the response structure
+                Object.keys(config).forEach(key => {
+                    if (!configData[key]) configData[key] = {};
+                    configData[key].value = config[key];
+                });
                 updateConfigSummary();
                 if (!silent) {
                     showConnectionStatus('success', 'Configuration saved successfully');
@@ -884,22 +1206,39 @@
     // Test configuration
     async function testConfiguration() {
         try {
+            // Collect current form data for testing
+            const config = {};
+            const formElements = document.querySelectorAll('input, select, textarea');
+            formElements.forEach(element => {
+                if (element.type === 'checkbox') {
+                    config[element.name || element.id] = element.checked;
+                } else if (element.name || element.id) {
+                    config[element.name || element.id] = element.value;
+                }
+            });
+
             const response = await fetch('/api/general/test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                body: JSON.stringify(config)
             });
 
             if (response.ok) {
                 const result = await response.json();
-                showConnectionStatus('success', 'Configuration test passed');
+                if (result.success !== false) {
+                    showConnectionStatus('success', 'Configuration test passed - All settings are valid');
+                } else {
+                    showConnectionStatus('error', `Configuration test failed: ${result.message}`);
+                }
             } else {
-                throw new Error('Configuration test failed');
+                const errorResult = await response.json();
+                throw new Error(errorResult.message || 'Configuration test failed');
             }
         } catch (error) {
             console.error('Error testing configuration:', error);
-            showConnectionStatus('error', 'Configuration test failed');
+            showConnectionStatus('error', error.message || 'Configuration test failed');
         }
     }
 
@@ -999,5 +1338,76 @@
             e.returnValue = '';
         }
     });
+
+    // Smooth scroll to configuration section
+    function scrollToSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            // Calculate offset to account for sticky header/navbar
+            const offset = 100; // Adjust this value based on your header height
+            const elementPosition = section.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+
+            // Add a subtle highlight effect to the target section
+            section.classList.add('section-highlight');
+            setTimeout(() => {
+                section.classList.remove('section-highlight');
+            }, 2000);
+        }
+    }
+
+    // Keyboard accessibility for summary cards
+    document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('summary-card') && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            e.target.click();
+        }
+    });
+
+    // Enhanced sticky action bar behavior
+    function setupStickyActionBar() {
+        const actionBar = document.querySelector('.sticky-action-bar');
+        const configSummary = document.getElementById('config-summary');
+        let isScrolled = false;
+
+        if (!actionBar) return;
+
+        function updateStickyBar() {
+            const scrollY = window.scrollY;
+            const summaryBottom = configSummary ? configSummary.getBoundingClientRect().bottom + window.scrollY : 200;
+            
+            // Add scrolled class when user scrolls past the configuration summary
+            if (scrollY > summaryBottom && !isScrolled) {
+                isScrolled = true;
+                actionBar.classList.add('scrolled');
+                
+                // Show a subtle indicator that settings can be saved
+                if (hasUnsavedChanges) {
+                    actionBar.style.borderTopColor = 'var(--warning)';
+                }
+            } else if (scrollY <= summaryBottom && isScrolled) {
+                isScrolled = false;
+                actionBar.classList.remove('scrolled');
+                actionBar.style.borderTopColor = 'var(--primary)';
+            }
+        }
+
+        // Throttled scroll listener for better performance
+        let scrollTimeout;
+        window.addEventListener('scroll', function() {
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
+            scrollTimeout = setTimeout(updateStickyBar, 10);
+        });
+
+        // Update on resize
+        window.addEventListener('resize', updateStickyBar);
+    }
 </script>
 {% endblock %} 

@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: falco-ai-alerts-development
+  name: falco-ai-alerts-dev
 
 resources:
   - ../../base
@@ -12,7 +12,7 @@ namespace: falco-ai-alerts-dev
 namePrefix: dev-
 
 commonLabels:
-  environment: development
+  environment: dev
   app.kubernetes.io/version: "2.0.0-dev"
 
 patches:
@@ -24,6 +24,15 @@ patches:
       - op: replace
         path: /spec/replicas
         value: 1
+  
+  # Override storage class for GKE
+  - target:
+      kind: PersistentVolumeClaim
+      name: weaviate-pvc
+    patch: |-
+      - op: replace
+        path: /spec/storageClassName
+        value: standard-rwo
   
   # Use NodePort for easy local access
   - target:
@@ -210,4 +219,4 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: v2.0.4 
+    newTag: v2.0.0-amd64 

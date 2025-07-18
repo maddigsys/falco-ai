@@ -5,6 +5,48 @@ All notable changes to the Falco AI Alert System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-01-17
+
+### Added
+- **JSON-RPC MCP Integration**: Universal AI client compatibility via stdio protocol
+- **Unified MCP Hub**: Consolidated all MCP interfaces into single dashboard
+- **Multi-Protocol MCP Support**: JSON-RPC, Claude-optimized, gRPC, and Standard MCP
+- **Auto-Setup Scripts**: Automated configuration for Claude Desktop, VS Code, and Cursor
+- **Web-Based MCP Configuration**: Real-time setup and testing interface
+- **15 Security Tools for AI Clients**: Complete toolset accessible via MCP protocol
+- **Comprehensive Alert Filtering**: Filter by rule, container, user, process, command, file path, Kubernetes data, alert content, AI analysis status
+- **Advanced Sorting Options**: Sort by timestamp, priority, rule name (ascending/descending)
+- **Filter Status Indicator**: Real-time display of active filters with count and descriptions
+- **Filter Save/Load**: Save frequently used filter configurations for quick access
+- **Debounced Text Filtering**: Smooth performance with automatic filtering as you type
+- **Dashboard Filter Enhancement**: Extended Dashboard with same comprehensive filtering system as Runtime Events
+
+### Changed
+- **Navigation Simplification**: Consolidated 3 MCP menu items into 1 dropdown
+- **Unified Styling**: Applied consistent design across all MCP interfaces
+- **Enhanced User Experience**: Single location for all MCP setup and configuration
+- **Improved Documentation**: Streamlined integration guides and setup instructions
+- **Dashboard Parity**: Dashboard now supports identical filtering capabilities as Runtime Events page
+
+### Fixed
+- **Backward Compatibility**: All legacy MCP URLs redirect to appropriate tabs
+- **Route Consolidation**: Eliminated duplicate configuration pages
+- **Documentation Cleanup**: Removed redundant MD files and consolidated information
+- **Runtime Events Filters**: Fixed non-functional filter buttons (Total, Critical, Unread, Recent)
+- **Filter Error Handling**: Added robust error handling and validation for filter operations
+- **Dashboard Filter System**: Replaced basic Dashboard filters with comprehensive multi-row filter grid
+
+### Removed
+- **Redundant Templates**: Deleted 3 old MCP templates (consolidated into unified dashboard)
+- **Duplicate Documentation**: Removed MCP_CONSOLIDATION_SUMMARY.md and JSON_RPC_STDIO_GUIDE.md
+- **Navigation Clutter**: Simplified from 3 separate MCP menu items to 1 organized dropdown
+
+### Technical
+- **Template Unification**: Reduced 3 separate templates to 1 unified dashboard
+- **Smart URL Routing**: Tab-based navigation with parameter support
+- **Enhanced Testing**: Comprehensive test suites for all MCP protocols
+- **Configuration Templates**: Auto-generated client configs with correct paths
+
 ## [2.0.0] - 2024-12-19
 
 ### Added

@@ -263,7 +263,7 @@ main() {
                 exit 0
                 ;;
             dev|development)
-                ENVIRONMENT="development"
+            ENVIRONMENT="dev"
                 shift
                 ;;
             prod|production)
@@ -301,7 +301,7 @@ main() {
     print_info "Will clean up: Falco AI Alerts + Ollama (tinyllama) + model data"
     
     # Show environment-specific details
-    if [ "$ENVIRONMENT" = "development" ]; then
+    if [ "$ENVIRONMENT" = "dev" ]; then
         print_info "Development cleanup includes:"
         echo "   • Image: maddigsys/falco-ai-alerts:latest"
         echo "   • Namespace: falco-ai-alerts-dev"
@@ -340,7 +340,7 @@ main() {
     if [ "$CREATE_BACKUP" = "true" ]; then
         print_info "Creating backups before cleanup..."
         
-        if [ "$ENVIRONMENT" = "development" ] || [ "$ENVIRONMENT" = "all" ]; then
+        if [ "$ENVIRONMENT" = "dev" ] || [ "$ENVIRONMENT" = "all" ]; then
             backup_data "falco-ai-alerts-dev" "dev-falco-ai-alerts"
         fi
         
@@ -350,8 +350,8 @@ main() {
     fi
     
     # Perform cleanup
-    if [ "$ENVIRONMENT" = "development" ] || [ "$ENVIRONMENT" = "all" ]; then
-        cleanup_namespace "development" "falco-ai-alerts-dev" "$SCRIPT_DIR/overlays/development"
+    if [ "$ENVIRONMENT" = "dev" ] || [ "$ENVIRONMENT" = "all" ]; then
+        cleanup_namespace "dev" "falco-ai-alerts-dev" "$SCRIPT_DIR/overlays/development"
     fi
     
     if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "all" ]; then

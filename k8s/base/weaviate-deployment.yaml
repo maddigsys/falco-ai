@@ -46,11 +46,11 @@ spec:
           value: "/var/lib/weaviate/backups"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "2Gi"
-            cpu: "1000m"
+            memory: "512Mi"
+            cpu: "500m"
         volumeMounts:
         - name: weaviate-data
           mountPath: /var/lib/weaviate
@@ -114,4 +114,4 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: hostpath  # Use hostpath storage class for local development 
+  storageClassName: standard-rwo  # Use standard-rwo storage class for GKE 

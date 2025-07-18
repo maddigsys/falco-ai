@@ -18,7 +18,7 @@
         margin-bottom: var(--space-xl);
         position: sticky;
         top: var(--space-md);
-        z-index: 100;
+        z-index: 500;
         transition: all 0.3s ease;
     }
 
@@ -549,10 +549,16 @@
                         <i class="fas fa-brain"></i>
                         Current Model
                     </label>
-                    <input type="text" class="form-control" id="model_name" name="model_name" readonly>
+                    <input type="text" class="form-control" id="model_name" name="model_name" readonly style="display: none;">
+                    <!-- Enhanced Current Model Status Display -->
+                    <div class="current-model-status" id="currentModelStatus" style="padding: var(--space-md); background: var(--bg-secondary); border-radius: var(--radius-md); border: 2px solid var(--border-light); min-height: 48px; display: flex; align-items: center;">
+                        <div class="status-text" style="font-size: var(--text-sm); color: var(--text-secondary); width: 100%;">
+                            <i class="fas fa-sync fa-spin"></i> Loading current model status...
+                        </div>
+                    </div>
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i>
-                        Currently configured model (set via provider tabs)
+                        Currently active model with availability status
                     </div>
                 </div>
             </div>
@@ -635,7 +641,7 @@
 
 <!-- Provider Selection Tabs -->
 <div class="provider-tabs">
-    <button class="provider-tab active" onclick="showProvider('openai')" data-provider="openai">
+    <button class="provider-tab" onclick="showProvider('openai')" data-provider="openai">
         <i class="fab fa-openai"></i>
         OpenAI
     </button>
@@ -651,7 +657,7 @@
 </div>
 
 <!-- OpenAI Configuration -->
-<div id="openai-config" class="provider-config falco-card active">
+<div id="openai-config" class="provider-config falco-card">
     <div class="card-header">
         <h3 class="card-title">
             <i class="fab fa-openai"></i>
@@ -684,9 +690,7 @@
                         Model
                     </label>
                     <select class="form-select" id="openai_model_name" name="openai_model_name">
-                        <option value="gpt-4">GPT-4 (Recommended)</option>
-                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="">Loading models...</option>
                     </select>
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i>
@@ -713,6 +717,10 @@
             <div class="model-chip" onclick="selectModel('openai_model_name', 'gpt-4')">GPT-4</div>
             <div class="model-chip" onclick="selectModel('openai_model_name', 'gpt-4-turbo')">GPT-4 Turbo</div>
             <div class="model-chip" onclick="selectModel('openai_model_name', 'gpt-3.5-turbo')">GPT-3.5 Turbo</div>
+        </div>
+        
+        <div class="model-status" id="openai-status">
+            <div class="status-text">Model status will be displayed here</div>
         </div>
         
         <div class="d-flex justify-content-end gap-2 mt-3">
@@ -765,11 +773,7 @@
                         Model
                     </label>
                     <select class="form-select" id="ollama_model_name" name="ollama_model_name">
-                        <option value="tinyllama">TinyLlama (Fast)</option>
-                        <option value="qwen2:7b">Qwen2 7B (Recommended)</option>
-                        <option value="llama3:latest">Llama3 Latest</option>
-                        <option value="mistral:latest">Mistral Latest</option>
-                        <option value="codellama:latest">CodeLlama Latest</option>
+                        <option value="">Loading models...</option>
                     </select>
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i>
@@ -888,10 +892,7 @@
                         Model
                     </label>
                     <select class="form-select" id="gemini_model_name" name="gemini_model_name">
-                        <option value="gemini-pro">Gemini Pro</option>
-                        <option value="gemini-pro-vision">Gemini Pro Vision</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="">Loading models...</option>
                     </select>
                     <div class="form-text">
                         <i class="fas fa-info-circle"></i>
@@ -918,6 +919,10 @@
             <div class="model-chip" onclick="selectModel('gemini_model_name', 'gemini-pro')">Gemini Pro</div>
             <div class="model-chip" onclick="selectModel('gemini_model_name', 'gemini-1.5-flash')">Gemini 1.5 Flash</div>
             <div class="model-chip" onclick="selectModel('gemini_model_name', 'gemini-1.5-pro')">Gemini 1.5 Pro</div>
+        </div>
+        
+        <div class="model-status" id="gemini-status">
+            <div class="status-text">Model status will be displayed here</div>
         </div>
         
         <div class="d-flex justify-content-end gap-2 mt-3">
@@ -956,7 +961,21 @@
             const response = await fetch('/api/ai/config');
             if (response.ok) {
                 configData = await response.json();
+                console.log('Loaded AI config data:', configData); // Debug log
+                
+                // Populate model dropdowns with availability checking
+                await populateAllModelDropdowns(configData);
+                
                 populateForm(configData);
+                
+                // Update current model display
+                await updateCurrentModelDisplay(configData);
+                
+                // Show the active provider tab
+                const activeProvider = configData.provider_name?.value || 'ollama';
+                showProvider(activeProvider);
+                
+                console.log('Set active provider tab to:', activeProvider); // Debug log
             } else {
                 throw new Error('Failed to load configuration');
             }
@@ -970,13 +989,22 @@
     function populateForm(config) {
         Object.keys(config).forEach(key => {
             const element = document.getElementById(key);
-            if (element && config[key]) {
-                const value = config[key].value || config[key]; // Handle both nested and flat structures
+            if (element && config[key] !== undefined && config[key] !== null) {
+                // Handle nested config structure: config[key].value or config[key]
+                let value = config[key];
+                if (typeof config[key] === 'object' && config[key].value !== undefined) {
+                    value = config[key].value;
+                }
+                
+                console.log(`Setting AI ${key} to:`, value); // Debug log
+                
                 if (element.type === 'checkbox') {
                     element.checked = value === 'true' || value === true;
                 } else {
-                    element.value = value;
+                    element.value = value || '';
                 }
+            } else if (element) {
+                console.log(`No value found for AI field ${key}`); // Debug log
             }
         });
     }
@@ -999,6 +1027,8 @@
             if (response.ok) {
                 const status = await response.json();
                 displayStatusInfo(status);
+                updateModelStatus(status);
+                updateCurrentModelDisplay(status);
             }
         } catch (error) {
             console.error('Error loading status:', error);
@@ -1048,6 +1078,77 @@
         }
     }
 
+    // Update individual model status displays
+    function updateModelStatus(config) {
+        const activeProvider = config.provider_name?.value || 'ollama';
+        
+        // Update Ollama status
+        const ollamaStatus = document.getElementById('ollama-status');
+        if (ollamaStatus) {
+            const ollamaModel = config.ollama_model_name?.value || config.model_name?.value || 'tinyllama';
+            const ollamaUrl = config.ollama_api_url?.value || 'http://prod-ollama:11434/api/generate';
+            const isOllamaActive = activeProvider === 'ollama';
+            
+            const statusText = ollamaStatus.querySelector('.status-text');
+            if (statusText) {
+                statusText.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>Model:</strong> ${ollamaModel} 
+                            ${isOllamaActive ? '<span class="badge bg-success ms-2">Active</span>' : '<span class="badge bg-secondary ms-2">Inactive</span>'}
+                        </span>
+                        <small class="text-muted">URL: ${ollamaUrl}</small>
+                    </div>
+                `;
+                statusText.className = `status-text ${isOllamaActive ? 'downloaded' : 'not-available'}`;
+            }
+        }
+
+        // Update OpenAI status
+        const openaiStatus = document.getElementById('openai-status');
+        if (openaiStatus) {
+            const openaiModel = config.openai_model_name?.value || 'gpt-3.5-turbo';
+            const hasApiKey = config.openai_virtual_key?.value || config.portkey_api_key?.value;
+            const isOpenaiActive = activeProvider === 'openai';
+            
+            const statusText = openaiStatus.querySelector('.status-text');
+            if (statusText) {
+                statusText.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>Model:</strong> ${openaiModel}
+                            ${isOpenaiActive ? '<span class="badge bg-success ms-2">Active</span>' : '<span class="badge bg-secondary ms-2">Inactive</span>'}
+                        </span>
+                        <small class="text-muted">${hasApiKey ? 'API Key configured' : 'No API Key'}</small>
+                    </div>
+                `;
+                statusText.className = `status-text ${hasApiKey && isOpenaiActive ? 'downloaded' : 'not-available'}`;
+            }
+        }
+
+        // Update Gemini status
+        const geminiStatus = document.getElementById('gemini-status');
+        if (geminiStatus) {
+            const geminiModel = config.gemini_model_name?.value || 'gemini-pro';
+            const hasApiKey = config.gemini_virtual_key?.value || config.portkey_api_key?.value;
+            const isGeminiActive = activeProvider === 'gemini';
+            
+            const statusText = geminiStatus.querySelector('.status-text');
+            if (statusText) {
+                statusText.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>Model:</strong> ${geminiModel}
+                            ${isGeminiActive ? '<span class="badge bg-success ms-2">Active</span>' : '<span class="badge bg-secondary ms-2">Inactive</span>'}
+                        </span>
+                        <small class="text-muted">${hasApiKey ? 'API Key configured' : 'No API Key'}</small>
+                    </div>
+                `;
+                statusText.className = `status-text ${hasApiKey && isGeminiActive ? 'downloaded' : 'not-available'}`;
+            }
+        }
+    }
+
     // Show provider configuration
     function showProvider(provider) {
         // Hide all provider configs
@@ -1066,7 +1167,23 @@
         // Add active class to selected tab
         document.querySelector(`[data-provider="${provider}"]`).classList.add('active');
         
+        // Update the provider_name field to reflect the current selection
+        const providerField = document.getElementById('provider_name');
+        if (providerField) {
+            providerField.value = provider;
+        }
+        
         currentProvider = provider;
+        
+        // Update current model display when provider changes
+        if (configData) {
+            // Create updated config with new provider
+            const updatedConfig = { ...configData };
+            updatedConfig.provider_name = { value: provider };
+            updateCurrentModelDisplay(updatedConfig);
+        }
+        
+        console.log('Switched to provider:', provider); // Debug log
     }
 
     // Select model
@@ -1198,6 +1315,387 @@
                 console.error('Error checking progress:', error);
             }
         }, 2000);
+    }
+
+    // Shared utility: Check which Ollama models are actually available
+    async function checkOllamaModels() {
+        try {
+            const response = await fetch('/api/ollama/models');
+            if (response.ok) {
+                const data = await response.json();
+                // The API returns { success: true, models: [...], count: X }
+                if (data.success && data.models && Array.isArray(data.models)) {
+                    console.log('Available Ollama models for AI config:', data.models);
+                    return data.models;
+                } else if (data.models && Array.isArray(data.models)) {
+                    return data.models;
+                } else if (Array.isArray(data)) {
+                    return data;
+                }
+            } else {
+                console.log('Ollama models API returned error:', response.status);
+            }
+        } catch (error) {
+            console.log('Could not check Ollama models:', error);
+        }
+        
+        // Return empty array if check fails
+        return [];
+    }
+
+    // Populate all model dropdowns with availability checking
+    async function populateAllModelDropdowns(config) {
+        await Promise.all([
+            populateOllamaModelDropdown(config),
+            populateOpenAIModelDropdown(config),
+            populateGeminiModelDropdown(config)
+        ]);
+    }
+
+    // Populate Ollama model dropdown with availability checking
+    async function populateOllamaModelDropdown(config) {
+        const modelSelect = document.getElementById('ollama_model_name');
+        if (!modelSelect) return;
+        
+        // Clear existing options
+        modelSelect.innerHTML = '<option value="">Loading models...</option>';
+        
+        const currentModel = config.ollama_model_name?.value || config.model_name?.value || 'tinyllama';
+        const models = [
+            'tinyllama',
+            'llama3:latest', 
+            'llama3:8b',
+            'llama3:70b',
+            'gemma:latest',
+            'gemma:7b',
+            'phi3:latest',
+            'codellama:latest',
+            'mistral:latest',
+            'mixtral:8x7b',
+            'qwen2:7b',
+            'qwen:latest'
+        ];
+        
+        try {
+            // Check which Ollama models are actually available
+            const availableModels = await checkOllamaModels();
+            
+            // Clear loading message
+            modelSelect.innerHTML = '<option value="">Select a model...</option>';
+            
+            // Add all available models first (these are definitely downloaded)
+            availableModels.forEach(model => {
+                if (!models.includes(model)) {
+                    models.unshift(model); // Add to beginning
+                }
+            });
+            
+            // Add model options with availability status
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                
+                const isAvailable = availableModels.includes(model);
+                const isCurrent = model === currentModel;
+                
+                if (isAvailable) {
+                    option.textContent = `${model} ✓ (Downloaded)`;
+                    option.style.color = '#059669'; // Green for available
+                    option.style.fontWeight = '600';
+                } else {
+                    option.textContent = `${model} ⚠ (Not Downloaded)`;
+                    option.style.color = '#D97706'; // Orange for not available
+                }
+                
+                if (isCurrent) {
+                    option.selected = true;
+                    if (!isAvailable) {
+                        option.textContent = `${model} ❌ (Active but Not Downloaded)`;
+                        option.style.color = '#DC2626'; // Red for current but not available
+                        option.style.fontWeight = '700';
+                    } else {
+                        option.textContent = `${model} ✓ (Active & Downloaded)`;
+                        option.style.color = '#059669';
+                        option.style.fontWeight = '700';
+                    }
+                }
+                
+                modelSelect.appendChild(option);
+            });
+            
+            // If current model is not in the list, add it as selected
+            if (currentModel && !models.includes(currentModel)) {
+                const option = document.createElement('option');
+                option.value = currentModel;
+                option.textContent = currentModel + ' (Current - Custom)';
+                option.selected = true;
+                option.style.color = '#7C3AED'; // Purple for custom models
+                modelSelect.appendChild(option);
+            }
+            
+        } catch (error) {
+            console.error('Error populating Ollama models:', error);
+            modelSelect.innerHTML = '<option value="">Error loading models</option>';
+        }
+    }
+
+    // Populate OpenAI model dropdown with API key checking
+    async function populateOpenAIModelDropdown(config) {
+        const modelSelect = document.getElementById('openai_model_name');
+        if (!modelSelect) return;
+        
+        const currentModel = config.openai_model_name?.value || 'gpt-3.5-turbo';
+        const models = [
+            'gpt-4o',
+            'gpt-4o-mini',
+            'gpt-4-turbo',
+            'gpt-4',
+            'gpt-3.5-turbo',
+            'gpt-3.5-turbo-16k'
+        ];
+        
+        // Clear loading message
+        modelSelect.innerHTML = '<option value="">Select a model...</option>';
+        
+        // Check if API key is configured
+        const hasApiKey = config.openai_virtual_key?.value || config.portkey_api_key?.value;
+        
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            
+            if (hasApiKey) {
+                option.textContent = `${model} ✓ (API Ready)`;
+                option.style.color = '#059669'; // Green for available
+                option.style.fontWeight = '600';
+            } else {
+                option.textContent = `${model} ⚠ (API Key Required)`;
+                option.style.color = '#D97706'; // Orange for no API key
+            }
+            
+            if (model === currentModel) {
+                option.selected = true;
+                if (hasApiKey) {
+                    option.textContent = `${model} ✓ (Active & Ready)`;
+                    option.style.fontWeight = '700';
+                } else {
+                    option.textContent = `${model} ❌ (Active but No API Key)`;
+                    option.style.color = '#DC2626'; // Red for current but not ready
+                    option.style.fontWeight = '700';
+                }
+            }
+            
+            modelSelect.appendChild(option);
+        });
+        
+        // If current model is not in the list, add it as selected
+        if (currentModel && !models.includes(currentModel)) {
+            const option = document.createElement('option');
+            option.value = currentModel;
+            option.textContent = currentModel + ' (Current - Custom)';
+            option.selected = true;
+            option.style.color = '#7C3AED'; // Purple for custom models
+            modelSelect.appendChild(option);
+        }
+    }
+
+    // Populate Gemini model dropdown with API key checking
+    async function populateGeminiModelDropdown(config) {
+        const modelSelect = document.getElementById('gemini_model_name');
+        if (!modelSelect) return;
+        
+        const currentModel = config.gemini_model_name?.value || 'gemini-pro';
+        const models = [
+            'gemini-pro',
+            'gemini-pro-vision',
+            'gemini-1.5-pro',
+            'gemini-1.5-flash'
+        ];
+        
+        // Clear loading message
+        modelSelect.innerHTML = '<option value="">Select a model...</option>';
+        
+        // Check if API key is configured
+        const hasApiKey = config.gemini_virtual_key?.value || config.portkey_api_key?.value;
+        
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            
+            if (hasApiKey) {
+                option.textContent = `${model} ✓ (API Ready)`;
+                option.style.color = '#059669'; // Green for available
+                option.style.fontWeight = '600';
+            } else {
+                option.textContent = `${model} ⚠ (API Key Required)`;
+                option.style.color = '#D97706'; // Orange for no API key
+            }
+            
+            if (model === currentModel) {
+                option.selected = true;
+                if (hasApiKey) {
+                    option.textContent = `${model} ✓ (Active & Ready)`;
+                    option.style.fontWeight = '700';
+                } else {
+                    option.textContent = `${model} ❌ (Active but No API Key)`;
+                    option.style.color = '#DC2626'; // Red for current but not ready
+                    option.style.fontWeight = '700';
+                }
+            }
+            
+            modelSelect.appendChild(option);
+        });
+        
+        // If current model is not in the list, add it as selected
+        if (currentModel && !models.includes(currentModel)) {
+            const option = document.createElement('option');
+            option.value = currentModel;
+            option.textContent = currentModel + ' (Current - Custom)';
+            option.selected = true;
+            option.style.color = '#7C3AED'; // Purple for custom models
+            modelSelect.appendChild(option);
+        }
+    }
+
+    // Update Current Model Display with availability status
+    async function updateCurrentModelDisplay(config) {
+        const statusDiv = document.getElementById('currentModelStatus');
+        const hiddenInput = document.getElementById('model_name');
+        if (!statusDiv) return;
+        
+        const statusText = statusDiv.querySelector('.status-text');
+        if (!statusText) return;
+        
+        const activeProvider = config.provider_name?.value || 'ollama';
+        let currentModel = '';
+        let statusHtml = '';
+        let statusClass = 'not-available';
+        
+        // Determine current model based on active provider
+        if (activeProvider === 'ollama') {
+            currentModel = config.ollama_model_name?.value || config.model_name?.value || 'tinyllama';
+        } else if (activeProvider === 'openai') {
+            currentModel = config.openai_model_name?.value || 'gpt-3.5-turbo';
+        } else if (activeProvider === 'gemini') {
+            currentModel = config.gemini_model_name?.value || 'gemini-pro';
+        }
+        
+        // Update hidden input for form submission
+        if (hiddenInput) {
+            hiddenInput.value = currentModel;
+        }
+        
+        if (activeProvider === 'ollama') {
+            try {
+                // Check if Ollama model is actually downloaded
+                const availableModels = await checkOllamaModels();
+                const isDownloaded = availableModels.includes(currentModel);
+                
+                if (isDownloaded) {
+                    statusClass = 'downloaded';
+                    statusHtml = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span style="color: #059669; font-weight: 600;">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>${currentModel}</strong>
+                                <span style="background: #059669; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">ACTIVE & DOWNLOADED</span>
+                            </span>
+                            <small style="color: var(--text-secondary);">Ollama (Local)</small>
+                        </div>
+                    `;
+                } else {
+                    statusClass = 'not-available';
+                    statusHtml = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span style="color: #DC2626; font-weight: 600;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>${currentModel}</strong>
+                                <span style="background: #DC2626; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">ACTIVE BUT NOT DOWNLOADED</span>
+                            </span>
+                            <small style="color: var(--text-secondary);">Ollama (Local)</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                statusClass = 'error';
+                statusHtml = `
+                    <div style="color: #DC2626; width: 100%;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>${currentModel}</strong> - Error checking Ollama status
+                    </div>
+                `;
+            }
+            
+        } else if (activeProvider === 'openai') {
+            const hasApiKey = config.openai_virtual_key?.value || config.portkey_api_key?.value;
+            
+            if (hasApiKey) {
+                statusClass = 'downloaded';
+                statusHtml = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="color: #059669; font-weight: 600;">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>${currentModel}</strong>
+                            <span style="background: #059669; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">ACTIVE & READY</span>
+                        </span>
+                        <small style="color: var(--text-secondary);">OpenAI (Cloud)</small>
+                    </div>
+                `;
+            } else {
+                statusClass = 'not-available';
+                statusHtml = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="color: #DC2626; font-weight: 600;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>${currentModel}</strong>
+                            <span style="background: #DC2626; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">ACTIVE BUT NO API KEY</span>
+                        </span>
+                        <small style="color: var(--text-secondary);">OpenAI (Cloud)</small>
+                    </div>
+                `;
+            }
+            
+        } else if (activeProvider === 'gemini') {
+            const hasApiKey = config.gemini_virtual_key?.value || config.portkey_api_key?.value;
+            
+            if (hasApiKey) {
+                statusClass = 'downloaded';
+                statusHtml = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="color: #059669; font-weight: 600;">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>${currentModel}</strong>
+                            <span style="background: #059669; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">ACTIVE & READY</span>
+                        </span>
+                        <small style="color: var(--text-secondary);">Google Gemini (Cloud)</small>
+                    </div>
+                `;
+            } else {
+                statusClass = 'not-available';
+                statusHtml = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="color: #DC2626; font-weight: 600;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>${currentModel}</strong>
+                            <span style="background: #DC2626; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px;">ACTIVE BUT NO API KEY</span>
+                        </span>
+                        <small style="color: var(--text-secondary);">Google Gemini (Cloud)</small>
+                    </div>
+                `;
+            }
+        }
+        
+        statusText.innerHTML = statusHtml;
+        statusText.className = `status-text ${statusClass}`;
+        
+        // Update border color based on status
+        if (statusClass === 'downloaded') {
+            statusDiv.style.borderColor = '#059669';
+        } else if (statusClass === 'not-available') {
+            statusDiv.style.borderColor = '#DC2626';
+        } else {
+            statusDiv.style.borderColor = 'var(--border-light)';
+        }
     }
 
     // Save configuration

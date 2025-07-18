@@ -1,0 +1,561 @@
+#!/bin/bash
+
+# Unified Falco AI Alert System Deployment Tool
+# Consolidates all deployment operations into a single command-line interface
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="2.0.0"
+DEFAULT_ENV="development"
+DEFAULT_TIMEOUT="600s"
+
+# Global variables
+ENVIRONMENT=""
+PLATFORM=""
+CONFIG_FILE=""
+DRY_RUN=false
+VERBOSE=false
+WAIT=false
+TIMEOUT="$DEFAULT_TIMEOUT"
+AUTO_SECRETS=false
+VERIFY=false
+
+# Print functions
+print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
+print_success() { echo -e "${GREEN}✅ $1${NC}"; }
+print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+print_error() { echo -e "${RED}❌ $1${NC}"; }
+print_step() { echo -e "${PURPLE}🚀 $1${NC}"; }
+print_header() {
+    echo -e "${CYAN}"
+    echo "=============================================="
+    echo "🚀 Falco AI Alert System - Unified Deploy Tool"
+    echo "Version: $VERSION"
+    echo "=============================================="
+    echo -e "${NC}"
+}
+
+# Help functions
+show_help() {
+    cat << EOF
+Unified Falco AI Alert System Deployment Tool
+
+USAGE:
+    $0 [COMMAND] [OPTIONS]
+
+COMMANDS:
+    install     Deploy the application
+    upgrade     Upgrade to new version
+    rollback    Rollback to previous version
+    status      Check deployment status
+    secrets     Manage secrets
+    cleanup     Remove deployment
+    verify      Run health checks
+    platform    Platform detection utilities
+
+GLOBAL OPTIONS:
+    --env=ENV          Environment (development/staging/production)
+    --platform=CLOUD   Override platform detection (gke/eks/aks/local)
+    --config=FILE      Custom configuration file
+    --dry-run          Show what would be done without executing
+    --verbose          Detailed output
+    --wait             Wait for completion
+    --timeout=DURATION Timeout for operations (default: 600s)
+    --help, -h         Show this help message
+
+INSTALL OPTIONS:
+    --auto-secrets     Auto-generate secrets
+    --verify           Run verification after deployment
+    --skip-models      Skip AI model download
+    --min-replicas=N   Minimum replicas for HPA
+    --max-replicas=N   Maximum replicas for HPA
+
+EXAMPLES:
+    # Complete deployment with verification
+    $0 install --env=development --auto-secrets --wait --verify
+
+    # Upgrade with automatic rollback on failure
+    $0 upgrade --env=production --version=v2.1.0 --rollback-on-failure
+
+    # Status dashboard
+    $0 status --env=development --watch
+
+    # Platform detection
+    $0 platform detect
+
+    # Secret management
+    $0 secrets generate --env=development
+    $0 secrets rotate --env=production --backup
+
+    # Cleanup
+    $0 cleanup --env=development --confirm
+
+EOF
+}
+
+# Utility functions
+log() {
+    if [[ "$VERBOSE" == true ]]; then
+        echo -e "${CYAN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+    fi
+}
+
+dry_run_check() {
+    if [[ "$DRY_RUN" == true ]]; then
+        print_info "DRY RUN: Would execute: $1"
+        return 0
+    fi
+    return 1
+}
+
+validate_environment() {
+    case "$ENVIRONMENT" in
+        development|staging|production)
+            return 0
+            ;;
+        *)
+            print_error "Invalid environment: $ENVIRONMENT"
+            print_info "Valid environments: development, staging, production"
+            exit 1
+            ;;
+    esac
+}
+
+get_namespace() {
+    case "$ENVIRONMENT" in
+        development) echo "falco-ai-alerts-development" ;;
+        staging) echo "falco-ai-alerts-staging" ;;
+        production) echo "falco-ai-alerts" ;;
+    esac
+}
+
+# Platform detection
+detect_platform() {
+    if [[ -n "$PLATFORM" ]]; then
+        echo "$PLATFORM"
+        return 0
+    fi
+    
+    # Use existing detection script
+    if [[ -f "$SCRIPT_DIR/detect-platform.sh" ]]; then
+        "$SCRIPT_DIR/detect-platform.sh"
+    else
+        print_warning "Platform detection script not found, defaulting to 'local'"
+        echo "local"
+    fi
+}
+
+# Command implementations
+cmd_platform() {
+    local action=${1:-detect}
+    
+    case "$action" in
+        detect)
+            print_step "Detecting Kubernetes platform..."
+            local platform=$(detect_platform)
+            print_success "Platform detected: $platform"
+            
+            # Get additional info
+            if [[ -f "$SCRIPT_DIR/detect-platform.sh" ]]; then
+                echo ""
+                print_info "Platform details:"
+                "$SCRIPT_DIR/detect-platform.sh" storage
+                "$SCRIPT_DIR/detect-platform.sh" resources
+            fi
+            ;;
+        list)
+            print_info "Supported platforms:"
+            echo "  - gke (Google Kubernetes Engine)"
+            echo "  - eks (Amazon Elastic Kubernetes Service)"
+            echo "  - aks (Azure Kubernetes Service)"
+            echo "  - doks (DigitalOcean Kubernetes)"
+            echo "  - local (minikube, kind, k3s)"
+            ;;
+        *)
+            print_error "Unknown platform command: $action"
+            echo "Usage: $0 platform [detect|list]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_secrets() {
+    local action=${1:-generate}
+    local namespace=$(get_namespace)
+    
+    case "$action" in
+        generate)
+            print_step "Generating secrets for $ENVIRONMENT environment..."
+            
+            if dry_run_check "kubectl create secret generic secrets -n $namespace"; then
+                return 0
+            fi
+            
+            # Auto-generate secure secrets
+            local slack_token="xoxb-not-configured-$(openssl rand -hex 8)"
+            local portkey_key="pk-not-configured-$(openssl rand -hex 16)"
+            local openai_key="openai-not-configured-$(openssl rand -hex 16)"
+            local gemini_key="gemini-not-configured-$(openssl rand -hex 16)"
+            local db_key=$(openssl rand -base64 32)
+            
+            # Create namespace if it doesn't exist
+            kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
+            
+            # Create secrets
+            kubectl create secret generic "${ENVIRONMENT:0:3}-falco-ai-alerts-secrets" \
+                --from-literal=SLACK_BOT_TOKEN="$slack_token" \
+                --from-literal=PORTKEY_API_KEY="$portkey_key" \
+                --from-literal=OPENAI_VIRTUAL_KEY="$openai_key" \
+                --from-literal=GEMINI_VIRTUAL_KEY="$gemini_key" \
+                --from-literal=DB_ENCRYPTION_KEY="$db_key" \
+                --namespace="$namespace" \
+                --dry-run=client -o yaml | kubectl apply -f -
+            
+            print_success "Secrets generated successfully"
+            print_warning "Default secrets generated with placeholder values"
+            print_info "Update secrets with real values using: $0 secrets update --env=$ENVIRONMENT"
+            ;;
+        update)
+            print_step "Updating secrets for $ENVIRONMENT environment..."
+            print_info "Interactive secret update not implemented yet"
+            print_info "Use kubectl to update secrets manually:"
+            echo "kubectl patch secret ${ENVIRONMENT:0:3}-falco-ai-alerts-secrets -n $namespace --patch '{\"stringData\":{\"SLACK_BOT_TOKEN\":\"your-token\"}}'"
+            ;;
+        rotate)
+            print_step "Rotating secrets for $ENVIRONMENT environment..."
+            print_info "Secret rotation not implemented yet"
+            ;;
+        *)
+            print_error "Unknown secrets command: $action"
+            echo "Usage: $0 secrets [generate|update|rotate]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_install() {
+    print_header
+    print_step "Installing Falco AI Alert System"
+    print_info "Environment: $ENVIRONMENT"
+    print_info "Platform: $(detect_platform)"
+    print_info "Namespace: $(get_namespace)"
+    
+    # Auto-generate secrets if requested
+    if [[ "$AUTO_SECRETS" == true ]]; then
+        cmd_secrets generate
+    fi
+    
+    # Use existing dynamic installer
+    if [[ -f "$SCRIPT_DIR/install-dynamic.sh" ]]; then
+        local install_args=("$ENVIRONMENT")
+        
+        if [[ "$DRY_RUN" == true ]]; then
+            print_info "DRY RUN: Would execute: $SCRIPT_DIR/install-dynamic.sh ${install_args[*]}"
+            return 0
+        fi
+        
+        "$SCRIPT_DIR/install-dynamic.sh" "${install_args[@]}"
+    else
+        print_error "Dynamic installer not found: $SCRIPT_DIR/install-dynamic.sh"
+        exit 1
+    fi
+    
+    # Verify installation if requested
+    if [[ "$VERIFY" == true ]]; then
+        print_step "Running post-installation verification..."
+        cmd_verify
+    fi
+    
+    print_success "Installation completed successfully! 🎉"
+}
+
+cmd_status() {
+    local namespace=$(get_namespace)
+    local watch_flag=""
+    
+    if [[ "$1" == "--watch" ]]; then
+        watch_flag="-w"
+    fi
+    
+    print_step "Checking deployment status for $ENVIRONMENT environment"
+    print_info "Namespace: $namespace"
+    
+    echo ""
+    print_info "Deployments:"
+    kubectl get deployments -n "$namespace" $watch_flag
+    
+    echo ""
+    print_info "Services:"
+    kubectl get services -n "$namespace"
+    
+    echo ""
+    print_info "Pods:"
+    kubectl get pods -n "$namespace" $watch_flag
+    
+    if [[ "$watch_flag" == "" ]]; then
+        echo ""
+        print_info "Persistent Volumes:"
+        kubectl get pvc -n "$namespace"
+        
+        echo ""
+        print_info "Recent Events:"
+        kubectl get events -n "$namespace" --sort-by='.lastTimestamp' | tail -10
+    fi
+}
+
+cmd_verify() {
+    local namespace=$(get_namespace)
+    
+    print_step "Verifying deployment health for $ENVIRONMENT environment"
+    
+    # Check all deployments are ready
+    print_info "Checking deployment readiness..."
+    local deployments=$(kubectl get deployments -n "$namespace" -o jsonpath='{.items[*].metadata.name}')
+    
+    for deployment in $deployments; do
+        if kubectl rollout status deployment/"$deployment" -n "$namespace" --timeout=60s >/dev/null 2>&1; then
+            print_success "Deployment $deployment is ready"
+        else
+            print_error "Deployment $deployment is not ready"
+            return 1
+        fi
+    done
+    
+    # Check services have endpoints
+    print_info "Checking service endpoints..."
+    local services=$(kubectl get services -n "$namespace" -o jsonpath='{.items[*].metadata.name}')
+    
+    for service in $services; do
+        local endpoints=$(kubectl get endpoints "$service" -n "$namespace" -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null || echo "")
+        if [[ -n "$endpoints" ]]; then
+            print_success "Service $service has endpoints"
+        else
+            print_warning "Service $service has no endpoints"
+        fi
+    done
+    
+    # Health check the main application
+    print_info "Running application health check..."
+    if kubectl exec -n "$namespace" deployment/${ENVIRONMENT:0:3}-falco-ai-alerts -- curl -f http://localhost:8080/health >/dev/null 2>&1; then
+        print_success "Application health check passed"
+    else
+        print_warning "Application health check failed"
+    fi
+    
+    print_success "Verification completed"
+}
+
+cmd_upgrade() {
+    local version="$1"
+    
+    if [[ -z "$version" ]]; then
+        print_error "Version required for upgrade"
+        echo "Usage: $0 upgrade --version=v2.1.0 --env=$ENVIRONMENT"
+        exit 1
+    fi
+    
+    print_step "Upgrading to version $version"
+    print_info "Current implementation: Use kubectl set image"
+    
+    local namespace=$(get_namespace)
+    local deployment="${ENVIRONMENT:0:3}-falco-ai-alerts"
+    
+    if dry_run_check "kubectl set image deployment/$deployment falco-ai-alerts=maddigsys/falco-ai-alerts:$version -n $namespace"; then
+        return 0
+    fi
+    
+    kubectl set image deployment/"$deployment" falco-ai-alerts=maddigsys/falco-ai-alerts:"$version" -n "$namespace"
+    
+    if [[ "$WAIT" == true ]]; then
+        kubectl rollout status deployment/"$deployment" -n "$namespace" --timeout="$TIMEOUT"
+    fi
+    
+    print_success "Upgrade completed"
+}
+
+cmd_rollback() {
+    local namespace=$(get_namespace)
+    local deployment="${ENVIRONMENT:0:3}-falco-ai-alerts"
+    
+    print_step "Rolling back deployment"
+    
+    if dry_run_check "kubectl rollout undo deployment/$deployment -n $namespace"; then
+        return 0
+    fi
+    
+    kubectl rollout undo deployment/"$deployment" -n "$namespace"
+    
+    if [[ "$WAIT" == true ]]; then
+        kubectl rollout status deployment/"$deployment" -n "$namespace" --timeout="$TIMEOUT"
+    fi
+    
+    print_success "Rollback completed"
+}
+
+cmd_cleanup() {
+    local namespace=$(get_namespace)
+    local confirm="$1"
+    
+    print_warning "This will delete the entire $ENVIRONMENT deployment"
+    print_info "Namespace: $namespace"
+    
+    if [[ "$confirm" != "--confirm" ]] && [[ "$confirm" != "-y" ]]; then
+        read -p "Are you sure you want to proceed? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_info "Cleanup cancelled"
+            return 0
+        fi
+    fi
+    
+    print_step "Cleaning up $ENVIRONMENT deployment..."
+    
+    if dry_run_check "kubectl delete namespace $namespace"; then
+        return 0
+    fi
+    
+    # Use existing cleanup if available
+    if [[ -f "$SCRIPT_DIR/cleanup.sh" ]]; then
+        "$SCRIPT_DIR/cleanup.sh" "$ENVIRONMENT" --force
+    else
+        # Fallback cleanup
+        kubectl delete namespace "$namespace" --ignore-not-found=true
+        kubectl delete clusterrole "${ENVIRONMENT:0:3}-falco-ai-alerts" --ignore-not-found=true
+        kubectl delete clusterrolebinding "${ENVIRONMENT:0:3}-falco-ai-alerts" --ignore-not-found=true
+    fi
+    
+    print_success "Cleanup completed"
+}
+
+# Parse command line arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --env=*)
+                ENVIRONMENT="${1#*=}"
+                shift
+                ;;
+            --platform=*)
+                PLATFORM="${1#*=}"
+                shift
+                ;;
+            --config=*)
+                CONFIG_FILE="${1#*=}"
+                shift
+                ;;
+            --timeout=*)
+                TIMEOUT="${1#*=}"
+                shift
+                ;;
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --verbose)
+                VERBOSE=true
+                shift
+                ;;
+            --wait)
+                WAIT=true
+                shift
+                ;;
+            --auto-secrets)
+                AUTO_SECRETS=true
+                shift
+                ;;
+            --verify)
+                VERIFY=true
+                shift
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            --version=*)
+                VERSION_ARG="${1#*=}"
+                shift
+                ;;
+            --confirm|-y)
+                CONFIRM=true
+                shift
+                ;;
+            *)
+                # Unknown option or command
+                if [[ -z "$COMMAND" ]]; then
+                    COMMAND="$1"
+                else
+                    SUBCOMMAND="$1"
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    # Set default environment if not specified
+    if [[ -z "$ENVIRONMENT" ]]; then
+        ENVIRONMENT="$DEFAULT_ENV"
+    fi
+    
+    # Validate environment
+    validate_environment
+}
+
+# Main function
+main() {
+    local COMMAND=""
+    local SUBCOMMAND=""
+    
+    if [[ $# -eq 0 ]]; then
+        show_help
+        exit 0
+    fi
+    
+    parse_args "$@"
+    
+    # Handle commands
+    case "$COMMAND" in
+        install)
+            cmd_install
+            ;;
+        upgrade)
+            cmd_upgrade "$VERSION_ARG"
+            ;;
+        rollback)
+            cmd_rollback
+            ;;
+        status)
+            cmd_status "$SUBCOMMAND"
+            ;;
+        secrets)
+            cmd_secrets "$SUBCOMMAND"
+            ;;
+        cleanup)
+            cmd_cleanup "$([[ "$CONFIRM" == true ]] && echo "--confirm")"
+            ;;
+        verify)
+            cmd_verify
+            ;;
+        platform)
+            cmd_platform "$SUBCOMMAND"
+            ;;
+        *)
+            print_error "Unknown command: $COMMAND"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@" 

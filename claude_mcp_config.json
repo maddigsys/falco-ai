@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/Users/migueldelossantos/Downloads/Sysdig/falco/falco-rag-ai-gateway/claude_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080"
+      }
+    }
+  }
+} 

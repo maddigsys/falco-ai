@@ -18,7 +18,7 @@
         margin-bottom: var(--space-xl);
         position: sticky;
         top: var(--space-md);
-        z-index: 100;
+        z-index: 500;
         transition: all 0.3s ease;
     }
 
@@ -586,16 +586,39 @@
             }
             
             const config = await response.json();
+            console.log('Loaded AI Chat config data:', config); // Debug log
             
-            // Populate form fields
-            document.getElementById('chatEnabled').checked = config.chat_enabled?.value !== 'false';
-            document.getElementById('chatMaxHistory').value = config.chat_max_history?.value || '50';
-            document.getElementById('chatSessionTimeout').value = config.chat_session_timeout?.value || '30';
-            document.getElementById('chatContextAlerts').value = config.chat_context_alerts?.value || '10';
-            document.getElementById('chatResponseLength').value = config.chat_response_length?.value || 'normal';
-            document.getElementById('chatTone').value = config.chat_tone?.value || 'professional';
-            document.getElementById('chatIncludeRemediation').checked = config.chat_include_remediation?.value !== 'false';
-            document.getElementById('chatIncludeContext').checked = config.chat_include_context?.value !== 'false';
+            // Populate form fields with better null handling
+            const setValue = (id, configKey, defaultValue) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const configValue = config[configKey];
+                    let value = defaultValue;
+                    
+                    if (configValue !== undefined && configValue !== null) {
+                        value = configValue.value !== undefined ? configValue.value : configValue;
+                    }
+                    
+                    console.log(`Setting AI Chat ${configKey} (${id}) to:`, value); // Debug log
+                    
+                    if (element.type === 'checkbox') {
+                        element.checked = value !== 'false' && value !== false;
+                    } else {
+                        element.value = value;
+                    }
+                } else {
+                    console.log(`Element not found: ${id}`); // Debug log
+                }
+            };
+            
+            setValue('chatEnabled', 'chat_enabled', 'true');
+            setValue('chatMaxHistory', 'chat_max_history', '50');
+            setValue('chatSessionTimeout', 'chat_session_timeout', '30');
+            setValue('chatContextAlerts', 'chat_context_alerts', '10');
+            setValue('chatResponseLength', 'chat_response_length', 'normal');
+            setValue('chatTone', 'chat_tone', 'professional');
+            setValue('chatIncludeRemediation', 'chat_include_remediation', 'true');
+            setValue('chatIncludeContext', 'chat_include_context', 'true');
             
         } catch (error) {
             console.error('Error loading chat config:', error);

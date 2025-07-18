@@ -18,7 +18,7 @@
         margin-bottom: var(--space-xl);
         position: sticky;
         top: var(--space-md);
-        z-index: 100;
+        z-index: 500;
         transition: all 0.3s ease;
     }
 
@@ -776,9 +776,10 @@
     // Load current configuration
     async function loadCurrentConfiguration() {
         try {
-            const response = await fetch('/api/config/slack');
+            const response = await fetch('/api/slack/config');
             if (response.ok) {
                 configData = await response.json();
+                console.log('Loaded config data:', configData); // Debug log
                 populateForm(configData);
                 updateStatusInfo();
             } else {
@@ -816,13 +817,22 @@
         Object.keys(config).forEach(key => {
             const elementId = fieldMapping[key];
             const element = document.getElementById(elementId);
-            if (element && config[key]) {
-                const value = config[key].value || config[key]; // Handle both nested and flat structures
+            if (element && config[key] !== undefined && config[key] !== null) {
+                // Handle nested config structure: config[key].value or config[key]
+                let value = config[key];
+                if (typeof config[key] === 'object' && config[key].value !== undefined) {
+                    value = config[key].value;
+                }
+                
+                console.log(`Setting ${elementId} (${key}) to:`, value); // Debug log
+                
                 if (element.type === 'checkbox') {
                     element.checked = value === 'true' || value === true;
                 } else {
-                    element.value = value;
+                    element.value = value || '';
                 }
+            } else if (element) {
+                console.log(`No value found for ${elementId} (${key})`); // Debug log
             }
         });
     }
@@ -906,7 +916,8 @@
                 }
                 
                 if (connectionStatusElement) {
-                    connectionStatusElement.innerHTML = 'Not tested';
+                    const configCount = Object.keys(configData).length;
+                    connectionStatusElement.innerHTML = `${configCount}/17 fields loaded`;
                     connectionStatusElement.closest('.status-card').className = 'status-card alert-secondary';
                 }
             }
@@ -1070,7 +1081,7 @@
                 }
             });
 
-            const response = await fetch('/api/config/slack', {
+            const response = await fetch('/api/slack/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

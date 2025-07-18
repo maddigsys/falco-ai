@@ -624,10 +624,7 @@
                                 <span data-translate="Multilingual Model">Multilingual Model</span>
                             </label>
                             <select class="form-select" id="ollamaModel">
-                                <option value="qwen2:7b">Qwen2 7B (Recommended)</option>
-                                <option value="llama3:latest">Llama3 (Latest)</option>
-                                <option value="aya:latest">Aya (Multilingual)</option>
-                                <option value="gemma:latest">Gemma (Latest)</option>
+                                <option value="">Loading models...</option>
                             </select>
                         </div>
                         
@@ -682,9 +679,7 @@
                                 <span data-translate="GPT Model">GPT Model</span>
                             </label>
                             <select class="form-select" id="openaiModel">
-                                <option value="gpt-4">GPT-4 (Recommended)</option>
-                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                <option value="">Loading models...</option>
                             </select>
                         </div>
                         
@@ -729,8 +724,7 @@
                                 <span data-translate="Gemini Model">Gemini Model</span>
                             </label>
                             <select class="form-select" id="geminiModel">
-                                <option value="gemini-pro">Gemini Pro</option>
-                                <option value="gemini-ultra">Gemini Ultra</option>
+                                <option value="">Loading models...</option>
                             </select>
                         </div>
                         
@@ -830,9 +824,7 @@
                             <span data-translate="AI Model">AI Model</span>
                         </label>
                         <select class="form-select" id="aiModel">
-                            <option value="qwen2:7b">Qwen2 7B (Recommended)</option>
-                            <option value="llama3:latest">Llama3 Latest</option>
-                            <option value="aya:latest">Aya Multilingual</option>
+                            <option value="">Loading models...</option>
                         </select>
                     </div>
                 </div>
@@ -1020,12 +1012,272 @@
     let currentConfig = {};
     let isMultilingualEnabled = true;
 
+    // Shared utility: Check which Ollama models are actually available
+    async function checkOllamaModels() {
+        try {
+            const response = await fetch('/api/ollama/models');
+            if (response.ok) {
+                const data = await response.json();
+                // The API returns { success: true, models: [...], count: X }
+                if (data.success && data.models && Array.isArray(data.models)) {
+                    console.log('Available Ollama models for Multilingual config:', data.models);
+                    return data.models;
+                } else if (data.models && Array.isArray(data.models)) {
+                    return data.models;
+                } else if (Array.isArray(data)) {
+                    return data;
+                }
+            } else {
+                console.log('Ollama models API returned error:', response.status);
+            }
+        } catch (error) {
+            console.log('Could not check Ollama models:', error);
+        }
+        
+        // Return empty array if check fails
+        return [];
+    }
+
+    // Populate all model dropdowns with availability checking
+    async function populateAllModelDropdowns() {
+        try {
+            // Get AI configuration for context
+            const response = await fetch('/api/ai/config');
+            const config = response.ok ? await response.json() : {};
+            
+            await Promise.all([
+                populateOllamaModelDropdown(config),
+                populateOpenAIModelDropdown(config),
+                populateGeminiModelDropdown(config),
+                populateMainAIModelDropdown(config)
+            ]);
+        } catch (error) {
+            console.error('Error populating model dropdowns:', error);
+        }
+    }
+
+    // Populate Ollama model dropdown with availability checking
+    async function populateOllamaModelDropdown(config) {
+        const modelSelect = document.getElementById('ollamaModel');
+        if (!modelSelect) return;
+        
+        const currentModel = config.ollama_model_name?.value || 'qwen2:7b';
+        const models = [
+            'qwen2:7b',
+            'llama3:latest',
+            'llama3:8b', 
+            'aya:latest',
+            'gemma:latest',
+            'gemma:7b',
+            'phi3:latest',
+            'mistral:latest'
+        ];
+        
+        try {
+            // Check which Ollama models are actually available
+            const availableModels = await checkOllamaModels();
+            
+            // Clear loading message
+            modelSelect.innerHTML = '<option value="">Select a multilingual model...</option>';
+            
+            // Add all available models first (these are definitely downloaded)
+            availableModels.forEach(model => {
+                if (!models.includes(model)) {
+                    models.unshift(model); // Add to beginning
+                }
+            });
+            
+            // Add model options with availability status
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                
+                const isAvailable = availableModels.includes(model);
+                const isCurrent = model === currentModel;
+                
+                if (isAvailable) {
+                    option.textContent = `${model} ✓ (Downloaded)`;
+                    option.style.color = '#059669'; // Green for available
+                    option.style.fontWeight = '600';
+                } else {
+                    option.textContent = `${model} ⚠ (Not Downloaded)`;
+                    option.style.color = '#D97706'; // Orange for not available
+                }
+                
+                if (isCurrent) {
+                    option.selected = true;
+                    if (!isAvailable) {
+                        option.textContent = `${model} ❌ (Current but Not Downloaded)`;
+                        option.style.color = '#DC2626'; // Red for current but not available
+                        option.style.fontWeight = '700';
+                    } else {
+                        option.textContent = `${model} ✓ (Current & Downloaded)`;
+                        option.style.color = '#059669';
+                        option.style.fontWeight = '700';
+                    }
+                }
+                
+                modelSelect.appendChild(option);
+            });
+            
+        } catch (error) {
+            console.error('Error populating Ollama models:', error);
+            modelSelect.innerHTML = '<option value="">Error loading models</option>';
+        }
+    }
+
+    // Populate OpenAI model dropdown with API key checking
+    async function populateOpenAIModelDropdown(config) {
+        const modelSelect = document.getElementById('openaiModel');
+        if (!modelSelect) return;
+        
+        const currentModel = config.openai_model_name?.value || 'gpt-4';
+        const models = [
+            'gpt-4o',
+            'gpt-4',
+            'gpt-4-turbo',
+            'gpt-3.5-turbo'
+        ];
+        
+        // Clear loading message
+        modelSelect.innerHTML = '<option value="">Select a GPT model...</option>';
+        
+        // Check if API key is configured
+        const hasApiKey = config.openai_virtual_key?.value || config.portkey_api_key?.value;
+        
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            
+            if (hasApiKey) {
+                option.textContent = `${model} ✓ (API Ready)`;
+                option.style.color = '#059669'; // Green for available
+                option.style.fontWeight = '600';
+            } else {
+                option.textContent = `${model} ⚠ (API Key Required)`;
+                option.style.color = '#D97706'; // Orange for no API key
+            }
+            
+            if (model === currentModel) {
+                option.selected = true;
+            }
+            
+            modelSelect.appendChild(option);
+        });
+    }
+
+    // Populate Gemini model dropdown with API key checking
+    async function populateGeminiModelDropdown(config) {
+        const modelSelect = document.getElementById('geminiModel');
+        if (!modelSelect) return;
+        
+        const currentModel = config.gemini_model_name?.value || 'gemini-pro';
+        const models = [
+            'gemini-pro',
+            'gemini-1.5-pro',
+            'gemini-1.5-flash'
+        ];
+        
+        // Clear loading message
+        modelSelect.innerHTML = '<option value="">Select a Gemini model...</option>';
+        
+        // Check if API key is configured
+        const hasApiKey = config.gemini_virtual_key?.value || config.portkey_api_key?.value;
+        
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            
+            if (hasApiKey) {
+                option.textContent = `${model} ✓ (API Ready)`;
+                option.style.color = '#059669'; // Green for available
+                option.style.fontWeight = '600';
+            } else {
+                option.textContent = `${model} ⚠ (API Key Required)`;
+                option.style.color = '#D97706'; // Orange for no API key
+            }
+            
+            if (model === currentModel) {
+                option.selected = true;
+            }
+            
+            modelSelect.appendChild(option);
+        });
+    }
+
+    // Populate main AI model dropdown with availability checking
+    async function populateMainAIModelDropdown(config) {
+        const modelSelect = document.getElementById('aiModel');
+        if (!modelSelect) return;
+        
+        const currentModel = config.ollama_model_name?.value || config.model_name?.value || 'qwen2:7b';
+        const models = [
+            'qwen2:7b',
+            'llama3:latest',
+            'aya:latest',
+            'gemma:latest'
+        ];
+        
+        try {
+            // Check which Ollama models are actually available
+            const availableModels = await checkOllamaModels();
+            
+            // Clear loading message
+            modelSelect.innerHTML = '<option value="">Select an AI model...</option>';
+            
+            // Add all available models first (these are definitely downloaded)
+            availableModels.forEach(model => {
+                if (!models.includes(model)) {
+                    models.unshift(model); // Add to beginning
+                }
+            });
+            
+            // Add model options with availability status
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                
+                const isAvailable = availableModels.includes(model);
+                const isCurrent = model === currentModel;
+                
+                if (isAvailable) {
+                    option.textContent = `${model} ✓ (Downloaded)`;
+                    option.style.color = '#059669'; // Green for available
+                    option.style.fontWeight = '600';
+                } else {
+                    option.textContent = `${model} ⚠ (Not Downloaded)`;
+                    option.style.color = '#D97706'; // Orange for not available
+                }
+                
+                if (isCurrent) {
+                    option.selected = true;
+                    if (!isAvailable) {
+                        option.textContent = `${model} ❌ (Current but Not Downloaded)`;
+                        option.style.color = '#DC2626'; // Red for current but not available
+                        option.style.fontWeight = '700';
+                    } else {
+                        option.textContent = `${model} ✓ (Current & Downloaded)`;
+                        option.style.color = '#059669';
+                        option.style.fontWeight = '700';
+                    }
+                }
+                
+                modelSelect.appendChild(option);
+            });
+            
+        } catch (error) {
+            console.error('Error populating main AI models:', error);
+            modelSelect.innerHTML = '<option value="">Error loading models</option>';
+        }
+    }
+
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
         loadConfiguration();
         checkTranslationStatus();
         loadLanguages();
         setupEventListeners();
+        populateAllModelDropdowns(); // Add model loading
         
         // Restore last active tab
         const lastTab = sessionStorage.getItem('currentMultilingualTab');
@@ -1088,10 +1340,14 @@
             const response = await fetch('/api/multilingual/config');
             if (response.ok) {
                 const config = await response.json();
+                console.log('Loaded Multilingual config data:', config); // Debug log
                 populateConfigForm(config);
+            } else {
+                throw new Error('Failed to load multilingual configuration');
             }
         } catch (error) {
-            console.error('Error loading configuration:', error);
+            console.error('Error loading multilingual configuration:', error);
+            showConnectionStatus('error', 'Failed to load multilingual configuration');
         }
     }
 
@@ -1648,12 +1904,16 @@
             const element = document.getElementById(fieldId);
             const value = config[dbKey];
             
-            if (element && value !== undefined) {
+            console.log(`Multilingual setting ${dbKey} (${fieldId}):`, value); // Debug log
+            
+            if (element && value !== undefined && value !== null) {
                 if (element.type === 'checkbox') {
                     element.checked = value === 'true' || value === true;
                 } else {
                     element.value = value;
                 }
+            } else if (element) {
+                console.log(`No value found for multilingual field ${dbKey}`); // Debug log
             }
         });
 

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/path/to/your/falco-rag-ai-gateway/jsonrpc_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080",
+        "LOG_LEVEL": "INFO"
+      },
+      "description": "Falco AI Alert System - Security monitoring and threat analysis tools",
+      "icon": "🛡️",
+      "displayName": "Falco Security Alerts"
+    }
+  }
+} 

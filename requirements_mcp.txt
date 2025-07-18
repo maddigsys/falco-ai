@@ -1,0 +1,31 @@
+# JSON-RPC over stdio MCP Requirements
+# Core dependencies for Claude MCP integration
+
+# HTTP requests for Falco API communication
+requests>=2.31.0
+
+# Async support for better performance
+aiohttp>=3.8.0
+
+# JSON processing (built-in json module is sufficient)
+# No additional JSON libraries needed
+
+# Standard library dependencies (included with Python 3.7+):
+# - asyncio (for async/await support)
+# - json (for JSON-RPC message handling)
+# - sys (for stdin/stdout communication)
+# - logging (for debugging and monitoring)
+# - subprocess (for process management)
+# - datetime (for timestamps)
+# - uuid (for session management)
+
+# Optional: Enhanced JSON handling
+# orjson>=3.9.0  # Faster JSON processing (optional)
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# Documentation dependencies (optional)
+# markdown>=3.4.0
+# mkdocs>=1.5.0 

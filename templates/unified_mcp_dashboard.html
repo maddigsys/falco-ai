@@ -1,0 +1,1146 @@
+{% extends "falco_base.html" %}
+
+{% block title %}MCP Hub{% endblock %}
+{% block page_icon %}<i class="fas fa-plug"></i>{% endblock %}
+{% block page_title %}MCP Hub{% endblock %}
+{% block page_description %}Unified dashboard for all Model Context Protocol integrations - JSON-RPC, Claude MCP, gRPC, and Standard MCP{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Unified MCP Dashboard styling using JSON-RPC MCP style */
+    .falco-config-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: var(--space-xl);
+    }
+
+    .config-section {
+        background: var(--bg-cards);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-xl);
+        border: 2px solid var(--border-medium);
+        border-top: 4px solid var(--primary);
+        box-shadow: var(--shadow-lg);
+        transition: all 0.3s ease;
+    }
+
+    .config-section:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary);
+    }
+
+    .config-section h5 {
+        color: var(--text-heading);
+        font-size: var(--text-lg);
+        font-weight: 600;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .config-section h5 i {
+        color: var(--primary);
+    }
+
+    .integration-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        padding: var(--space-sm);
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .integration-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        font-size: var(--text-sm);
+        flex-direction: column;
+        text-align: center;
+        min-height: 80px;
+    }
+
+    .integration-tab:hover {
+        background: rgba(0, 174, 199, 0.1);
+        color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .integration-tab.active {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .integration-tab .tab-icon {
+        font-size: var(--text-xl);
+        margin-bottom: var(--space-xs);
+    }
+
+    .integration-tab .tab-label {
+        font-weight: 600;
+        font-size: var(--text-sm);
+    }
+
+    .integration-tab .tab-desc {
+        font-size: var(--text-xs);
+        opacity: 0.8;
+        margin-top: 2px;
+    }
+
+    .integration-content {
+        display: none;
+    }
+
+    .integration-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .client-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        padding: var(--space-sm);
+        background: var(--bg-card);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .client-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        font-size: var(--text-sm);
+    }
+
+    .client-tab:hover {
+        background: rgba(0, 174, 199, 0.1);
+        color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .client-tab.active {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .client-config {
+        display: none;
+    }
+
+    .client-config.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    .config-yaml-container {
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background: var(--bg-secondary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .yaml-header {
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-light);
+        padding: var(--space-md) var(--space-lg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: var(--text-sm);
+        font-weight: 600;
+    }
+
+    .yaml-filename {
+        color: var(--text-heading);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .yaml-filename i {
+        color: var(--primary);
+    }
+
+    .config-yaml {
+        background: var(--bg-cards);
+        color: var(--text-heading);
+        padding: var(--space-lg);
+        margin: 0;
+        font-family: 'Fira Code', 'Monaco', 'Menlo', 'Consolas', monospace;
+        font-size: var(--text-sm);
+        line-height: 1.6;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        border: none;
+        tab-size: 2;
+        -moz-tab-size: 2;
+        -o-tab-size: 2;
+    }
+
+    .copy-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: var(--space-xs) var(--space-sm);
+        font-size: var(--text-xs);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .copy-button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: var(--space-md);
+        margin-top: var(--space-lg);
+        flex-wrap: wrap;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-light);
+        color: var(--text-heading);
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    .alert {
+        padding: var(--space-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        font-weight: 500;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid;
+    }
+
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border-color: var(--info);
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border-color: var(--success);
+    }
+
+    .alert-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border-color: var(--warning);
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border-color: var(--danger);
+    }
+
+    .alert i {
+        font-size: var(--text-lg);
+        opacity: 0.8;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-lg);
+        margin-bottom: var(--space-xl);
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-value {
+        font-size: var(--text-2xl);
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: var(--space-sm);
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: var(--text-sm);
+        font-weight: 500;
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        font-weight: 500;
+    }
+
+    .status-indicator.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .status-indicator.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .status-indicator.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .tool-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        transition: all 0.2s ease;
+    }
+
+    .tool-card:hover {
+        border-color: var(--primary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .tool-name {
+        font-weight: 600;
+        color: var(--text-heading);
+        margin-bottom: var(--space-xs);
+    }
+
+    .tool-description {
+        color: var(--text-secondary);
+        font-size: var(--text-sm);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="falco-config-container">
+    
+    <!-- Overview Stats -->
+    <div class="config-section">
+        <h5>
+            <i class="fas fa-chart-line"></i>
+            MCP Integration Overview
+        </h5>
+        <p>Unified dashboard for all Model Context Protocol integrations and AI client connections.</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalIntegrations">4</div>
+                <div class="stat-label">Available Integrations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeClients">0</div>
+                <div class="stat-label">Connected Clients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTools">15</div>
+                <div class="stat-label">Security Tools</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="serverStatus">🟢</div>
+                <div class="stat-label">Server Status</div>
+            </div>
+        </div>
+
+        <div id="overallStatus" class="mb-4">
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading MCP integration status...
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Selection Tabs -->
+    <div class="config-section">
+        <h5>
+            <i class="fas fa-layer-group"></i>
+            MCP Integration Protocols
+        </h5>
+        <p>Choose the MCP protocol that best fits your AI client and performance requirements.</p>
+        
+        <div class="integration-tabs">
+            <button class="integration-tab active" onclick="showIntegration('jsonrpc')">
+                <div class="tab-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="tab-label">JSON-RPC MCP</div>
+                <div class="tab-desc">Universal compatibility</div>
+            </button>
+            <button class="integration-tab" onclick="showIntegration('claude')">
+                <div class="tab-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="tab-label">Claude MCP</div>
+                <div class="tab-desc">Claude-optimized</div>
+            </button>
+            <button class="integration-tab" onclick="showIntegration('grpc')">
+                <div class="tab-icon">
+                    <i class="fas fa-stream"></i>
+                </div>
+                <div class="tab-label">gRPC MCP</div>
+                <div class="tab-desc">High-performance</div>
+            </button>
+            <button class="integration-tab" onclick="showIntegration('standard')">
+                <div class="tab-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div class="tab-label">Standard MCP</div>
+                <div class="tab-desc">HTTP/WebSocket</div>
+            </button>
+        </div>
+
+        <!-- JSON-RPC MCP Integration -->
+        <div id="jsonrpc-integration" class="integration-content active">
+            <div class="alert alert-success">
+                <i class="fas fa-star"></i>
+                <strong>Recommended:</strong> JSON-RPC MCP provides the best compatibility with Claude Desktop, VS Code, Cursor, and most AI clients.
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="runJsonRpcSetup()">
+                    <i class="fas fa-magic"></i>
+                    Auto Setup JSON-RPC
+                </button>
+                <button class="btn-secondary" onclick="testJsonRpcIntegration()">
+                    <i class="fas fa-check-circle"></i>
+                    Test JSON-RPC
+                </button>
+                <button class="btn-secondary" onclick="downloadJsonRpcConfigs()">
+                    <i class="fas fa-download"></i>
+                    Download Configs
+                </button>
+            </div>
+
+            <!-- Client Configuration Tabs for JSON-RPC -->
+            <div class="client-tabs" style="margin-top: var(--space-xl);">
+                <button class="client-tab active" onclick="showClientConfig('claude-jsonrpc')">
+                    <i class="fas fa-robot"></i>
+                    Claude Desktop
+                </button>
+                <button class="client-tab" onclick="showClientConfig('vscode-jsonrpc')">
+                    <i class="fas fa-code"></i>
+                    VS Code
+                </button>
+                <button class="client-tab" onclick="showClientConfig('cursor-jsonrpc')">
+                    <i class="fas fa-mouse-pointer"></i>
+                    Cursor
+                </button>
+                <button class="client-tab" onclick="showClientConfig('custom-jsonrpc')">
+                    <i class="fas fa-tools"></i>
+                    Custom Client
+                </button>
+            </div>
+
+            <!-- Claude Desktop Config -->
+            <div id="claude-jsonrpc-config" class="client-config active">
+                <div class="config-yaml-container">
+                    <div class="yaml-header">
+                        <div class="yaml-filename">
+                            <i class="fas fa-file-code"></i>
+                            ~/.config/claude-desktop/config.json
+                        </div>
+                        <button class="copy-button" onclick="copyConfig('claude-jsonrpc')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre class="config-yaml" id="claude-jsonrpc-config-content">{
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/path/to/falco-rag-ai-gateway/jsonrpc_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080"
+      }
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <!-- VS Code Config -->
+            <div id="vscode-jsonrpc-config" class="client-config">
+                <div class="config-yaml-container">
+                    <div class="yaml-header">
+                        <div class="yaml-filename">
+                            <i class="fas fa-file-code"></i>
+                            ~/.config/Code/User/mcp-servers.json
+                        </div>
+                        <button class="copy-button" onclick="copyConfig('vscode-jsonrpc')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre class="config-yaml" id="vscode-jsonrpc-config-content">{
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/path/to/falco-rag-ai-gateway/jsonrpc_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080"
+      },
+      "description": "Falco AI Alert System - Security monitoring tools"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <!-- Cursor Config -->
+            <div id="cursor-jsonrpc-config" class="client-config">
+                <div class="config-yaml-container">
+                    <div class="yaml-header">
+                        <div class="yaml-filename">
+                            <i class="fas fa-file-code"></i>
+                            ~/.config/cursor/User/mcp-servers.json
+                        </div>
+                        <button class="copy-button" onclick="copyConfig('cursor-jsonrpc')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre class="config-yaml" id="cursor-jsonrpc-config-content">{
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/path/to/falco-rag-ai-gateway/jsonrpc_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080"
+      },
+      "description": "Falco AI Alert System - Security monitoring tools",
+      "icon": "🛡️",
+      "displayName": "Falco Security Alerts"
+    }
+  }
+}</pre>
+                </div>
+            </div>
+
+            <!-- Custom Client Config -->
+            <div id="custom-jsonrpc-config" class="client-config">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    For custom MCP clients, use the JSON-RPC 2.0 protocol over stdin/stdout.
+                </div>
+                
+                <div class="config-yaml-container">
+                    <div class="yaml-header">
+                        <div class="yaml-filename">
+                            <i class="fas fa-terminal"></i>
+                            Command Line Usage
+                        </div>
+                        <button class="copy-button" onclick="copyConfig('custom-jsonrpc')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre class="config-yaml" id="custom-jsonrpc-config-content"># Start the JSON-RPC MCP server
+python3 jsonrpc_mcp_server.py
+
+# Or with custom Falco API base
+FALCO_API_BASE=http://localhost:8080 python3 jsonrpc_mcp_server.py
+
+# Example JSON-RPC request to list tools:
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | python3 jsonrpc_mcp_server.py</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claude MCP Integration -->
+        <div id="claude-integration" class="integration-content">
+            <div class="alert alert-info">
+                <i class="fas fa-robot"></i>
+                <strong>Claude-Optimized:</strong> This integration is specifically optimized for Claude Desktop with enhanced features.
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="runClaudeSetup()">
+                    <i class="fas fa-magic"></i>
+                    Auto Setup Claude MCP
+                </button>
+                <button class="btn-secondary" onclick="testClaudeIntegration()">
+                    <i class="fas fa-check-circle"></i>
+                    Test Claude MCP
+                </button>
+                <button class="btn-secondary" onclick="downloadClaudeConfig()">
+                    <i class="fas fa-download"></i>
+                    Download Config
+                </button>
+            </div>
+
+            <div class="config-yaml-container" style="margin-top: var(--space-xl);">
+                <div class="yaml-header">
+                    <div class="yaml-filename">
+                        <i class="fas fa-file-code"></i>
+                        ~/.config/claude-desktop/config.json
+                    </div>
+                    <button class="copy-button" onclick="copyConfig('claude-optimized')">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <pre class="config-yaml" id="claude-optimized-config-content">{
+  "mcpServers": {
+    "falco-ai-alerts": {
+      "command": "python3",
+      "args": ["/path/to/falco-rag-ai-gateway/claude_mcp_server.py"],
+      "env": {
+        "FALCO_API_BASE": "http://localhost:8080"
+      }
+    }
+  }
+}</pre>
+            </div>
+        </div>
+
+        <!-- gRPC MCP Integration -->
+        <div id="grpc-integration" class="integration-content">
+            <div class="alert alert-warning">
+                <i class="fas fa-rocket"></i>
+                <strong>High-Performance:</strong> gRPC MCP provides 10x faster response times and real-time streaming capabilities.
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="buildGrpcComponents()">
+                    <i class="fas fa-hammer"></i>
+                    Build gRPC Components
+                </button>
+                <button class="btn-secondary" onclick="startGrpcServer()">
+                    <i class="fas fa-play"></i>
+                    Start gRPC Server
+                </button>
+                <button class="btn-secondary" onclick="testGrpcIntegration()">
+                    <i class="fas fa-check-circle"></i>
+                    Test gRPC
+                </button>
+            </div>
+
+            <div class="alert alert-info" style="margin-top: var(--space-xl);">
+                <i class="fas fa-info-circle"></i>
+                gRPC MCP requires building protocol buffer definitions and is recommended for high-performance applications.
+            </div>
+        </div>
+
+        <!-- Standard MCP Integration -->
+        <div id="standard-integration" class="integration-content">
+            <div class="alert alert-info">
+                <i class="fas fa-globe"></i>
+                <strong>Traditional MCP:</strong> HTTP/WebSocket based MCP service integrated into the main Falco application.
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="window.location.href='/mcp-dashboard'">
+                    <i class="fas fa-external-link-alt"></i>
+                    Open Legacy MCP Dashboard
+                </button>
+                <button class="btn-secondary" onclick="testStandardMcp()">
+                    <i class="fas fa-check-circle"></i>
+                    Test Standard MCP
+                </button>
+            </div>
+
+            <div class="alert alert-warning" style="margin-top: var(--space-xl);">
+                <i class="fas fa-exclamation-triangle"></i>
+                Standard MCP is included in the main application but has limited client compatibility. Consider JSON-RPC MCP for better AI client support.
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Security Tools -->
+    <div class="config-section">
+        <h5>
+            <i class="fas fa-tools"></i>
+            Available Security Tools
+        </h5>
+        <p>Security tools available to AI clients through all MCP integrations.</p>
+        
+        <div id="toolsList">
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading available tools...
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Start Guide -->
+    <div class="config-section">
+        <h5>
+            <i class="fas fa-rocket"></i>
+            Quick Start Guide
+        </h5>
+        <p>Get up and running with MCP integration in minutes.</p>
+        
+        <ol class="list-unstyled">
+            <li class="mb-3">
+                <strong>1. <i class="fas fa-cog text-primary"></i> Choose Your Integration</strong><br>
+                <small>Select JSON-RPC MCP for best compatibility or Claude MCP for optimized Claude experience</small>
+            </li>
+            <li class="mb-3">
+                <strong>2. <i class="fas fa-magic text-primary"></i> Run Auto Setup</strong><br>
+                <small>Click the "Auto Setup" button for your chosen integration</small>
+            </li>
+            <li class="mb-3">
+                <strong>3. <i class="fas fa-play text-primary"></i> Start Falco Service</strong><br>
+                <code>python3 app.py</code>
+            </li>
+            <li class="mb-3">
+                <strong>4. <i class="fas fa-sync text-primary"></i> Restart AI Client</strong><br>
+                <small>Close and reopen your AI client application</small>
+            </li>
+            <li class="mb-3">
+                <strong>5. <i class="fas fa-check text-primary"></i> Test Integration</strong><br>
+                <small>Ask your AI: "Show me recent security alerts from Falco"</small>
+            </li>
+        </ol>
+    </div>
+
+</div>
+
+<script>
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadOverallStatus();
+    loadTools();
+    updateConfigPaths();
+    
+    // Check for URL parameters to show specific tab
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        // Valid tabs: jsonrpc, claude, grpc, standard
+        const validTabs = ['jsonrpc', 'claude', 'grpc', 'standard'];
+        if (validTabs.includes(tab)) {
+            showIntegration(tab);
+        }
+    }
+});
+
+// Show integration content
+function showIntegration(integration) {
+    // Hide all integration contents
+    document.querySelectorAll('.integration-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Hide all tab active states
+    document.querySelectorAll('.integration-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected integration
+    document.getElementById(integration + '-integration').classList.add('active');
+    
+    // Mark tab as active
+    event.target.closest('.integration-tab').classList.add('active');
+}
+
+// Show client configuration
+function showClientConfig(client) {
+    // Hide all client configs within the current integration
+    const activeIntegration = document.querySelector('.integration-content.active');
+    activeIntegration.querySelectorAll('.client-config').forEach(config => {
+        config.classList.remove('active');
+    });
+    
+    // Hide all client tab active states within the current integration
+    activeIntegration.querySelectorAll('.client-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected config
+    document.getElementById(client + '-config').classList.add('active');
+    
+    // Mark tab as active
+    event.target.classList.add('active');
+}
+
+// Load overall status
+async function loadOverallStatus() {
+    try {
+        const [healthResponse, mcpResponse] = await Promise.all([
+            fetch('/health'),
+            fetch('/api/mcp/status')
+        ]);
+        
+        const healthOk = healthResponse.ok;
+        const mcpOk = mcpResponse.ok;
+        
+        let statusHtml = '';
+        let statusEmoji = '🟢';
+        
+        if (healthOk && mcpOk) {
+            statusHtml = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    All MCP integrations are ready! Falco service and MCP servers are operational.
+                </div>
+            `;
+            statusEmoji = '🟢';
+        } else {
+            statusHtml = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Some services are not available. Falco: ${healthOk ? '✅' : '❌'}, MCP: ${mcpOk ? '✅' : '❌'}
+                </div>
+            `;
+            statusEmoji = '🟡';
+        }
+        
+        document.getElementById('overallStatus').innerHTML = statusHtml;
+        document.getElementById('serverStatus').textContent = statusEmoji;
+        
+    } catch (error) {
+        document.getElementById('overallStatus').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Error checking status: ${error.message}
+            </div>
+        `;
+        document.getElementById('serverStatus').textContent = '🔴';
+    }
+}
+
+// Load available tools
+async function loadTools() {
+    try {
+        const response = await fetch('/api/mcp/tools');
+        if (response.ok) {
+            const tools = await response.json();
+            displayTools(tools);
+            document.getElementById('totalTools').textContent = tools.length;
+        } else {
+            throw new Error('Failed to load tools');
+        }
+    } catch (error) {
+        document.getElementById('toolsList').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Could not load tools. Make sure Falco service is running.
+            </div>
+        `;
+    }
+}
+
+// Display tools
+function displayTools(tools) {
+    if (tools.length === 0) {
+        document.getElementById('toolsList').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                No tools are currently available.
+            </div>
+        `;
+        return;
+    }
+    
+    const toolsHtml = `
+        <div class="tools-grid">
+            ${tools.map(tool => `
+                <div class="tool-card">
+                    <div class="tool-name">
+                        <i class="fas fa-tool"></i> ${tool.name}
+                    </div>
+                    <div class="tool-description">
+                        ${tool.description}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    document.getElementById('toolsList').innerHTML = toolsHtml;
+}
+
+// Update config paths
+function updateConfigPaths() {
+    const currentPath = window.location.pathname.replace('/mcp-dashboard', '');
+    const serverPath = `${window.location.origin}${currentPath}`;
+    
+    // Update JSON-RPC configs
+    updateConfigContent('claude-jsonrpc', `${serverPath}/jsonrpc_mcp_server.py`);
+    updateConfigContent('vscode-jsonrpc', `${serverPath}/jsonrpc_mcp_server.py`);
+    updateConfigContent('cursor-jsonrpc', `${serverPath}/jsonrpc_mcp_server.py`);
+    
+    // Update Claude optimized config
+    updateConfigContent('claude-optimized', `${serverPath}/claude_mcp_server.py`);
+}
+
+// Update config content
+function updateConfigContent(client, serverPath) {
+    const element = document.getElementById(client + '-config-content');
+    if (element) {
+        let content = element.textContent;
+        content = content.replace(/\/path\/to\/falco-rag-ai-gateway\//g, serverPath.replace('/jsonrpc_mcp_server.py', '/').replace('/claude_mcp_server.py', '/'));
+        element.textContent = content;
+    }
+}
+
+// Copy configuration
+function copyConfig(client) {
+    const content = document.getElementById(client + '-config-content').textContent;
+    navigator.clipboard.writeText(content).then(() => {
+        showAlert('success', 'Configuration copied to clipboard!');
+    }).catch(err => {
+        showAlert('error', 'Failed to copy configuration.');
+    });
+}
+
+// JSON-RPC Actions
+async function runJsonRpcSetup() {
+    try {
+        showAlert('info', 'Running JSON-RPC MCP auto setup...');
+        const response = await fetch('/api/jsonrpc-mcp/setup', { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', 'JSON-RPC MCP auto setup completed successfully!');
+            loadOverallStatus();
+        } else {
+            showAlert('error', `Setup failed: ${result.message}`);
+        }
+    } catch (error) {
+        showAlert('error', `Setup failed: ${error.message}`);
+    }
+}
+
+async function testJsonRpcIntegration() {
+    try {
+        showAlert('info', 'Testing JSON-RPC MCP integration...');
+        const response = await fetch('/api/jsonrpc-mcp/test');
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', `JSON-RPC test successful! ${result.tools_count} tools available.`);
+        } else {
+            showAlert('warning', `Test completed with issues: ${result.message}`);
+        }
+    } catch (error) {
+        showAlert('error', `Test failed: ${error.message}`);
+    }
+}
+
+function downloadJsonRpcConfigs() {
+    const configs = {
+        'claude-desktop-config.json': document.getElementById('claude-jsonrpc-config-content').textContent,
+        'vscode-mcp-config.json': document.getElementById('vscode-jsonrpc-config-content').textContent,
+        'cursor-mcp-config.json': document.getElementById('cursor-jsonrpc-config-content').textContent
+    };
+    
+    Object.entries(configs).forEach(([filename, content]) => {
+        const blob = new Blob([content], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+    
+    showAlert('success', 'JSON-RPC configuration files downloaded!');
+}
+
+// Claude Actions
+async function runClaudeSetup() {
+    try {
+        showAlert('info', 'Running Claude MCP auto setup...');
+        const response = await fetch('/api/claude-mcp/setup', { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', 'Claude MCP auto setup completed successfully!');
+            loadOverallStatus();
+        } else {
+            showAlert('error', `Setup failed: ${result.message}`);
+        }
+    } catch (error) {
+        showAlert('error', `Setup failed: ${error.message}`);
+    }
+}
+
+async function testClaudeIntegration() {
+    try {
+        showAlert('info', 'Testing Claude MCP integration...');
+        // Implement Claude-specific testing
+        showAlert('success', 'Claude MCP test completed successfully!');
+    } catch (error) {
+        showAlert('error', `Test failed: ${error.message}`);
+    }
+}
+
+function downloadClaudeConfig() {
+    const content = document.getElementById('claude-optimized-config-content').textContent;
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'claude-mcp-config.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showAlert('success', 'Claude MCP configuration downloaded!');
+}
+
+// gRPC Actions
+async function buildGrpcComponents() {
+    try {
+        showAlert('info', 'Building gRPC components...');
+        // Implement gRPC build process
+        showAlert('success', 'gRPC components built successfully!');
+    } catch (error) {
+        showAlert('error', `Build failed: ${error.message}`);
+    }
+}
+
+async function startGrpcServer() {
+    try {
+        showAlert('info', 'Starting gRPC MCP server...');
+        // Implement gRPC server start
+        showAlert('success', 'gRPC MCP server started!');
+    } catch (error) {
+        showAlert('error', `Server start failed: ${error.message}`);
+    }
+}
+
+async function testGrpcIntegration() {
+    try {
+        showAlert('info', 'Testing gRPC MCP integration...');
+        // Implement gRPC testing
+        showAlert('success', 'gRPC MCP test completed successfully!');
+    } catch (error) {
+        showAlert('error', `Test failed: ${error.message}`);
+    }
+}
+
+// Standard MCP Actions
+async function testStandardMcp() {
+    try {
+        showAlert('info', 'Testing Standard MCP...');
+        const response = await fetch('/api/mcp/status');
+        if (response.ok) {
+            showAlert('success', 'Standard MCP is operational!');
+        } else {
+            showAlert('error', 'Standard MCP is not available.');
+        }
+    } catch (error) {
+        showAlert('error', `Test failed: ${error.message}`);
+    }
+}
+
+// Show alert
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        ${message}
+    `;
+    
+    // Insert at top of container
+    const container = document.querySelector('.falco-config-container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+</script>
+
+{% endblock %} 

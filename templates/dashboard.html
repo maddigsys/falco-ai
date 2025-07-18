@@ -306,7 +306,7 @@
         transform: scale(1.05);
     }
 
-    /* Alert List */
+    /* ENHANCED ALERT LIST VISUAL INDICATORS */
     .alert-list {
         max-height: 400px;
         overflow-y: auto;
@@ -319,36 +319,167 @@
         padding: var(--space-lg);
         margin-bottom: var(--space-md);
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
 
+    /* Enhanced Unread Status */
+    .alert-item.unread {
+        border-left: 6px solid #ef4444;
+        background: linear-gradient(90deg, 
+            rgba(239, 68, 68, 0.08) 0%, 
+            rgba(239, 68, 68, 0.02) 20%, 
+            var(--bg-secondary) 40%);
+        box-shadow: 
+            0 2px 8px rgba(239, 68, 68, 0.15),
+            inset 3px 0 0 rgba(239, 68, 68, 0.3);
+        transform: translateX(2px);
+    }
+
+    .alert-item.unread::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+        animation: unreadGlow 2s ease-in-out infinite;
+    }
+
+    .alert-item.unread::after {
+        content: '●';
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        color: #ef4444;
+        font-size: 14px;
+        animation: unreadPulse 2s ease-in-out infinite;
+        text-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    }
+
+    /* Enhanced Read Status */
+    .alert-item.read {
+        border-left: 4px solid #10b981;
+        background: linear-gradient(90deg, 
+            rgba(16, 185, 129, 0.04) 0%, 
+            rgba(16, 185, 129, 0.01) 15%, 
+            var(--bg-secondary) 30%);
+        opacity: 0.85;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .alert-item.read::before {
+        content: '✓';
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        color: #10b981;
+        font-size: 12px;
+        font-weight: bold;
+        opacity: 0.7;
+    }
+
+    /* Enhanced Dismissed Status */
+    .alert-item.dismissed {
+        border-left: 4px solid #6b7280;
+        background: linear-gradient(90deg, 
+            rgba(107, 114, 128, 0.05) 0%, 
+            rgba(107, 114, 128, 0.01) 15%, 
+            var(--bg-secondary) 30%);
+        opacity: 0.6;
+        filter: grayscale(0.4);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .alert-item.dismissed::before {
+        content: '×';
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: bold;
+        opacity: 0.6;
+    }
+
+    /* Hover Effects */
     .alert-item:hover {
         border-color: var(--falco-primary);
         background: rgba(0, 174, 199, 0.05);
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .alert-item.selected {
-        border-color: var(--falco-primary);
-        background: rgba(0, 174, 199, 0.1);
+        transform: translateY(-2px) translateX(4px);
         box-shadow: var(--shadow-lg);
     }
 
-    .alert-item.unread {
-        border-left: 4px solid var(--danger);
-        background: rgba(239, 68, 68, 0.02);
+    .alert-item.unread:hover {
+        border-left-color: #dc2626;
+        background: linear-gradient(90deg, 
+            rgba(239, 68, 68, 0.12) 0%, 
+            rgba(239, 68, 68, 0.04) 20%, 
+            rgba(0, 174, 199, 0.05) 40%);
+        transform: translateY(-2px) translateX(6px);
+        box-shadow: 
+            0 4px 12px rgba(239, 68, 68, 0.2),
+            var(--shadow-lg);
     }
 
-    .alert-item.read {
-        opacity: 0.8;
-        border-left: 4px solid var(--success);
+    /* Selection State */
+    .alert-item.selected {
+        border-color: var(--falco-primary);
+        background: rgba(0, 174, 199, 0.1);
+        box-shadow: 
+            0 0 0 2px rgba(0, 174, 199, 0.3),
+            var(--shadow-lg);
+        transform: translateY(-1px) translateX(3px);
     }
 
-    .alert-item.dismissed {
-        opacity: 0.6;
-        border-left: 4px solid var(--text-muted);
-        background: rgba(107, 114, 128, 0.02);
+    /* Focus State for Keyboard Navigation */
+    .alert-item.focused {
+        border-color: var(--falco-primary);
+        box-shadow: 
+            0 0 0 3px rgba(0, 174, 199, 0.4),
+            var(--shadow-md);
+        outline: none;
+    }
+
+    /* Status Change Animation */
+    .alert-item.status-changing {
+        transition: all 0.5s ease;
+        animation: statusChange 0.5s ease;
+    }
+
+    @keyframes statusChange {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes unreadGlow {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+    }
+
+    @keyframes unreadPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.3; transform: scale(1.1); }
+    }
+
+    /* Real-time Update Notification */
+    .alert-item.newly-updated {
+        animation: newUpdate 1s ease;
+        border-color: var(--falco-primary);
+    }
+
+    @keyframes newUpdate {
+        0% { 
+            background: rgba(0, 174, 199, 0.2);
+            transform: scale(1.02);
+        }
+        100% { 
+            background: var(--bg-secondary);
+            transform: scale(1);
+        }
     }
 
     .alert-rule {
@@ -423,6 +554,64 @@
         background: var(--text-muted);
         color: white;
         box-shadow: var(--shadow-sm);
+    }
+
+    /* Keyboard Shortcuts Indicator */
+    .keyboard-shortcuts-hint {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-md);
+        font-size: var(--text-xs);
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    .keyboard-shortcuts-hint.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Real-time Status Updates */
+    .real-time-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: var(--success);
+        color: white;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    }
+
+    .real-time-indicator.connected {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .real-time-indicator.disconnected {
+        background: var(--danger);
+    }
+
+    .real-time-indicator .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s ease-in-out infinite;
     }
 
     /* Config sections */
@@ -651,10 +840,187 @@
             align-items: flex-start;
         }
     }
+
+    /* Filter Enhancements */
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
+        align-items: end;
+    }
+
+    .filter-group.filter-actions {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: var(--space-sm);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--bg-cards);
+        color: var(--text-heading);
+        font-size: var(--text-sm);
+        transition: all 0.2s ease;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--falco-primary);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .filter-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    .filters-status {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .filter-count {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+    }
+
+    .filter-count.active {
+        background: var(--falco-primary);
+        color: white;
+        border-color: var(--falco-primary);
+    }
+
+    .btn-filter {
+        background: var(--falco-primary);
+        color: white;
+        border: none;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .btn-filter:hover {
+        background: var(--falco-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-reset {
+        background: var(--danger);
+        color: white;
+        border: none;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .btn-reset:hover {
+        background: var(--danger-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-save-filter {
+        background: var(--success);
+        color: white;
+        border: none;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .btn-save-filter:hover {
+        background: var(--success-dark);
+        transform: translateY(-1px);
+    }
+
+    /* Enhanced filter selects */
+    .filter-select {
+        width: 100%;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: var(--space-sm);
+        font-size: var(--text-sm);
+        transition: border-color 0.2s ease;
+        background: var(--falco-white);
+        color: var(--text-heading);
+    }
+
+    .filter-select:focus {
+        border-color: var(--falco-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    /* Filter state indicators */
+    .filter-group.has-value .filter-label {
+        color: var(--falco-primary);
+        font-weight: 600;
+    }
+
+    .filter-group.has-value .filter-input,
+    .filter-group.has-value .filter-select {
+        border-color: var(--falco-primary);
+        background: rgba(0, 174, 199, 0.05);
+    }
+
+    /* Filter responsiveness */
+    @media (max-width: 768px) {
+        .filter-row {
+            grid-template-columns: 1fr;
+            gap: var(--space-sm);
+        }
+        
+        .filter-group.filter-actions {
+            justify-content: center;
+            margin-top: var(--space-md);
+        }
+        
+        .filter-group.filter-actions button {
+            flex: 1;
+            max-width: 120px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Real-time Status Indicator -->
+<div class="real-time-indicator" id="realTimeIndicator">
+    <div class="status-dot"></div>
+    <span id="realTimeStatus">Connecting...</span>
+</div>
+
+<!-- Keyboard Shortcuts Hint -->
+<div class="keyboard-shortcuts-hint" id="keyboardHint">
+    <div><strong>Keyboard Shortcuts:</strong></div>
+    <div>R - Mark as Read | D - Dismiss | ↑↓ - Navigate</div>
+</div>
+
 <div class="dashboard-grid">
     <!-- Falco Integration Setup (Collapsible) -->
     <div class="falco-card" id="falcoIntegrationCard">
@@ -776,67 +1142,127 @@
             <div class="card-header collapsible-header" onclick="toggleAlertFilters()">
                 <h3 class="card-title">
                     <i class="fas fa-filter"></i>
-                    Alert Filters & Controls
-                    <i class="fas fa-chevron-up card-toggle-icon"></i>
+                    Advanced Filters & Controls
+                    <div class="filters-status">
+                        <span id="filterStatus" class="filter-count">No filters active</span>
+                        <i class="fas fa-chevron-up card-toggle-icon"></i>
+                    </div>
                 </h3>
             </div>
             <div class="card-body card-content">
-                <div class="filter-group">
-                    <label for="timeRange">Time Range</label>
-                    <select id="timeRange" onchange="applyFilters()">
-                        <option value="all">All Time</option>
-                        <option value="1h">Last Hour</option>
-                        <option value="24h">Last 24 Hours</option>
-                        <option value="7d" selected>Last 7 Days</option>
-                        <option value="30d">Last 30 Days</option>
-                    </select>
+                <!-- Primary Filters Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="timeRange">Time Range</label>
+                        <select id="timeRange" class="filter-select" onchange="applyFilters()">
+                            <option value="1h">Last Hour</option>
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="7d" selected>Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="priorityFilter">Priority</label>
+                        <select id="priorityFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="all">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="error">Error</option>
+                            <option value="warning">Warning</option>
+                            <option value="notice">Notice</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="statusFilter">Status</label>
+                        <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="all">All Status</option>
+                            <option value="unread">Unread</option>
+                            <option value="read">Read</option>
+                            <option value="dismissed">Dismissed</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="filter-group">
-                    <label for="priorityFilter">Priority</label>
-                    <select id="priorityFilter" onchange="applyFilters()">
-                        <option value="all">All Priorities</option>
-                        <option value="critical">Critical</option>
-                        <option value="error">Error</option>
-                        <option value="warning">Warning</option>
-                        <option value="notice">Notice</option>
-                        <option value="informational">Informational</option>
-                        <option value="debug">Debug</option>
-                    </select>
+
+                <!-- Secondary Filters Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="ruleFilter">Rule Name</label>
+                        <input type="text" id="ruleFilter" class="filter-input" placeholder="Filter by rule name..." onchange="applyFilters()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="containerFilter">Container</label>
+                        <input type="text" id="containerFilter" class="filter-input" placeholder="Filter by container name..." onchange="applyFilters()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="sourceFilter">Source/Host</label>
+                        <input type="text" id="sourceFilter" class="filter-input" placeholder="Filter by source host..." onchange="applyFilters()">
+                    </div>
                 </div>
-                <div class="filter-group">
-                    <label for="ruleFilter">Rule</label>
-                    <select id="ruleFilter" onchange="applyFilters()">
-                        <option value="all">All Rules</option>
-                    </select>
+
+                <!-- Tertiary Filters Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="outputFilter">Alert Content</label>
+                        <input type="text" id="outputFilter" class="filter-input" placeholder="Search in alert description..." onchange="applyFilters()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="aiAnalysisFilter">AI Analysis</label>
+                        <select id="aiAnalysisFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="all">All Alerts</option>
+                            <option value="with_ai">With AI Analysis</option>
+                            <option value="without_ai">Without AI Analysis</option>
+                            <option value="ai_error">AI Analysis Failed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="limitFilter">Show</label>
+                        <select id="limitFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="25" selected>25 alerts</option>
+                            <option value="50">50 alerts</option>
+                            <option value="100">100 alerts</option>
+                            <option value="200">200 alerts</option>
+                            <option value="all">All alerts</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="filter-group">
-                    <label for="statusFilter">Status</label>
-                    <select id="statusFilter" onchange="applyFilters()">
-                        <option value="all">All Status</option>
-                        <option value="unread">Unread</option>
-                        <option value="read">Read</option>
-                        <option value="dismissed">Dismissed</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="limitFilter">Show</label>
-                    <select id="limitFilter" onchange="applyFilters()">
-                        <option value="25">25 alerts</option>
-                        <option value="50">50 alerts</option>
-                        <option value="100">100 alerts</option>
-                        <option value="all">All alerts</option>
-                    </select>
-                </div>
-                
-                <div class="bulk-actions">
-                    <button class="btn-bulk" onclick="markAllAsRead()" title="Mark all visible alerts as read">
-                        <i class="fas fa-check"></i>
-                        Mark All Read
-                    </button>
-                    <button class="btn-bulk" onclick="dismissAllVisible()" title="Dismiss all visible alerts">
-                        <i class="fas fa-times"></i>
-                        Dismiss All
-                    </button>
+
+                <!-- Actions Row -->
+                <div class="filter-row">
+                    <div class="filter-group filter-actions">
+                        <button class="btn-filter" onclick="applyFilters()">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                        <button class="btn-reset" onclick="resetFilters()">
+                            <i class="fas fa-times"></i> Reset
+                        </button>
+                        <button class="btn-save-filter" onclick="saveFilter()">
+                            <i class="fas fa-bookmark"></i> Save
+                        </button>
+                    </div>
+                    
+                    <div class="filter-group bulk-actions">
+                        <button class="btn-bulk" onclick="markAllAsRead()" title="Mark all visible alerts as read">
+                            <i class="fas fa-check"></i> Mark All Read
+                        </button>
+                        <button class="btn-bulk" onclick="dismissAllVisible()" title="Dismiss all visible alerts">
+                            <i class="fas fa-times"></i> Dismiss All
+                        </button>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <button class="btn-bulk" onclick="window.location.href='/runtime-events'" title="Open detailed Runtime Events view">
+                            <i class="fas fa-external-link-alt"></i> Detailed View
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -876,13 +1302,17 @@
                 </div>
                 
                 <div class="bulk-actions">
-                    <button class="btn-bulk" onclick="markAllAsRead()" title="Mark all visible alerts as read">
+                    <button class="btn-bulk" onclick="markVisibleAsRead()" title="Mark visible alerts as read">
                         <i class="fas fa-check"></i>
+                        Mark Visible Read
+                    </button>
+                    <button class="btn-bulk" onclick="markAllAsRead()" title="Mark ALL alerts as read">
+                        <i class="fas fa-check-double"></i>
                         Mark All Read
                     </button>
                     <button class="btn-bulk" onclick="dismissAllVisible()" title="Dismiss all visible alerts">
                         <i class="fas fa-times"></i>
-                        Dismiss All
+                        Dismiss Visible
                     </button>
                 </div>
             </div>
@@ -1040,12 +1470,19 @@
     // Global variables
     let alerts = [];
     let filteredAlerts = [];
+    let focusedAlertIndex = -1;
+    let eventSource = null;
+    let realTimeConnected = false;
     let currentFilters = {
         timeRange: '7d',
         priority: 'all',
-        rule: 'all',
+        rule: '',
         status: 'all',
-        limit: '25'
+        limit: '25',
+        container: '',
+        source: '',
+        output: '',
+        aiAnalysis: 'all'
     };
     let alertStats = {
         total: 0,
@@ -1070,9 +1507,18 @@
         // Load alert counts
         loadAlertCounts();
         
-        // Set up periodic refresh
+        // Set up keyboard shortcuts
+        setupKeyboardShortcuts();
+        
+        // Initialize real-time updates
+        initializeRealTimeUpdates();
+        
+        // Set up periodic refresh (fallback for SSE)
         setInterval(loadAlerts, 30000); // Refresh every 30 seconds
         setInterval(loadAlertCounts, 30000);
+        
+        // Show keyboard shortcuts hint initially
+        showKeyboardHint();
     });
 
     // Initialize filters from URL parameters
@@ -1080,9 +1526,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         
         // Set time range filter
-        const timeRange = urlParams.get('time_range') || 'all';
+        const timeRange = urlParams.get('time_range') || '7d';
         const timeRangeSelect = document.getElementById('timeRange');
-        if (timeRangeSelect && timeRange !== 'all') {
+        if (timeRangeSelect && timeRange !== '7d') {
             timeRangeSelect.value = timeRange;
             currentFilters.timeRange = timeRange;
         }
@@ -1095,9 +1541,11 @@
             currentFilters.priority = priority;
         }
         
-        // Set rule filter (will be set after rules are loaded)
-        const rule = urlParams.get('rule') || 'all';
-        if (rule !== 'all') {
+        // Set rule filter
+        const rule = urlParams.get('rule') || '';
+        const ruleInput = document.getElementById('ruleFilter');
+        if (ruleInput && rule) {
+            ruleInput.value = rule;
             currentFilters.rule = rule;
         }
         
@@ -1117,44 +1565,52 @@
             currentFilters.limit = limit;
         }
         
-        // Set source filter (if provided)
-        const source = urlParams.get('source');
-        if (source) {
+        // Set container filter
+        const container = urlParams.get('container') || '';
+        const containerInput = document.getElementById('containerFilter');
+        if (containerInput && container) {
+            containerInput.value = container;
+            currentFilters.container = container;
+        }
+        
+        // Set source filter
+        const source = urlParams.get('source') || '';
+        const sourceInput = document.getElementById('sourceFilter');
+        if (sourceInput && source) {
+            sourceInput.value = source;
             currentFilters.source = source;
+        }
+        
+        // Set output filter
+        const output = urlParams.get('output') || '';
+        const outputInput = document.getElementById('outputFilter');
+        if (outputInput && output) {
+            outputInput.value = output;
+            currentFilters.output = output;
+        }
+        
+        // Set AI analysis filter
+        const aiAnalysis = urlParams.get('ai_analysis') || 'all';
+        const aiAnalysisSelect = document.getElementById('aiAnalysisFilter');
+        if (aiAnalysisSelect && aiAnalysis !== 'all') {
+            aiAnalysisSelect.value = aiAnalysis;
+            currentFilters.aiAnalysis = aiAnalysis;
         }
     }
 
     // Load alerts with current filters
     async function loadAlerts() {
         try {
-            // Build API URL with current filters
-            const params = new URLSearchParams();
-            if (currentFilters.timeRange !== 'all') params.append('time_range', currentFilters.timeRange);
-            if (currentFilters.priority !== 'all') params.append('priority', currentFilters.priority);
-            if (currentFilters.rule !== 'all') params.append('rule', currentFilters.rule);
-            if (currentFilters.status !== 'all') params.append('status', currentFilters.status);
-            if (currentFilters.limit !== '25') params.append('limit', currentFilters.limit);
-            if (currentFilters.source) params.append('source', currentFilters.source);
-            
-            const apiUrl = '/api/alerts' + (params.toString() ? '?' + params.toString() : '');
-            const response = await fetch(apiUrl);
+            console.log('Loading alerts for Dashboard...');
+            // Fetch all alerts and let client-side filtering handle the work
+            const response = await fetch('/api/alerts?limit=1000');
             
             if (response.ok) {
                 alerts = await response.json();
+                console.log(`✅ Loaded ${alerts.length} alerts for Dashboard`);
                 
-                // Apply source filter if set (since API doesn't support this yet)
-                if (currentFilters.source) {
-                    alerts = alerts.filter(alert => 
-                        (alert.source || 'unknown').toLowerCase().includes(currentFilters.source.toLowerCase())
-                    );
-                }
-                
+                // Apply filters and update display
                 applyFilters();
-                updateStats();
-                updateDisplay();
-                
-                // Update page title based on filters
-                updatePageTitle();
             } else {
                 console.error('Failed to load alerts:', response.statusText);
             }
@@ -1171,17 +1627,26 @@
         if (currentFilters.priority !== 'all') {
             activeFilters.push(`${currentFilters.priority} priority`);
         }
-        if (currentFilters.rule !== 'all') {
+        if (currentFilters.rule) {
             activeFilters.push(`rule: ${currentFilters.rule}`);
         }
         if (currentFilters.status !== 'all') {
             activeFilters.push(`${currentFilters.status} status`);
         }
-        if (currentFilters.timeRange !== 'all') {
+        if (currentFilters.timeRange !== '7d') {
             activeFilters.push(`${currentFilters.timeRange} timeframe`);
+        }
+        if (currentFilters.container) {
+            activeFilters.push(`container: ${currentFilters.container}`);
         }
         if (currentFilters.source) {
             activeFilters.push(`source: ${currentFilters.source}`);
+        }
+        if (currentFilters.output) {
+            activeFilters.push(`content: ${currentFilters.output}`);
+        }
+        if (currentFilters.aiAnalysis !== 'all') {
+            activeFilters.push(`AI: ${currentFilters.aiAnalysis}`);
         }
         
         if (activeFilters.length > 0) {
@@ -1203,14 +1668,109 @@
 
     // Apply current filters to alerts
     function applyFilters() {
+        // Update current filters from form elements
+        currentFilters.timeRange = document.getElementById('timeRange')?.value || '7d';
+        currentFilters.priority = document.getElementById('priorityFilter')?.value || 'all';
+        currentFilters.rule = document.getElementById('ruleFilter')?.value || '';
+        currentFilters.status = document.getElementById('statusFilter')?.value || 'all';
+        currentFilters.limit = document.getElementById('limitFilter')?.value || '25';
+        currentFilters.container = document.getElementById('containerFilter')?.value || '';
+        currentFilters.source = document.getElementById('sourceFilter')?.value || '';
+        currentFilters.output = document.getElementById('outputFilter')?.value || '';
+        currentFilters.aiAnalysis = document.getElementById('aiAnalysisFilter')?.value || 'all';
+        
+        console.log('🔍 Dashboard filters applied:', currentFilters);
+        
         filteredAlerts = alerts.filter(alert => {
-            // Time range filter - already applied by API
-            // Priority filter - already applied by API  
-            // Rule filter - already applied by API
-            // Status filter - already applied by API
-            // Source filter - applied locally if set
-            
-            return true; // All filtering now done by API or locally above
+            if (!alert) return false;
+
+            // Time range filter
+            if (currentFilters.timeRange !== 'all') {
+                const alertTime = new Date(alert.timestamp || alert.time);
+                if (isNaN(alertTime.getTime())) {
+                    return false; // Skip alerts with invalid timestamps
+                }
+                
+                const now = new Date();
+                const diffHours = (now - alertTime) / (1000 * 60 * 60);
+                
+                switch (currentFilters.timeRange) {
+                    case '1h': if (diffHours > 1) return false; break;
+                    case '24h': if (diffHours > 24) return false; break;
+                    case '7d': if (diffHours > 24 * 7) return false; break;
+                    case '30d': if (diffHours > 24 * 30) return false; break;
+                }
+            }
+
+            // Priority filter
+            if (currentFilters.priority !== 'all') {
+                const alertPriority = alert.priority || 'info';
+                if (alertPriority !== currentFilters.priority) {
+                    return false;
+                }
+            }
+
+            // Status filter  
+            if (currentFilters.status !== 'all') {
+                const alertStatus = alert.status || 'unread';
+                if (alertStatus !== currentFilters.status) {
+                    return false;
+                }
+            }
+
+            // Rule filter
+            if (currentFilters.rule) {
+                const alertRule = alert.rule || '';
+                if (!alertRule.toLowerCase().includes(currentFilters.rule.toLowerCase())) {
+                    return false;
+                }
+            }
+
+            // Container filter
+            if (currentFilters.container) {
+                const containerName = alert.source || 
+                                    alert.fields?.['container.name'] || 
+                                    alert.output_fields?.['container.name'] || '';
+                if (!containerName.toLowerCase().includes(currentFilters.container.toLowerCase())) {
+                    return false;
+                }
+            }
+
+            // Source filter
+            if (currentFilters.source) {
+                const source = alert.source || '';
+                if (!source.toLowerCase().includes(currentFilters.source.toLowerCase())) {
+                    return false;
+                }
+            }
+
+            // Output content filter
+            if (currentFilters.output) {
+                const output = alert.output || '';
+                if (!output.toLowerCase().includes(currentFilters.output.toLowerCase())) {
+                    return false;
+                }
+            }
+
+            // AI Analysis filter
+            if (currentFilters.aiAnalysis !== 'all') {
+                const hasAI = alert.ai_analysis && Object.keys(alert.ai_analysis).length > 0;
+                const hasAIError = alert.ai_analysis && alert.ai_analysis.error;
+                
+                switch (currentFilters.aiAnalysis) {
+                    case 'with_ai':
+                        if (!hasAI || hasAIError) return false;
+                        break;
+                    case 'without_ai':
+                        if (hasAI && !hasAIError) return false;
+                        break;
+                    case 'ai_error':
+                        if (!hasAIError) return false;
+                        break;
+                }
+            }
+
+            return true;
         });
         
         // Apply limit
@@ -1218,6 +1778,15 @@
             const limit = parseInt(currentFilters.limit);
             filteredAlerts = filteredAlerts.slice(0, limit);
         }
+        
+        // Update display
+        updateStats();
+        updateDisplay();
+        updateFilterStatus();
+        updatePageTitle();
+        updateURLParameters();
+        
+        console.log(`✅ Dashboard filtering complete: ${filteredAlerts.length} of ${alerts.length} alerts shown`);
     }
 
     // Update statistics
@@ -1301,8 +1870,12 @@
             return;
         }
         
-        alertList.innerHTML = filteredAlerts.map(alert => `
-            <div class="alert-item ${alert.status}" onclick="selectAlert('${alert.id}')" data-alert-id="${alert.id}">
+        alertList.innerHTML = filteredAlerts.map((alert, index) => `
+            <div class="alert-item ${alert.status || 'unread'}" 
+                 onclick="selectAlert('${alert.id}')" 
+                 data-alert-id="${alert.id}" 
+                 data-alert-index="${index}"
+                 tabindex="0">
                 <div class="alert-rule">${escapeHtml(alert.rule)}</div>
                 <div class="alert-meta">
                     <div>
@@ -1316,6 +1889,10 @@
                 </div>
             </div>
         `).join('');
+        
+        // Reset focused index when re-rendering
+        focusedAlertIndex = -1;
+        updateAlertFocus();
     }
 
     // Toggle functions (removed control panel)
@@ -1548,7 +2125,7 @@ data:
     }
 
     // Select alert
-    function selectAlert(alertId) {
+    async function selectAlert(alertId) {
         document.querySelectorAll('.alert-item.selected').forEach(item => {
             item.classList.remove('selected');
         });
@@ -1558,27 +2135,94 @@ data:
             alertItem.classList.add('selected');
         }
         
+        // Auto-mark alert as read when selected
+        await markAlertAsRead(alertId);
+        
         window.location.href = `/alerts/${alertId}`;
+    }
+
+    // Mark single alert as read
+    async function markAlertAsRead(alertId) {
+        try {
+            const response = await fetch(`/api/alerts/${alertId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'read' })
+            });
+            
+            if (response.ok) {
+                // Update the alert in our local data
+                const alert = alerts.find(a => a.id == alertId);
+                if (alert) {
+                    alert.status = 'read';
+                }
+                
+                // Update the UI to reflect the status change
+                const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+                if (alertElement) {
+                    alertElement.classList.remove('unread');
+                    alertElement.classList.add('read');
+                }
+                
+                // Update counts
+                loadAlertCounts();
+                updateStats();
+                
+                console.log(`✅ Marked alert ${alertId} as read`);
+            } else {
+                console.error('Failed to mark alert as read:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error marking alert as read:', error);
+        }
     }
 
     // Bulk actions
     async function markAllAsRead() {
         try {
+            showAlert('info', 'Marking all alerts as read...');
+            
             const response = await fetch('/api/alerts/mark-read-all', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
             
             if (response.ok) {
+                const result = await response.json();
+                showAlert('success', `✅ ${result.message}`);
+                
+                // Update local data
+                alerts.forEach(alert => {
+                    if (alert.status === 'unread' || !alert.status) {
+                        alert.status = 'read';
+                    }
+                });
+                
+                // Refresh displays
                 loadAlerts();
+                loadAlertCounts();
+            } else {
+                const error = await response.json();
+                showAlert('error', `❌ Error: ${error.error}`);
             }
         } catch (error) {
             console.error('Error marking alerts as read:', error);
+            showAlert('error', '❌ Failed to mark alerts as read');
         }
     }
 
     async function dismissAllVisible() {
+        if (filteredAlerts.length === 0) {
+            showAlert('warning', 'No alerts to dismiss');
+            return;
+        }
+        
+        const confirmed = confirm(`Are you sure you want to dismiss ${filteredAlerts.length} visible alerts?`);
+        if (!confirmed) return;
+        
         try {
+            showAlert('info', `Dismissing ${filteredAlerts.length} alerts...`);
+            
             const alertIds = filteredAlerts.map(alert => alert.id);
             const response = await fetch('/api/alerts/dismiss-multiple', {
                 method: 'POST',
@@ -1587,10 +2231,75 @@ data:
             });
             
             if (response.ok) {
+                const result = await response.json();
+                showAlert('success', `✅ ${result.message}`);
+                
+                // Update local data
+                alertIds.forEach(id => {
+                    const alert = alerts.find(a => a.id === id);
+                    if (alert) {
+                        alert.status = 'dismissed';
+                    }
+                });
+                
+                // Refresh displays
                 loadAlerts();
+                loadAlertCounts();
+            } else {
+                const error = await response.json();
+                showAlert('error', `❌ Error: ${error.error}`);
             }
         } catch (error) {
             console.error('Error dismissing alerts:', error);
+            showAlert('error', '❌ Failed to dismiss alerts');
+        }
+    }
+
+    // Add functions for marking visible alerts as read
+    async function markVisibleAsRead() {
+        if (filteredAlerts.length === 0) {
+            showAlert('warning', 'No alerts to mark as read');
+            return;
+        }
+        
+        const unreadVisible = filteredAlerts.filter(alert => alert.status === 'unread' || !alert.status);
+        if (unreadVisible.length === 0) {
+            showAlert('info', 'All visible alerts are already read');
+            return;
+        }
+        
+        try {
+            showAlert('info', `Marking ${unreadVisible.length} alerts as read...`);
+            
+            const alertIds = unreadVisible.map(alert => alert.id);
+            const response = await fetch('/api/alerts/bulk-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alert_ids: alertIds, status: 'read' })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                showAlert('success', `✅ Marked ${result.updated_count} alerts as read`);
+                
+                // Update local data
+                alertIds.forEach(id => {
+                    const alert = alerts.find(a => a.id === id);
+                    if (alert) {
+                        alert.status = 'read';
+                    }
+                });
+                
+                // Refresh displays
+                loadAlerts();
+                loadAlertCounts();
+            } else {
+                const error = await response.json();
+                showAlert('error', `❌ Error: ${error.error}`);
+            }
+        } catch (error) {
+            console.error('Error marking alerts as read:', error);
+            showAlert('error', '❌ Failed to mark alerts as read');
         }
     }
 
@@ -1618,31 +2327,21 @@ data:
         }
     }
 
-    // Filter application with URL update
-    function applyFilters() {
-        currentFilters.timeRange = document.getElementById('timeRange')?.value || 'all';
-        currentFilters.priority = document.getElementById('priorityFilter')?.value || 'all';
-        currentFilters.rule = document.getElementById('ruleFilter')?.value || 'all';
-        currentFilters.status = document.getElementById('statusFilter')?.value || 'all';
-        currentFilters.limit = document.getElementById('limitFilter')?.value || '25';
-        
-        // Update URL parameters
-        updateURLParameters();
-        
-        // Reload alerts with new filters
-        loadAlerts();
-    }
+
 
     // Update URL parameters without refreshing the page
     function updateURLParameters() {
         const params = new URLSearchParams();
         
-        if (currentFilters.timeRange !== 'all') params.append('time_range', currentFilters.timeRange);
+        if (currentFilters.timeRange !== '7d') params.append('time_range', currentFilters.timeRange);
         if (currentFilters.priority !== 'all') params.append('priority', currentFilters.priority);
-        if (currentFilters.rule !== 'all') params.append('rule', currentFilters.rule);
+        if (currentFilters.rule) params.append('rule', currentFilters.rule);
         if (currentFilters.status !== 'all') params.append('status', currentFilters.status);
         if (currentFilters.limit !== '25') params.append('limit', currentFilters.limit);
+        if (currentFilters.container) params.append('container', currentFilters.container);
         if (currentFilters.source) params.append('source', currentFilters.source);
+        if (currentFilters.output) params.append('output', currentFilters.output);
+        if (currentFilters.aiAnalysis !== 'all') params.append('ai_analysis', currentFilters.aiAnalysis);
         
         const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
         window.history.pushState({}, '', newUrl);
@@ -1679,5 +2378,653 @@ data:
             }
         });
     }
+
+    // Update filter status indicator
+    function updateFilterStatus() {
+        const filterStatusEl = document.getElementById('filterStatus');
+        if (!filterStatusEl) return;
+        
+        // Count active filters
+        let activeFilters = 0;
+        const filterLabels = [];
+        
+        if (currentFilters.timeRange !== 'all' && currentFilters.timeRange !== '7d') {
+            activeFilters++;
+            filterLabels.push(`Time: ${currentFilters.timeRange}`);
+        }
+        if (currentFilters.priority !== 'all') {
+            activeFilters++;
+            filterLabels.push(`Priority: ${currentFilters.priority}`);
+        }
+        if (currentFilters.status !== 'all') {
+            activeFilters++;
+            filterLabels.push(`Status: ${currentFilters.status}`);
+        }
+        if (currentFilters.rule) {
+            activeFilters++;
+            filterLabels.push(`Rule: ${currentFilters.rule}`);
+        }
+        if (currentFilters.container) {
+            activeFilters++;
+            filterLabels.push(`Container: ${currentFilters.container}`);
+        }
+        if (currentFilters.source) {
+            activeFilters++;
+            filterLabels.push(`Source: ${currentFilters.source}`);
+        }
+        if (currentFilters.output) {
+            activeFilters++;
+            filterLabels.push(`Content: ${currentFilters.output}`);
+        }
+        if (currentFilters.aiAnalysis !== 'all') {
+            activeFilters++;
+            filterLabels.push(`AI: ${currentFilters.aiAnalysis}`);
+        }
+        if (currentFilters.limit !== '25') {
+            activeFilters++;
+            filterLabels.push(`Limit: ${currentFilters.limit}`);
+        }
+        
+        // Update status display
+        if (activeFilters === 0) {
+            filterStatusEl.textContent = 'No filters active';
+            filterStatusEl.className = 'filter-count';
+        } else {
+            filterStatusEl.textContent = `${activeFilters} filter${activeFilters > 1 ? 's' : ''} active`;
+            filterStatusEl.className = 'filter-count active';
+            filterStatusEl.title = filterLabels.join(', ');
+        }
+        
+        // Update filter group styling
+        updateFilterGroupStyling();
+    }
+
+    // Update filter group styling to show which have values
+    function updateFilterGroupStyling() {
+        const filterInputs = document.querySelectorAll('.filter-input, .filter-select');
+        filterInputs.forEach(input => {
+            const filterGroup = input.closest('.filter-group');
+            if (input.value && input.value !== 'all' && input.value !== '7d' && input.value !== '25') {
+                filterGroup.classList.add('has-value');
+            } else {
+                filterGroup.classList.remove('has-value');
+            }
+        });
+    }
+
+    // Reset filters to default
+    function resetFilters() {
+        try {
+            console.log('Resetting Dashboard filters');
+            
+            // Reset form elements
+            const timeRangeEl = document.getElementById('timeRange');
+            const priorityFilterEl = document.getElementById('priorityFilter');
+            const statusFilterEl = document.getElementById('statusFilter');
+            const limitFilterEl = document.getElementById('limitFilter');
+            const ruleFilterEl = document.getElementById('ruleFilter');
+            const containerFilterEl = document.getElementById('containerFilter');
+            const sourceFilterEl = document.getElementById('sourceFilter');
+            const outputFilterEl = document.getElementById('outputFilter');
+            const aiAnalysisFilterEl = document.getElementById('aiAnalysisFilter');
+            
+            // Reset select elements
+            if (timeRangeEl) timeRangeEl.value = '7d';
+            if (priorityFilterEl) priorityFilterEl.value = 'all';
+            if (statusFilterEl) statusFilterEl.value = 'all';
+            if (limitFilterEl) limitFilterEl.value = '25';
+            if (aiAnalysisFilterEl) aiAnalysisFilterEl.value = 'all';
+            
+            // Reset text inputs
+            if (ruleFilterEl) ruleFilterEl.value = '';
+            if (containerFilterEl) containerFilterEl.value = '';
+            if (sourceFilterEl) sourceFilterEl.value = '';
+            if (outputFilterEl) outputFilterEl.value = '';
+            
+            // Reset current filters object
+            currentFilters = {
+                timeRange: '7d',
+                priority: 'all',
+                rule: '',
+                status: 'all',
+                limit: '25',
+                container: '',
+                source: '',
+                output: '',
+                aiAnalysis: 'all'
+            };
+            
+            // Apply default filters
+            applyFilters();
+            
+        } catch (error) {
+            console.error('Error resetting filters:', error);
+        }
+    }
+
+    // Save filter configuration
+    function saveFilter() {
+        const filterConfig = {
+            name: prompt('Enter a name for this filter configuration:'),
+            filters: { ...currentFilters },
+            timestamp: Date.now()
+        };
+        
+        if (!filterConfig.name) return;
+        
+        // Save to localStorage
+        const savedFilters = JSON.parse(localStorage.getItem('falco_dashboard_saved_filters') || '[]');
+        savedFilters.push(filterConfig);
+        localStorage.setItem('falco_dashboard_saved_filters', JSON.stringify(savedFilters));
+        
+        // Show success message
+        showAlert('success', `Filter "${filterConfig.name}" saved successfully!`);
+    }
+
+    // Show alert function
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible`;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.minWidth = '300px';
+        alertDiv.style.maxWidth = '500px';
+        
+        alertDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add to page
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // ENHANCED KEYBOARD SHORTCUTS & NAVIGATION
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(event) {
+            // Don't interfere with form inputs
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+            const alertItems = document.querySelectorAll('.alert-item');
+
+            switch (key) {
+                case 'r':
+                    event.preventDefault();
+                    if (focusedAlertIndex >= 0 && focusedAlertIndex < filteredAlerts.length) {
+                        markAlertAsReadByIndex(focusedAlertIndex);
+                    } else if (alertItems.length > 0) {
+                        // Mark first alert if none focused
+                        focusedAlertIndex = 0;
+                        updateAlertFocus();
+                        markAlertAsReadByIndex(0);
+                    }
+                    break;
+
+                case 'd':
+                    event.preventDefault();
+                    if (focusedAlertIndex >= 0 && focusedAlertIndex < filteredAlerts.length) {
+                        dismissAlertByIndex(focusedAlertIndex);
+                    } else if (alertItems.length > 0) {
+                        // Dismiss first alert if none focused
+                        focusedAlertIndex = 0;
+                        updateAlertFocus();
+                        dismissAlertByIndex(0);
+                    }
+                    break;
+
+                case 'arrowup':
+                    event.preventDefault();
+                    if (alertItems.length > 0) {
+                        focusedAlertIndex = Math.max(0, focusedAlertIndex - 1);
+                        updateAlertFocus();
+                    }
+                    break;
+
+                case 'arrowdown':
+                    event.preventDefault();
+                    if (alertItems.length > 0) {
+                        focusedAlertIndex = Math.min(alertItems.length - 1, focusedAlertIndex + 1);
+                        updateAlertFocus();
+                    }
+                    break;
+
+                case 'enter':
+                    event.preventDefault();
+                    if (focusedAlertIndex >= 0 && focusedAlertIndex < filteredAlerts.length) {
+                        const alert = filteredAlerts[focusedAlertIndex];
+                        selectAlert(alert.id);
+                    }
+                    break;
+
+                case 'escape':
+                    event.preventDefault();
+                    clearAlertFocus();
+                    break;
+
+                case '?':
+                    event.preventDefault();
+                    toggleKeyboardHint();
+                    break;
+            }
+        });
+
+        // Show shortcuts hint on first focus
+        document.addEventListener('focusin', function(event) {
+            if (event.target.classList.contains('alert-item')) {
+                showKeyboardHint();
+            }
+        });
+    }
+
+    // Update alert focus state
+    function updateAlertFocus() {
+        const alertItems = document.querySelectorAll('.alert-item');
+        
+        alertItems.forEach((item, index) => {
+            item.classList.remove('focused');
+            if (index === focusedAlertIndex) {
+                item.classList.add('focused');
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
+
+    // Clear alert focus
+    function clearAlertFocus() {
+        focusedAlertIndex = -1;
+        document.querySelectorAll('.alert-item').forEach(item => {
+            item.classList.remove('focused');
+        });
+    }
+
+    // Mark alert as read by index
+    async function markAlertAsReadByIndex(index) {
+        if (index >= 0 && index < filteredAlerts.length) {
+            const alert = filteredAlerts[index];
+            const alertElement = document.querySelector(`[data-alert-id="${alert.id}"]`);
+            
+            if (alertElement && alert.status !== 'read') {
+                // Add animation class
+                alertElement.classList.add('status-changing');
+                
+                await markAlertAsRead(alert.id);
+                
+                // Remove animation class after animation completes
+                setTimeout(() => {
+                    alertElement.classList.remove('status-changing');
+                }, 500);
+                
+                showAlert('success', `✓ Alert marked as read`);
+            }
+        }
+    }
+
+    // Dismiss alert by index
+    async function dismissAlertByIndex(index) {
+        if (index >= 0 && index < filteredAlerts.length) {
+            const alert = filteredAlerts[index];
+            const alertElement = document.querySelector(`[data-alert-id="${alert.id}"]`);
+            
+            if (alertElement && alert.status !== 'dismissed') {
+                // Add animation class
+                alertElement.classList.add('status-changing');
+                
+                await dismissAlert(alert.id);
+                
+                // Remove animation class after animation completes
+                setTimeout(() => {
+                    alertElement.classList.remove('status-changing');
+                }, 500);
+                
+                showAlert('success', `✓ Alert dismissed`);
+            }
+        }
+    }
+
+    // Dismiss single alert
+    async function dismissAlert(alertId) {
+        try {
+            const response = await fetch(`/api/alerts/${alertId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'dismissed' })
+            });
+            
+            if (response.ok) {
+                // Update the alert in our local data
+                const alert = alerts.find(a => a.id == alertId);
+                if (alert) {
+                    alert.status = 'dismissed';
+                }
+                
+                // Update the UI to reflect the status change
+                const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+                if (alertElement) {
+                    alertElement.classList.remove('unread', 'read');
+                    alertElement.classList.add('dismissed');
+                }
+                
+                // Update counts
+                loadAlertCounts();
+                updateStats();
+                
+                console.log(`✅ Dismissed alert ${alertId}`);
+            } else {
+                console.error('Failed to dismiss alert:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error dismissing alert:', error);
+        }
+    }
+
+    // REAL-TIME UPDATES WITH SERVER-SENT EVENTS
+    function initializeRealTimeUpdates() {
+        console.log('🔄 Initializing real-time updates...');
+        
+        // Check if browser supports EventSource
+        if (typeof EventSource !== 'undefined') {
+            connectToEventStream();
+        } else {
+            console.warn('⚠️ Browser does not support Server-Sent Events');
+            updateRealTimeIndicator(false, 'Not supported');
+        }
+    }
+
+    function connectToEventStream() {
+        try {
+            // Close existing connection if any
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            eventSource = new EventSource('/api/events/stream');
+            
+            eventSource.onopen = function(event) {
+                console.log('✅ Real-time connection established');
+                realTimeConnected = true;
+                updateRealTimeIndicator(true, 'Connected');
+            };
+
+            eventSource.onmessage = function(event) {
+                console.log('📡 Received real-time update:', event.data);
+                
+                try {
+                    const data = JSON.parse(event.data);
+                    handleRealTimeUpdate(data);
+                } catch (error) {
+                    console.error('Error parsing real-time update:', error);
+                }
+            };
+
+            eventSource.onerror = function(event) {
+                console.error('❌ Real-time connection error:', event);
+                realTimeConnected = false;
+                updateRealTimeIndicator(false, 'Disconnected');
+                
+                // Attempt to reconnect after 5 seconds
+                setTimeout(() => {
+                    if (!realTimeConnected) {
+                        console.log('🔄 Attempting to reconnect...');
+                        connectToEventStream();
+                    }
+                }, 5000);
+            };
+
+            eventSource.addEventListener('alert_status_change', function(event) {
+                console.log('📊 Alert status change:', event.data);
+                const data = JSON.parse(event.data);
+                handleAlertStatusChange(data);
+            });
+
+            eventSource.addEventListener('new_alert', function(event) {
+                console.log('🚨 New alert received:', event.data);
+                const data = JSON.parse(event.data);
+                handleNewAlert(data);
+            });
+
+        } catch (error) {
+            console.error('❌ Failed to establish real-time connection:', error);
+            updateRealTimeIndicator(false, 'Failed');
+        }
+    }
+
+    function handleRealTimeUpdate(data) {
+        switch (data.type) {
+            case 'alert_status_change':
+                handleAlertStatusChange(data);
+                break;
+            case 'new_alert':
+                handleNewAlert(data);
+                break;
+            case 'counts_updated':
+                loadAlertCounts();
+                break;
+            default:
+                console.log('🔔 Unknown real-time update type:', data.type);
+        }
+    }
+
+    function handleAlertStatusChange(data) {
+        const { alert_id, new_status, old_status } = data;
+        
+        // Update local data
+        const alert = alerts.find(a => a.id == alert_id);
+        if (alert) {
+            alert.status = new_status;
+        }
+        
+        // Update UI
+        const alertElement = document.querySelector(`[data-alert-id="${alert_id}"]`);
+        if (alertElement) {
+            alertElement.classList.remove('unread', 'read', 'dismissed');
+            alertElement.classList.add(new_status, 'newly-updated');
+            
+            // Remove the update animation after it completes
+            setTimeout(() => {
+                alertElement.classList.remove('newly-updated');
+            }, 1000);
+        }
+        
+        // Update counts
+        updateStats();
+        loadAlertCounts();
+        
+        console.log(`📊 Alert ${alert_id} status changed: ${old_status} → ${new_status}`);
+    }
+
+    function handleNewAlert(data) {
+        const { alert } = data;
+        
+        // Add to alerts array
+        alerts.unshift(alert);
+        
+        // Refresh display if it matches current filters
+        applyFilters();
+        
+        // Update counts
+        updateStats();
+        loadAlertCounts();
+        
+        console.log(`🚨 New alert added: ${alert.rule}`);
+        
+        // Show notification for critical alerts
+        if (alert.priority === 'critical') {
+            showAlert('warning', `🚨 New critical alert: ${alert.rule}`);
+        }
+    }
+
+    function updateRealTimeIndicator(connected, status) {
+        const indicator = document.getElementById('realTimeIndicator');
+        const statusSpan = document.getElementById('realTimeStatus');
+        
+        if (indicator && statusSpan) {
+            statusSpan.textContent = status;
+            
+            if (connected) {
+                indicator.classList.add('connected');
+                indicator.classList.remove('disconnected');
+            } else {
+                indicator.classList.remove('connected');
+                indicator.classList.add('disconnected');
+            }
+        }
+    }
+
+    // KEYBOARD SHORTCUTS HINT MANAGEMENT
+    function showKeyboardHint() {
+        const hint = document.getElementById('keyboardHint');
+        if (hint) {
+            hint.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                hint.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    function toggleKeyboardHint() {
+        const hint = document.getElementById('keyboardHint');
+        if (hint) {
+            hint.classList.toggle('show');
+        }
+    }
+
+    // ENHANCED ALERT SELECTION WITH ANIMATION
+    async function selectAlert(alertId) {
+        // Remove previous selection
+        document.querySelectorAll('.alert-item.selected').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        const alertItem = document.querySelector(`[data-alert-id="${alertId}"]`);
+        if (alertItem) {
+            alertItem.classList.add('selected');
+            
+            // Update focused index
+            const index = parseInt(alertItem.getAttribute('data-alert-index'));
+            if (!isNaN(index)) {
+                focusedAlertIndex = index;
+                updateAlertFocus();
+            }
+        }
+        
+        // Auto-mark alert as read when selected (with animation)
+        const alert = alerts.find(a => a.id == alertId);
+        if (alert && alert.status !== 'read') {
+            if (alertItem) {
+                alertItem.classList.add('status-changing');
+            }
+            
+            await markAlertAsRead(alertId);
+            
+            if (alertItem) {
+                setTimeout(() => {
+                    alertItem.classList.remove('status-changing');
+                }, 500);
+            }
+        }
+        
+        window.location.href = `/alerts/${alertId}`;
+    }
+
+    // ENHANCED MARK AS READ WITH BETTER UI FEEDBACK
+    async function markAlertAsRead(alertId) {
+        try {
+            const response = await fetch(`/api/alerts/${alertId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'read' })
+            });
+            
+            if (response.ok) {
+                // Update the alert in our local data
+                const alert = alerts.find(a => a.id == alertId);
+                if (alert && alert.status !== 'read') {
+                    alert.status = 'read';
+                    
+                    // Update the UI to reflect the status change
+                    const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+                    if (alertElement) {
+                        alertElement.classList.remove('unread');
+                        alertElement.classList.add('read');
+                    }
+                    
+                    // Update counts
+                    loadAlertCounts();
+                    updateStats();
+                    
+                    console.log(`✅ Marked alert ${alertId} as read`);
+                }
+            } else {
+                console.error('Failed to mark alert as read:', response.statusText);
+                showAlert('error', 'Failed to mark alert as read');
+            }
+        } catch (error) {
+            console.error('Error marking alert as read:', error);
+            showAlert('error', 'Error marking alert as read');
+        }
+    }
+
+    // Apply filter from stat card with enhanced feedback
+    function applyStatFilter(filterType, event) {
+        if (event) {
+            event.preventDefault();
+        }
+        
+        console.log(`🎯 Applying stat filter: ${filterType}`);
+        
+        // Reset filters first
+        resetFilters();
+        
+        // Apply the specific filter
+        switch (filterType) {
+            case 'critical':
+                document.getElementById('priorityFilter').value = 'critical';
+                currentFilters.priority = 'critical';
+                break;
+            case 'unread':
+                document.getElementById('statusFilter').value = 'unread';
+                currentFilters.status = 'unread';
+                break;
+            case 'recent':
+                document.getElementById('timeRange').value = '1h';
+                currentFilters.timeRange = '1h';
+                break;
+            case 'all':
+            default:
+                // Already reset, show all
+                break;
+        }
+        
+        // Apply filters and show feedback
+        applyFilters();
+        showAlert('info', `📊 Filtered to ${filterType} alerts`);
+    }
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (eventSource) {
+            eventSource.close();
+        }
+    });
 </script>
 {% endblock %}

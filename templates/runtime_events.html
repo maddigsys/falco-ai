@@ -1109,6 +1109,115 @@
             justify-content: space-between;
         }
     }
+
+    /* Filter Enhancements */
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
+        align-items: end;
+    }
+
+    .filter-group.filter-actions {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: var(--space-sm);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        background: var(--bg-cards);
+        color: var(--text-heading);
+        font-size: var(--text-sm);
+        transition: all 0.2s ease;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 174, 199, 0.1);
+    }
+
+    .filter-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    .filters-status {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .filter-count {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+    }
+
+    .filter-count.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .btn-save-filter {
+        background: var(--success);
+        color: white;
+        border: none;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .btn-save-filter:hover {
+        background: var(--success-dark);
+        transform: translateY(-1px);
+    }
+
+    /* Filter responsiveness */
+    @media (max-width: 768px) {
+        .filter-row {
+            grid-template-columns: 1fr;
+            gap: var(--space-sm);
+        }
+        
+        .filter-group.filter-actions {
+            justify-content: center;
+            margin-top: var(--space-md);
+        }
+        
+        .filter-group.filter-actions button {
+            flex: 1;
+            max-width: 120px;
+        }
+    }
+
+    /* Filter state indicators */
+    .filter-group.has-value .filter-label {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .filter-group.has-value .filter-input,
+    .filter-group.has-value .filter-select {
+        border-color: var(--primary);
+        background: rgba(0, 174, 199, 0.05);
+    }
 </style>
 {% endblock %}
 
@@ -1121,67 +1230,152 @@
             <div class="filters-header" onclick="toggleFilters()">
                 <h2 class="filters-title">
                     <i class="fas fa-filter"></i>
-                    Filters & Controls
+                    Advanced Filters & Controls
                 </h2>
-                <button class="filters-toggle" id="filtersToggle">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
+                <div class="filters-status">
+                    <span id="filterStatus" class="filter-count">No filters active</span>
+                    <button class="filters-toggle" id="filtersToggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="filters-content" id="filtersContent">
-                <div class="filter-group">
-                    <label class="filter-label">Time Range</label>
-                    <select id="timeRange" class="filter-select">
-                        <option value="1h">Last Hour</option>
-                        <option value="24h" selected>Last 24 Hours</option>
-                        <option value="7d">Last 7 Days</option>
-                        <option value="30d">Last 30 Days</option>
-                        <option value="all">All Time</option>
-                    </select>
+                <!-- Primary Filters Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Time Range</label>
+                        <select id="timeRange" class="filter-select">
+                            <option value="1h">Last Hour</option>
+                            <option value="24h" selected>Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Priority</label>
+                        <select id="priorityFilter" class="filter-select">
+                            <option value="all">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="error">Error</option>
+                            <option value="warning">Warning</option>
+                            <option value="notice">Notice</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">All Status</option>
+                            <option value="unread">Unread</option>
+                            <option value="read">Read</option>
+                            <option value="dismissed">Dismissed</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Per Page</label>
+                        <select id="limitFilter" class="filter-select">
+                            <option value="10">10 events</option>
+                            <option value="25" selected>25 events</option>
+                            <option value="50">50 events</option>
+                            <option value="100">100 events</option>
+                            <option value="200">200 events</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">Priority</label>
-                    <select id="priorityFilter" class="filter-select">
-                        <option value="all">All Priorities</option>
-                        <option value="critical">Critical</option>
-                        <option value="error">Error</option>
-                        <option value="warning">Warning</option>
-                        <option value="notice">Notice</option>
-                        <option value="informational">Informational</option>
-                    </select>
+
+                <!-- Secondary Filters Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Rule Name</label>
+                        <input type="text" id="ruleFilter" class="filter-input" placeholder="Filter by rule name...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Container</label>
+                        <input type="text" id="containerFilter" class="filter-input" placeholder="Filter by container name...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">User</label>
+                        <input type="text" id="userFilter" class="filter-input" placeholder="Filter by user name...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Process</label>
+                        <input type="text" id="processFilter" class="filter-input" placeholder="Filter by process name...">
+                    </div>
                 </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">Status</label>
-                    <select id="statusFilter" class="filter-select">
-                        <option value="all">All Status</option>
-                        <option value="unread">Unread</option>
-                        <option value="read">Read</option>
-                        <option value="dismissed">Dismissed</option>
-                    </select>
+
+                <!-- Tertiary Filters Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Command</label>
+                        <input type="text" id="commandFilter" class="filter-input" placeholder="Filter by command line...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">File Path</label>
+                        <input type="text" id="fileFilter" class="filter-input" placeholder="Filter by file path...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Source/Host</label>
+                        <input type="text" id="sourceFilter" class="filter-input" placeholder="Filter by source host...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Kubernetes</label>
+                        <input type="text" id="k8sFilter" class="filter-input" placeholder="Filter by pod/namespace...">
+                    </div>
                 </div>
-                
-                <div class="filter-group">
-                    <label class="filter-label">Per Page</label>
-                    <select id="limitFilter" class="filter-select">
-                        <option value="10">10 events</option>
-                        <option value="25" selected>25 events</option>
-                        <option value="50">50 events</option>
-                        <option value="100">100 events</option>
-                        <option value="200">200 events</option>
-                    </select>
-                </div>
-                
-                <div class="filter-actions">
-                    <button class="btn-filter" onclick="applyFilters()">
-                        <i class="fas fa-filter"></i>
-                        Apply
-                    </button>
-                    <button class="btn-reset" onclick="resetFilters()">
-                        <i class="fas fa-undo"></i>
-                        Reset
-                    </button>
+
+                <!-- Advanced Options Row -->
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Alert Content</label>
+                        <input type="text" id="outputFilter" class="filter-input" placeholder="Search in alert description...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">AI Analysis</label>
+                        <select id="aiAnalysisFilter" class="filter-select">
+                            <option value="all">All Alerts</option>
+                            <option value="with_ai">With AI Analysis</option>
+                            <option value="without_ai">Without AI Analysis</option>
+                            <option value="ai_error">AI Analysis Failed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Sort By</label>
+                        <select id="sortBy" class="filter-select">
+                            <option value="timestamp_desc">Newest First</option>
+                            <option value="timestamp_asc">Oldest First</option>
+                            <option value="priority_desc">Priority (High→Low)</option>
+                            <option value="priority_asc">Priority (Low→High)</option>
+                            <option value="rule_asc">Rule Name (A→Z)</option>
+                            <option value="rule_desc">Rule Name (Z→A)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group filter-actions">
+                        <button class="btn-filter" onclick="applyFilters()">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                        <button class="btn-reset" onclick="resetFilters()">
+                            <i class="fas fa-times"></i> Reset
+                        </button>
+                        <button class="btn-save-filter" onclick="saveFilter()">
+                            <i class="fas fa-bookmark"></i> Save
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1267,9 +1461,18 @@
         timeRange: '24h',
         priority: 'all',
         status: 'all',
-        limit: '100',
-        rule: null,
-        source: null
+        limit: '25',
+        rule: '',
+        container: '',
+        user: '',
+        process: '',
+        command: '',
+        file: '',
+        source: '',
+        k8s: '',
+        output: '',
+        aiAnalysis: 'all',
+        sortBy: 'timestamp_desc'
     };
 
     // Initialize
@@ -1280,11 +1483,58 @@
         filtersContent.classList.add('collapsed');
         filtersToggle.classList.add('collapsed');
         
+        // Initialize filter event listeners
+        const timeRangeEl = document.getElementById('timeRange');
+        const priorityFilterEl = document.getElementById('priorityFilter');
+        const statusFilterEl = document.getElementById('statusFilter');
+        const limitFilterEl = document.getElementById('limitFilter');
+        const ruleFilterEl = document.getElementById('ruleFilter');
+        const containerFilterEl = document.getElementById('containerFilter');
+        const userFilterEl = document.getElementById('userFilter');
+        const processFilterEl = document.getElementById('processFilter');
+        const commandFilterEl = document.getElementById('commandFilter');
+        const fileFilterEl = document.getElementById('fileFilter');
+        const sourceFilterEl = document.getElementById('sourceFilter');
+        const k8sFilterEl = document.getElementById('k8sFilter');
+        const outputFilterEl = document.getElementById('outputFilter');
+        const aiAnalysisFilterEl = document.getElementById('aiAnalysisFilter');
+        const sortByEl = document.getElementById('sortBy');
+        
+        // Add change event listeners for select elements
+        if (timeRangeEl) timeRangeEl.addEventListener('change', applyFilters);
+        if (priorityFilterEl) priorityFilterEl.addEventListener('change', applyFilters);
+        if (statusFilterEl) statusFilterEl.addEventListener('change', applyFilters);
+        if (limitFilterEl) limitFilterEl.addEventListener('change', applyFilters);
+        if (aiAnalysisFilterEl) aiAnalysisFilterEl.addEventListener('change', applyFilters);
+        if (sortByEl) sortByEl.addEventListener('change', applyFilters);
+        
+        // Add input event listeners for text inputs (with debouncing)
+        let filterTimeout;
+        const debounceApplyFilters = () => {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(applyFilters, 300); // 300ms debounce
+        };
+        
+        if (ruleFilterEl) ruleFilterEl.addEventListener('input', debounceApplyFilters);
+        if (containerFilterEl) containerFilterEl.addEventListener('input', debounceApplyFilters);
+        if (userFilterEl) userFilterEl.addEventListener('input', debounceApplyFilters);
+        if (processFilterEl) processFilterEl.addEventListener('input', debounceApplyFilters);
+        if (commandFilterEl) commandFilterEl.addEventListener('input', debounceApplyFilters);
+        if (fileFilterEl) fileFilterEl.addEventListener('input', debounceApplyFilters);
+        if (sourceFilterEl) sourceFilterEl.addEventListener('input', debounceApplyFilters);
+        if (k8sFilterEl) k8sFilterEl.addEventListener('input', debounceApplyFilters);
+        if (outputFilterEl) outputFilterEl.addEventListener('input', debounceApplyFilters);
+        
         // Read URL parameters and set filters
         initializeFiltersFromURL();
         
+        // Load initial data
         loadAlerts();
+        
+        // Set up periodic refresh
         setInterval(loadAlerts, 30000); // Refresh every 30 seconds
+        
+        console.log('Runtime Events page initialized');
     });
 
     // Initialize filters from URL parameters
@@ -1455,84 +1705,307 @@
     // Load alerts from API
     async function loadAlerts() {
         try {
+            console.log('Loading alerts...');
             const response = await fetch('/api/alerts?limit=1000'); // Load more for better volume
+            
+            console.log('API Response status:', response.status);
+            console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+            
             if (response.ok) {
-                alerts = await response.json();
-                applyFilters();
-                updateStats();
+                const newAlerts = await response.json();
+                console.log('Raw API response:', newAlerts);
+                console.log('Type of response:', typeof newAlerts);
+                console.log('Is array:', Array.isArray(newAlerts));
+                
+                if (Array.isArray(newAlerts)) {
+                    alerts = newAlerts;
+                    console.log(`✅ Loaded ${alerts.length} alerts successfully`);
+                    
+                    // Log sample alert structure
+                    if (alerts.length > 0) {
+                        console.log('Sample alert structure:', alerts[0]);
+                    }
+                    
+                    applyFilters();
+                    updateStats();
+                } else {
+                    console.error('❌ Invalid alerts data format:', newAlerts);
+                    console.error('Expected array, got:', typeof newAlerts);
+                    alerts = [];
+                    showError(`Invalid data format received from server. Expected array, got ${typeof newAlerts}`);
+                    applyFilters();
+                    updateStats();
+                }
             } else {
-                console.error('Failed to load alerts:', response.statusText);
-                showError('Failed to load alerts');
+                const errorText = await response.text();
+                console.error('❌ Failed to load alerts:', response.status, response.statusText);
+                console.error('Error response body:', errorText);
+                showError(`Failed to load alerts: ${response.status} ${response.statusText}`);
+                // Don't reset alerts on error, keep existing data
             }
         } catch (error) {
-            console.error('Error loading alerts:', error);
+            console.error('❌ Error loading alerts:', error);
+            console.error('Error stack:', error.stack);
             showError('Error loading alerts: ' + error.message);
+            // Initialize empty alerts if this is the first load
+            if (!alerts) {
+                alerts = [];
+                applyFilters();
+                updateStats();
+            }
         }
     }
 
     // Apply current filters
     function applyFilters() {
-        // Get current filter values
-        currentFilters.timeRange = document.getElementById('timeRange').value;
-        currentFilters.priority = document.getElementById('priorityFilter').value;
-        currentFilters.status = document.getElementById('statusFilter').value;
-        currentFilters.limit = document.getElementById('limitFilter').value;
-        
-        itemsPerPage = parseInt(currentFilters.limit);
+        try {
+            console.log('🔍 APPLY FILTERS: Starting filter application...');
+            
+            // Get current filter values
+            currentFilters.timeRange = document.getElementById('timeRange')?.value || 'all';
+            currentFilters.priority = document.getElementById('priorityFilter')?.value || 'all';
+            currentFilters.status = document.getElementById('statusFilter')?.value || 'all';
+            currentFilters.limit = document.getElementById('limitFilter')?.value || '25';
+            currentFilters.rule = document.getElementById('ruleFilter')?.value || '';
+            currentFilters.container = document.getElementById('containerFilter')?.value || '';
+            currentFilters.user = document.getElementById('userFilter')?.value || '';
+            currentFilters.process = document.getElementById('processFilter')?.value || '';
+            currentFilters.command = document.getElementById('commandFilter')?.value || '';
+            currentFilters.file = document.getElementById('fileFilter')?.value || '';
+            currentFilters.source = document.getElementById('sourceFilter')?.value || '';
+            currentFilters.k8s = document.getElementById('k8sFilter')?.value || '';
+            currentFilters.output = document.getElementById('outputFilter')?.value || '';
+            currentFilters.aiAnalysis = document.getElementById('aiAnalysisFilter')?.value || 'all';
+            currentFilters.sortBy = document.getElementById('sortBy')?.value || 'timestamp_desc';
+            
+            console.log('🔍 Current filters:', currentFilters);
+            
+            itemsPerPage = parseInt(currentFilters.limit);
 
-        filteredAlerts = alerts.filter(alert => {
-            // Time range filter
-            if (currentFilters.timeRange !== 'all') {
-                const alertTime = new Date(alert.timestamp || alert.time);
-                const now = new Date();
-                const diffHours = (now - alertTime) / (1000 * 60 * 60);
-                
-                switch (currentFilters.timeRange) {
-                    case '1h': if (diffHours > 1) return false; break;
-                    case '24h': if (diffHours > 24) return false; break;
-                    case '7d': if (diffHours > 24 * 7) return false; break;
-                    case '30d': if (diffHours > 24 * 30) return false; break;
+            // Ensure alerts array exists
+            if (!alerts || !Array.isArray(alerts)) {
+                console.log('❌ No alerts data available for filtering');
+                filteredAlerts = [];
+                displayAlerts();
+                updatePagination();
+                updateStats();
+                updateStatCards();
+                updateFilterStatus();
+                return;
+            }
+            
+            console.log(`🔍 Starting with ${alerts.length} total alerts`);
+
+            filteredAlerts = alerts.filter((alert, index) => {
+                if (!alert) {
+                    console.log(`❌ Alert ${index} is null/undefined`);
+                    return false;
                 }
-            }
 
-            // Priority filter
-            if (currentFilters.priority !== 'all' && alert.priority !== currentFilters.priority) {
-                return false;
-            }
+                // Time range filter
+                if (currentFilters.timeRange !== 'all') {
+                    const alertTime = new Date(alert.timestamp || alert.time);
+                    if (isNaN(alertTime.getTime())) {
+                        console.log(`❌ Alert ${index} has invalid timestamp:`, alert.timestamp || alert.time);
+                        return false; // Skip alerts with invalid timestamps
+                    }
+                    
+                    const now = new Date();
+                    const diffHours = (now - alertTime) / (1000 * 60 * 60);
+                    
+                    switch (currentFilters.timeRange) {
+                        case '1h': 
+                            if (diffHours > 1) {
+                                console.log(`⏰ Alert ${index} filtered out: ${diffHours.toFixed(1)}h > 1h`);
+                                return false; 
+                            }
+                            break;
+                        case '24h': 
+                            if (diffHours > 24) {
+                                console.log(`⏰ Alert ${index} filtered out: ${diffHours.toFixed(1)}h > 24h`);
+                                return false; 
+                            }
+                            break;
+                        case '7d': 
+                            if (diffHours > 24 * 7) {
+                                console.log(`⏰ Alert ${index} filtered out: ${diffHours.toFixed(1)}h > 168h`);
+                                return false; 
+                            }
+                            break;
+                        case '30d': 
+                            if (diffHours > 24 * 30) {
+                                console.log(`⏰ Alert ${index} filtered out: ${diffHours.toFixed(1)}h > 720h`);
+                                return false; 
+                            }
+                            break;
+                    }
+                }
 
-            // Status filter  
-            if (currentFilters.status !== 'all' && alert.status !== currentFilters.status) {
-                return false;
-            }
+                // Priority filter
+                if (currentFilters.priority !== 'all') {
+                    const alertPriority = alert.priority || 'info';
+                    if (alertPriority !== currentFilters.priority) {
+                        console.log(`🚨 Alert ${index} filtered out: priority '${alertPriority}' !== '${currentFilters.priority}'`);
+                        return false;
+                    }
+                }
 
-            // Rule filter (from URL parameter)
-            if (currentFilters.rule && alert.rule && !alert.rule.toLowerCase().includes(currentFilters.rule.toLowerCase())) {
-                return false;
-            }
+                // Status filter  
+                if (currentFilters.status !== 'all') {
+                    const alertStatus = alert.status || 'unread';
+                    if (alertStatus !== currentFilters.status) {
+                        console.log(`📊 Alert ${index} filtered out: status '${alertStatus}' !== '${currentFilters.status}'`);
+                        return false;
+                    }
+                }
 
-            // Source filter (from URL parameter)
-            if (currentFilters.source && alert.source && !alert.source.toLowerCase().includes(currentFilters.source.toLowerCase())) {
-                return false;
-            }
+                console.log(`✅ Alert ${index} passed filters: ${alert.rule}`);
+                
+                // Rule filter
+                if (currentFilters.rule) {
+                    const alertRule = alert.rule || '';
+                    if (!alertRule.toLowerCase().includes(currentFilters.rule.toLowerCase())) {
+                        console.log(`📝 Alert ${index} filtered out: rule '${alertRule}' doesn't contain '${currentFilters.rule}'`);
+                        return false;
+                    }
+                }
 
-            return true;
-        });
+                // Container filter
+                if (currentFilters.container) {
+                    const containerName = alert.source || 
+                                        alert.fields?.['container.name'] || 
+                                        alert.output_fields?.['container.name'] || '';
+                    if (!containerName.toLowerCase().includes(currentFilters.container.toLowerCase())) {
+                        console.log(`🐳 Alert ${index} filtered out: container '${containerName}' doesn't contain '${currentFilters.container}'`);
+                        return false;
+                    }
+                }
 
-        // Sort by timestamp (newest first)
-        filteredAlerts.sort((a, b) => {
-            const timeA = new Date(a.timestamp || a.time);
-            const timeB = new Date(b.timestamp || b.time);
-            return timeB - timeA;
-        });
+                // User filter
+                if (currentFilters.user) {
+                    const userName = alert.fields?.['user.name'] || 
+                                   alert.output_fields?.['user.name'] || '';
+                    if (!userName.toLowerCase().includes(currentFilters.user.toLowerCase())) {
+                        console.log(`👤 Alert ${index} filtered out: user '${userName}' doesn't contain '${currentFilters.user}'`);
+                        return false;
+                    }
+                }
 
-        // Reset pagination
-        currentPage = 1;
-        totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
-        
-        displayAlerts();
-        updatePagination();
-        updateStats();
-        updateStatCards();
+                // Process filter
+                if (currentFilters.process) {
+                    const processName = alert.fields?.['proc.name'] || 
+                                      alert.output_fields?.['proc.name'] || '';
+                    if (!processName.toLowerCase().includes(currentFilters.process.toLowerCase())) {
+                        console.log(`⚙️ Alert ${index} filtered out: process '${processName}' doesn't contain '${currentFilters.process}'`);
+                        return false;
+                    }
+                }
+
+                // Command filter
+                if (currentFilters.command) {
+                    const command = alert.fields?.['proc.cmdline'] || 
+                                  alert.output_fields?.['proc.cmdline'] || '';
+                    if (!command.toLowerCase().includes(currentFilters.command.toLowerCase())) {
+                        console.log(`💻 Alert ${index} filtered out: command '${command}' doesn't contain '${currentFilters.command}'`);
+                        return false;
+                    }
+                }
+
+                // File filter
+                if (currentFilters.file) {
+                    const fileName = alert.fields?.['fd.name'] || 
+                                   alert.output_fields?.['fd.name'] || '';
+                    if (!fileName.toLowerCase().includes(currentFilters.file.toLowerCase())) {
+                        console.log(`📁 Alert ${index} filtered out: file '${fileName}' doesn't contain '${currentFilters.file}'`);
+                        return false;
+                    }
+                }
+
+                // Source filter
+                if (currentFilters.source) {
+                    const source = alert.source || '';
+                    if (!source.toLowerCase().includes(currentFilters.source.toLowerCase())) {
+                        console.log(`🖥️ Alert ${index} filtered out: source '${source}' doesn't contain '${currentFilters.source}'`);
+                        return false;
+                    }
+                }
+
+                // Kubernetes filter
+                if (currentFilters.k8s) {
+                    const k8sPod = alert.fields?.['k8s.pod.name'] || 
+                                 alert.output_fields?.['k8s.pod.name'] || '';
+                    const k8sNamespace = alert.fields?.['k8s.ns.name'] || 
+                                       alert.output_fields?.['k8s.ns.name'] || '';
+                    const k8sData = `${k8sPod} ${k8sNamespace}`;
+                    if (!k8sData.toLowerCase().includes(currentFilters.k8s.toLowerCase())) {
+                        console.log(`☸️ Alert ${index} filtered out: k8s '${k8sData}' doesn't contain '${currentFilters.k8s}'`);
+                        return false;
+                    }
+                }
+
+                // Output content filter
+                if (currentFilters.output) {
+                    const output = alert.output || '';
+                    if (!output.toLowerCase().includes(currentFilters.output.toLowerCase())) {
+                        console.log(`📄 Alert ${index} filtered out: output doesn't contain '${currentFilters.output}'`);
+                        return false;
+                    }
+                }
+
+                // AI Analysis filter
+                if (currentFilters.aiAnalysis !== 'all') {
+                    const hasAI = alert.ai_analysis && Object.keys(alert.ai_analysis).length > 0;
+                    const hasAIError = alert.ai_analysis && alert.ai_analysis.error;
+                    
+                    switch (currentFilters.aiAnalysis) {
+                        case 'with_ai':
+                            if (!hasAI || hasAIError) {
+                                console.log(`🤖 Alert ${index} filtered out: no valid AI analysis`);
+                                return false;
+                            }
+                            break;
+                        case 'without_ai':
+                            if (hasAI && !hasAIError) {
+                                console.log(`🤖 Alert ${index} filtered out: has AI analysis`);
+                                return false;
+                            }
+                            break;
+                        case 'ai_error':
+                            if (!hasAIError) {
+                                console.log(`🤖 Alert ${index} filtered out: no AI error`);
+                                return false;
+                            }
+                            break;
+                    }
+                }
+
+                console.log(`✅ Alert ${index} passed ALL filters: ${alert.rule}`);
+                return true; // Temporarily return true here to bypass other filters for debugging
+            });
+
+            console.log(`🔍 After filtering: ${filteredAlerts.length} alerts remain`);
+
+            // Apply sorting
+            applySorting();
+
+            // Reset pagination
+            currentPage = 1;
+            totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
+            
+            // Update display
+            displayAlerts();
+            updatePagination();
+            updateStats();
+            updateStatCards();
+            updateFilterStatus();
+            
+            console.log(`✅ Filter application complete: ${filteredAlerts.length} of ${alerts.length} alerts shown`);
+            
+        } catch (error) {
+            console.error('❌ Error applying filters:', error);
+            console.error('Error stack:', error.stack);
+            showError('Error applying filters: ' + error.message);
+        }
     }
 
     // Display alerts for current page
@@ -1606,7 +2079,7 @@
     }
 
     // Select alert and show details
-    function selectAlert(actualIndex) {
+    async function selectAlert(actualIndex) {
         // Calculate the correct index within the current page
         const startIndex = (currentPage - 1) * itemsPerPage;
         const relativeIndex = actualIndex - startIndex;
@@ -1630,6 +2103,9 @@
             return;
         }
         
+        // Auto-mark alert as read when selected
+        await markAlertAsRead(selectedAlert.id, alertElement);
+        
         // Show sidebar and update container layout
         const container = document.querySelector('.events-container');
         const sidebar = document.querySelector('.events-sidebar');
@@ -1643,6 +2119,51 @@
         
         // Load chat history for this alert or start fresh
         loadChatHistoryForAlert(selectedAlert.id);
+    }
+
+    // Mark single alert as read
+    async function markAlertAsRead(alertId, alertElement) {
+        try {
+            const response = await fetch(`/api/alerts/${alertId}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'read' })
+            });
+            
+            if (response.ok) {
+                // Update the alert in our local data
+                const alert = alerts.find(a => a.id == alertId);
+                if (alert && alert.status === 'unread') {
+                    alert.status = 'read';
+                    
+                    // Update the UI to reflect the status change
+                    if (alertElement) {
+                        alertElement.classList.remove('unread');
+                        alertElement.classList.add('read');
+                        
+                        // Update the status text in the metadata
+                        const statusSpan = alertElement.querySelector('.alert-metadata span:last-child');
+                        if (statusSpan) {
+                            statusSpan.innerHTML = '<i class="fas fa-tag"></i> read';
+                        }
+                    }
+                    
+                    // Update the selected alert status if it's the same one
+                    if (selectedAlert && selectedAlert.id == alertId) {
+                        selectedAlert.status = 'read';
+                    }
+                    
+                    // Update statistics
+                    updateStats();
+                    
+                    console.log(`✅ Marked alert ${alertId} as read`);
+                }
+            } else {
+                console.error('Failed to mark alert as read:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error marking alert as read:', error);
+        }
     }
 
     // Show alert details in sidebar
@@ -1944,44 +2465,65 @@
 
     // Apply filter from stat card click
     function applyStatFilter(filterType) {
-        // Remove active class from all stat items
-        document.querySelectorAll('.stat-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // Add active class to clicked item
-        const clickedItem = document.querySelector(`[data-filter="${filterType}"]`);
-        if (clickedItem) {
-            clickedItem.classList.add('active');
+        try {
+            console.log(`Applying stat filter: ${filterType}`);
+            
+            // Remove active class from all stat items
+            document.querySelectorAll('.stat-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            const clickedItem = document.querySelector(`[data-filter="${filterType}"]`);
+            if (clickedItem) {
+                clickedItem.classList.add('active');
+            }
+            
+            // Get filter elements
+            const timeRangeEl = document.getElementById('timeRange');
+            const priorityFilterEl = document.getElementById('priorityFilter');
+            const statusFilterEl = document.getElementById('statusFilter');
+            
+            if (!timeRangeEl || !priorityFilterEl || !statusFilterEl) {
+                console.error('Filter elements not found');
+                return;
+            }
+            
+            // Apply the appropriate filter
+            switch (filterType) {
+                case 'all':
+                    // Clear all filters
+                    timeRangeEl.value = '24h';
+                    priorityFilterEl.value = 'all';
+                    statusFilterEl.value = 'all';
+                    break;
+                case 'critical':
+                    // Filter to critical priority, keep other filters
+                    priorityFilterEl.value = 'critical';
+                    break;
+                case 'unread':
+                    // Filter to unread status, keep other filters
+                    statusFilterEl.value = 'unread';
+                    break;
+                case 'recent':
+                    // Filter to last hour, keep other filters
+                    timeRangeEl.value = '1h';
+                    break;
+                default:
+                    console.warn(`Unknown filter type: ${filterType}`);
+                    return;
+            }
+            
+            // Apply the filters
+            applyFilters();
+            
+            // Show visual feedback
+            showFilterFeedback(filterType);
+            
+        } catch (error) {
+            console.error('Error applying stat filter:', error);
+            showError('Error applying filter: ' + error.message);
         }
-        
-        // Apply the appropriate filter
-        switch (filterType) {
-            case 'all':
-                // Clear all filters
-                document.getElementById('timeRange').value = '24h';
-                document.getElementById('priorityFilter').value = 'all';
-                document.getElementById('statusFilter').value = 'all';
-                break;
-            case 'critical':
-                // Filter to critical priority
-                document.getElementById('priorityFilter').value = 'critical';
-                break;
-            case 'unread':
-                // Filter to unread status
-                document.getElementById('statusFilter').value = 'unread';
-                break;
-            case 'recent':
-                // Filter to last hour
-                document.getElementById('timeRange').value = '1h';
-                break;
-        }
-        
-        // Apply the filters
-        applyFilters();
-        
-        // Show visual feedback
-        showFilterFeedback(filterType);
     }
     
     // Show feedback for applied filter
@@ -2026,18 +2568,78 @@
 
     // Clear all filters
     function resetFilters() {
-        // Remove active class from all stat items
-        document.querySelectorAll('.stat-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        document.getElementById('timeRange').value = '24h';
-        document.getElementById('priorityFilter').value = 'all';
-        document.getElementById('statusFilter').value = 'all';
-        document.getElementById('limitFilter').value = '25';
-        applyFilters();
-        
-        showFilterFeedback('all');
+        try {
+            console.log('Resetting all filters');
+            
+            // Reset filter values
+            const timeRangeEl = document.getElementById('timeRange');
+            const priorityFilterEl = document.getElementById('priorityFilter');
+            const statusFilterEl = document.getElementById('statusFilter');
+            const limitFilterEl = document.getElementById('limitFilter');
+            const ruleFilterEl = document.getElementById('ruleFilter');
+            const containerFilterEl = document.getElementById('containerFilter');
+            const userFilterEl = document.getElementById('userFilter');
+            const processFilterEl = document.getElementById('processFilter');
+            const commandFilterEl = document.getElementById('commandFilter');
+            const fileFilterEl = document.getElementById('fileFilter');
+            const sourceFilterEl = document.getElementById('sourceFilter');
+            const k8sFilterEl = document.getElementById('k8sFilter');
+            const outputFilterEl = document.getElementById('outputFilter');
+            const aiAnalysisFilterEl = document.getElementById('aiAnalysisFilter');
+            const sortByEl = document.getElementById('sortBy');
+            
+            // Reset select elements
+            if (timeRangeEl) timeRangeEl.value = '24h';
+            if (priorityFilterEl) priorityFilterEl.value = 'all';
+            if (statusFilterEl) statusFilterEl.value = 'all';
+            if (limitFilterEl) limitFilterEl.value = '25';
+            if (aiAnalysisFilterEl) aiAnalysisFilterEl.value = 'all';
+            if (sortByEl) sortByEl.value = 'timestamp_desc';
+            
+            // Reset text inputs
+            if (ruleFilterEl) ruleFilterEl.value = '';
+            if (containerFilterEl) containerFilterEl.value = '';
+            if (userFilterEl) userFilterEl.value = '';
+            if (processFilterEl) processFilterEl.value = '';
+            if (commandFilterEl) commandFilterEl.value = '';
+            if (fileFilterEl) fileFilterEl.value = '';
+            if (sourceFilterEl) sourceFilterEl.value = '';
+            if (k8sFilterEl) k8sFilterEl.value = '';
+            if (outputFilterEl) outputFilterEl.value = '';
+            
+            // Reset current filters object
+            currentFilters = {
+                timeRange: '24h',
+                priority: 'all',
+                status: 'all',
+                limit: '25',
+                rule: '',
+                container: '',
+                user: '',
+                process: '',
+                command: '',
+                file: '',
+                source: '',
+                k8s: '',
+                output: '',
+                aiAnalysis: 'all',
+                sortBy: 'timestamp_desc'
+            };
+            
+            // Remove active class from all stat items
+            document.querySelectorAll('.stat-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Apply default filters
+            applyFilters();
+            
+            showFilterFeedback('reset');
+            
+        } catch (error) {
+            console.error('Error resetting filters:', error);
+            showError('Error resetting filters: ' + error.message);
+        }
     }
 
     function clearFilters() {
@@ -2352,6 +2954,202 @@
         document.querySelectorAll('.alert-item').forEach(item => {
             item.classList.remove('selected');
         });
+    }
+
+    // Apply sorting to filtered alerts
+    function applySorting() {
+        if (!filteredAlerts || filteredAlerts.length === 0) return;
+        
+        switch (currentFilters.sortBy) {
+            case 'timestamp_desc':
+                filteredAlerts.sort((a, b) => {
+                    const timeA = new Date(a.timestamp || a.time);
+                    const timeB = new Date(b.timestamp || b.time);
+                    return timeB - timeA;
+                });
+                break;
+            case 'timestamp_asc':
+                filteredAlerts.sort((a, b) => {
+                    const timeA = new Date(a.timestamp || a.time);
+                    const timeB = new Date(b.timestamp || b.time);
+                    return timeA - timeB;
+                });
+                break;
+            case 'priority_desc':
+                const priorityOrder = { 'critical': 6, 'error': 5, 'warning': 4, 'notice': 3, 'info': 2, 'debug': 1 };
+                filteredAlerts.sort((a, b) => {
+                    const priorityA = priorityOrder[a.priority] || 0;
+                    const priorityB = priorityOrder[b.priority] || 0;
+                    return priorityB - priorityA;
+                });
+                break;
+            case 'priority_asc':
+                const priorityOrderAsc = { 'critical': 6, 'error': 5, 'warning': 4, 'notice': 3, 'info': 2, 'debug': 1 };
+                filteredAlerts.sort((a, b) => {
+                    const priorityA = priorityOrderAsc[a.priority] || 0;
+                    const priorityB = priorityOrderAsc[b.priority] || 0;
+                    return priorityA - priorityB;
+                });
+                break;
+            case 'rule_asc':
+                filteredAlerts.sort((a, b) => {
+                    const ruleA = (a.rule || '').toLowerCase();
+                    const ruleB = (b.rule || '').toLowerCase();
+                    return ruleA.localeCompare(ruleB);
+                });
+                break;
+            case 'rule_desc':
+                filteredAlerts.sort((a, b) => {
+                    const ruleA = (a.rule || '').toLowerCase();
+                    const ruleB = (b.rule || '').toLowerCase();
+                    return ruleB.localeCompare(ruleA);
+                });
+                break;
+        }
+    }
+
+    // Update filter status indicator
+    function updateFilterStatus() {
+        const filterStatusEl = document.getElementById('filterStatus');
+        if (!filterStatusEl) return;
+        
+        // Count active filters
+        let activeFilters = 0;
+        const filterLabels = [];
+        
+        if (currentFilters.timeRange !== 'all' && currentFilters.timeRange !== '24h') {
+            activeFilters++;
+            filterLabels.push(`Time: ${currentFilters.timeRange}`);
+        }
+        if (currentFilters.priority !== 'all') {
+            activeFilters++;
+            filterLabels.push(`Priority: ${currentFilters.priority}`);
+        }
+        if (currentFilters.status !== 'all') {
+            activeFilters++;
+            filterLabels.push(`Status: ${currentFilters.status}`);
+        }
+        if (currentFilters.rule) {
+            activeFilters++;
+            filterLabels.push(`Rule: ${currentFilters.rule}`);
+        }
+        if (currentFilters.container) {
+            activeFilters++;
+            filterLabels.push(`Container: ${currentFilters.container}`);
+        }
+        if (currentFilters.user) {
+            activeFilters++;
+            filterLabels.push(`User: ${currentFilters.user}`);
+        }
+        if (currentFilters.process) {
+            activeFilters++;
+            filterLabels.push(`Process: ${currentFilters.process}`);
+        }
+        if (currentFilters.command) {
+            activeFilters++;
+            filterLabels.push(`Command: ${currentFilters.command}`);
+        }
+        if (currentFilters.file) {
+            activeFilters++;
+            filterLabels.push(`File: ${currentFilters.file}`);
+        }
+        if (currentFilters.source) {
+            activeFilters++;
+            filterLabels.push(`Source: ${currentFilters.source}`);
+        }
+        if (currentFilters.k8s) {
+            activeFilters++;
+            filterLabels.push(`K8s: ${currentFilters.k8s}`);
+        }
+        if (currentFilters.output) {
+            activeFilters++;
+            filterLabels.push(`Content: ${currentFilters.output}`);
+        }
+        if (currentFilters.aiAnalysis !== 'all') {
+            activeFilters++;
+            filterLabels.push(`AI: ${currentFilters.aiAnalysis}`);
+        }
+        if (currentFilters.sortBy !== 'timestamp_desc') {
+            activeFilters++;
+            filterLabels.push(`Sort: ${currentFilters.sortBy}`);
+        }
+        
+        // Update status display
+        if (activeFilters === 0) {
+            filterStatusEl.textContent = 'No filters active';
+            filterStatusEl.className = 'filter-count';
+        } else {
+            filterStatusEl.textContent = `${activeFilters} filter${activeFilters > 1 ? 's' : ''} active`;
+            filterStatusEl.className = 'filter-count active';
+            filterStatusEl.title = filterLabels.join(', ');
+        }
+        
+        // Update filter group styling
+        updateFilterGroupStyling();
+    }
+
+    // Update filter group styling to show which have values
+    function updateFilterGroupStyling() {
+        const filterInputs = document.querySelectorAll('.filter-input, .filter-select');
+        filterInputs.forEach(input => {
+            const filterGroup = input.closest('.filter-group');
+            if (input.value && input.value !== 'all' && input.value !== '24h' && input.value !== '25' && input.value !== 'timestamp_desc') {
+                filterGroup.classList.add('has-value');
+            } else {
+                filterGroup.classList.remove('has-value');
+            }
+        });
+    }
+
+    // Save filter configuration
+    function saveFilter() {
+        const filterConfig = {
+            name: prompt('Enter a name for this filter configuration:'),
+            filters: { ...currentFilters },
+            timestamp: Date.now()
+        };
+        
+        if (!filterConfig.name) return;
+        
+        // Save to localStorage
+        const savedFilters = JSON.parse(localStorage.getItem('falco_saved_filters') || '[]');
+        savedFilters.push(filterConfig);
+        localStorage.setItem('falco_saved_filters', JSON.stringify(savedFilters));
+        
+        showAlert('success', `Filter "${filterConfig.name}" saved successfully!`);
+    }
+
+    // Show alert function
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible`;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.minWidth = '300px';
+        alertDiv.style.maxWidth = '500px';
+        
+        alertDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add to page
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
 </script>
 {% endblock %} 

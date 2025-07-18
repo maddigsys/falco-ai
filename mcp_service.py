@@ -1,6 +1,6 @@
 """
-Alternative MCP (Model Context Protocol) Implementation
-This provides MCP-like functionality without requiring the official MCP packages
+MCP (Model Context Protocol) Service Implementation
+Provides MCP server and client functionality for the Falco AI Alert System
 """
 
 import json
@@ -29,8 +29,8 @@ class MCPResource:
     description: str
     mime_type: str
 
-class AlternativeMCPServer:
-    """Alternative MCP server implementation"""
+class MCPServer:
+    """MCP server implementation"""
     
     def __init__(self):
         self.tools: Dict[str, MCPTool] = {}
@@ -88,8 +88,8 @@ class AlternativeMCPServer:
             for resource in self.resources.values()
         ]
 
-class AlternativeMCPClient:
-    """Alternative MCP client implementation"""
+class MCPClient:
+    """MCP client implementation"""
     
     def __init__(self, server_url: str):
         self.server_url = server_url
@@ -143,8 +143,8 @@ class MCPManager:
     """Manager for MCP functionality"""
     
     def __init__(self):
-        self.server = AlternativeMCPServer()
-        self.clients: Dict[str, AlternativeMCPClient] = {}
+        self.server = MCPServer()
+        self.clients: Dict[str, MCPClient] = {}
         self.is_available = False
         
     def initialize(self):
