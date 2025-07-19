@@ -3,6 +3,10 @@ kind: Kustomization
 
 metadata:
   name: falco-ai-alerts-eks
+  annotations:
+    cloud-provider: eks
+    optimized-for: "Amazon Elastic Kubernetes Service"
+    architecture-support: "amd64,arm64"
 
 resources:
   - ../../base

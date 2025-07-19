@@ -1,0 +1,138 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: falco-ai-alerts-gke
+  annotations:
+    cloud-provider: gke
+    optimized-for: "Google Kubernetes Engine"
+    architecture-support: "amd64,arm64"
+
+resources:
+  - ../../base
+  - hpa.yaml
+
+namespace: falco-ai-alerts
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+  platform: gke
+  app.kubernetes.io/version: "2.1.0"
+
+patches:
+  # Increase replicas for production
+  - target:
+      kind: Deployment
+      name: falco-ai-alerts
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  
+  # GKE-optimized resource configuration
+  - target:
+      kind: Deployment
+      name: falco-ai-alerts
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "1Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1000m"
+
+  # GKE-specific storage class (premium-rwo for SSD performance)
+  - target:
+      kind: PersistentVolumeClaim
+      name: falco-ai-alerts-data
+    patch: |-
+      - op: replace
+        path: /spec/storageClassName
+        value: "premium-rwo"
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: "20Gi"
+
+  # GKE Ollama deployment optimizations
+  - target:
+      kind: Deployment
+      name: ollama
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "8Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "2000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "10Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "4000m"
+
+  # GKE storage for Ollama (standard-rwo for cost efficiency)
+  - target:
+      kind: PersistentVolumeClaim
+      name: ollama-data
+    patch: |-
+      - op: replace
+        path: /spec/storageClassName
+        value: "standard-rwo"
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: "30Gi"
+
+  # GKE Weaviate deployment optimizations
+  - target:
+      kind: Deployment
+      name: weaviate
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "1Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "2Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1000m"
+
+  # GKE Weaviate storage (premium-rwo for vector database performance)
+  - target:
+      kind: PersistentVolumeClaim
+      name: weaviate-data
+    patch: |-
+      - op: replace
+        path: /spec/storageClassName
+        value: "premium-rwo"
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: "10Gi"
+
+  # GKE-specific service optimizations
+  - target:
+      kind: Service
+      name: falco-ai-alerts
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          cloud.google.com/neg: '{"ingress": true}'
+          cloud.google.com/backend-config: '{"default": "falco-backend-config"}'
+
+images:
+  - name: maddigsys/falco-ai-alerts
+    newName: maddigsys/falco-ai-alerts
+    newTag: "v2.1.0" 

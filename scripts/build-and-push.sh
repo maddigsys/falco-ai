@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Docker Hub Build and Push Script for Falco AI Alert System
-# Usage: ./scripts/build-and-push.sh [version] [--push]
+# Multi-Architecture Docker Build and Push Script for Falco AI Alert System
+# Usage: ./scripts/build-and-push.sh [version] [--push] [--arch]
 
 set -e
 
@@ -9,15 +9,18 @@ set -e
 DOCKER_REPO="maddigsys"
 IMAGE_NAME="falco-ai-alerts"
 DEFAULT_VERSION="latest"
+DEFAULT_PLATFORMS="linux/amd64,linux/arm64"
 
 # Parse arguments
 VERSION=${1:-$DEFAULT_VERSION}
 PUSH_IMAGE=${2:-"--push"}
+CUSTOM_PLATFORMS=${3:-$DEFAULT_PLATFORMS}
 
-echo "🐳 Docker Hub Build and Push Script"
-echo "=================================="
+echo "🐳 Multi-Architecture Docker Build and Push Script"
+echo "================================================="
 echo "Repository: $DOCKER_REPO/$IMAGE_NAME"
 echo "Version: $VERSION"
+echo "Platforms: $CUSTOM_PLATFORMS"
 echo "Push: $PUSH_IMAGE"
 echo ""
 
@@ -33,6 +36,12 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# Check if buildx is available
+if ! docker buildx version > /dev/null 2>&1; then
+    echo "❌ Error: Docker buildx is not available. Please update Docker to a newer version."
+    exit 1
+fi
+
 # Check if logged into Docker Hub
 if ! docker info | grep -q "Username"; then
     echo "⚠️  Warning: Not logged into Docker Hub. Please run 'docker login' first."
@@ -42,67 +51,95 @@ if ! docker info | grep -q "Username"; then
     fi
 fi
 
-# Build the image
-echo "🔨 Building Docker image..."
-docker build -t "$DOCKER_REPO/$IMAGE_NAME:$VERSION" .
-
-# Tag as latest if this is a specific version
-if [[ "$VERSION" != "latest" ]]; then
-    echo "🏷️  Tagging as latest..."
-    docker tag "$DOCKER_REPO/$IMAGE_NAME:$VERSION" "$DOCKER_REPO/$IMAGE_NAME:latest"
+# Create and use a new buildx builder if needed
+BUILDER_NAME="falco-multiarch-builder"
+if ! docker buildx ls | grep -q "$BUILDER_NAME"; then
+    echo "🛠️  Creating multi-architecture builder..."
+    docker buildx create --name "$BUILDER_NAME" --driver docker-container --bootstrap
 fi
 
-# Test the image
-echo "🧪 Testing the image..."
-docker run --rm -d --name test-falco-ai "$DOCKER_REPO/$IMAGE_NAME:$VERSION" &
-TEST_CONTAINER_PID=$!
+echo "🔧 Using buildx builder: $BUILDER_NAME"
+docker buildx use "$BUILDER_NAME"
 
-# Wait for container to start
-sleep 10
+# Ensure builder is running
+docker buildx inspect --bootstrap
 
-# Check if container is running
-if docker ps | grep -q test-falco-ai; then
-    echo "✅ Image test successful"
-    docker stop test-falco-ai > /dev/null 2>&1 || true
-else
-    echo "❌ Image test failed"
-    docker stop test-falco-ai > /dev/null 2>&1 || true
-    exit 1
-fi
-
-# Push to Docker Hub if requested
+# Build the multi-architecture image
+echo "🔨 Building multi-architecture Docker image..."
 if [[ "$PUSH_IMAGE" == "--push" ]]; then
-    echo "📤 Pushing to Docker Hub..."
+    # Build and push
+    docker buildx build \
+        --platform "$CUSTOM_PLATFORMS" \
+        --tag "$DOCKER_REPO/$IMAGE_NAME:$VERSION" \
+        --push \
+        .
     
-    # Push the versioned tag
-    docker push "$DOCKER_REPO/$IMAGE_NAME:$VERSION"
-    
-    # Push latest tag if this is a specific version
+    # Tag and push as latest if this is a specific version
     if [[ "$VERSION" != "latest" ]]; then
-        docker push "$DOCKER_REPO/$IMAGE_NAME:latest"
+        echo "🏷️  Building and pushing as latest..."
+        docker buildx build \
+            --platform "$CUSTOM_PLATFORMS" \
+            --tag "$DOCKER_REPO/$IMAGE_NAME:latest" \
+            --push \
+            .
     fi
     
-    echo "✅ Successfully pushed to Docker Hub!"
+    echo "✅ Successfully built and pushed multi-architecture images!"
     echo ""
-    echo "📋 Image URLs:"
+    echo "📋 Image URLs (multi-arch manifests):"
     echo "   $DOCKER_REPO/$IMAGE_NAME:$VERSION"
     if [[ "$VERSION" != "latest" ]]; then
         echo "   $DOCKER_REPO/$IMAGE_NAME:latest"
     fi
+    echo ""
+    echo "🏗️  Supported Architectures:"
+    echo "   $(echo $CUSTOM_PLATFORMS | tr ',' '\n' | sed 's/linux\///g' | sed 's/^/   - /')"
+    
 else
-    echo "✅ Image built successfully (not pushed)"
+    # Build only (load to local Docker)
+    echo "🔨 Building for local testing (amd64 only)..."
+    docker buildx build \
+        --platform "linux/amd64" \
+        --tag "$DOCKER_REPO/$IMAGE_NAME:$VERSION" \
+        --load \
+        .
+    
+    # Test the image
+    echo "🧪 Testing the image..."
+    docker run --rm -d --name test-falco-ai "$DOCKER_REPO/$IMAGE_NAME:$VERSION" &
+    TEST_CONTAINER_PID=$!
+    
+    # Wait for container to start
+    sleep 10
+    
+    # Check if container is running
+    if docker ps | grep -q test-falco-ai; then
+        echo "✅ Image test successful"
+        docker stop test-falco-ai > /dev/null 2>&1 || true
+    else
+        echo "❌ Image test failed"
+        docker stop test-falco-ai > /dev/null 2>&1 || true
+        exit 1
+    fi
+    
+    echo "✅ Multi-architecture image built successfully (not pushed)"
     echo ""
     echo "📋 To push manually:"
-    echo "   docker push $DOCKER_REPO/$IMAGE_NAME:$VERSION"
-    if [[ "$VERSION" != "latest" ]]; then
-        echo "   docker push $DOCKER_REPO/$IMAGE_NAME:latest"
-    fi
+    echo "   ./scripts/build-and-push.sh $VERSION --push"
 fi
 
 echo ""
-echo "🎉 Build completed successfully!"
+echo "🎉 Multi-architecture build completed successfully!"
 echo ""
-echo "🚀 To run the image:"
-echo "   docker run -d -p 8080:8080 --name falco-ai-alerts $DOCKER_REPO/$IMAGE_NAME:$VERSION"
+echo "🚀 Cloud Deployment Ready:"
+echo "   - AMD64: Compatible with standard cloud instances"
+echo "   - ARM64: Compatible with AWS Graviton, GCP Tau T2A, Azure Ampere"
 echo ""
-echo "📖 For more information, see the README.md file." 
+echo "📖 For Kubernetes deployment, see k8s/README.md"
+
+# Cleanup builder if this was a one-time build
+if [[ "$PUSH_IMAGE" != "--push" ]]; then
+    echo ""
+    echo "🧹 Cleaning up builder..."
+    docker buildx rm "$BUILDER_NAME" || true
+fi 

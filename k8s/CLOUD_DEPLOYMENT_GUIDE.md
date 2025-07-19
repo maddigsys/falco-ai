@@ -1,6 +1,74 @@
-# Cloud Deployment Guide - Falco AI Alert System
+# Cloud Deployment Guide - Falco AI Alert System v2.1.0
 
-This guide addresses specific constraints and considerations for deploying the Falco AI Alert System on major cloud Kubernetes platforms.
+This guide addresses specific constraints and considerations for deploying the Falco AI Alert System on major cloud Kubernetes platforms with **multi-architecture support** (AMD64/ARM64).
+
+## 🏗️ **Multi-Architecture Support (NEW in v2.1.0)**
+
+### **Container Architecture Compatibility**
+| Architecture | Cloud Support | Cost Benefits | Performance |
+|--------------|---------------|---------------|-------------|
+| **AMD64** | All providers | Standard pricing | High performance |
+| **ARM64** | AWS Graviton2/3, GCP Tau T2A, Azure Ampere | 20-40% cost savings | Excellent efficiency |
+
+### **Recommended Instance Types by Cloud**
+
+#### **AWS EKS - ARM64 (Cost-Optimized)**
+```bash
+# Node group configuration for ARM64
+eksctl create nodegroup \
+  --cluster=falco-cluster \
+  --name=arm64-nodes \
+  --instance-types=t4g.large,m6g.large,c6g.large \
+  --nodes=2 \
+  --nodes-min=1 \
+  --nodes-max=5 \
+  --node-arch=arm64
+```
+
+#### **GCP GKE - ARM64 (Cost-Optimized)**
+```bash
+# Node pool configuration for ARM64
+gcloud container node-pools create arm64-pool \
+  --cluster=falco-cluster \
+  --machine-type=t2a-standard-2 \
+  --num-nodes=2 \
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=5
+```
+
+#### **Azure AKS - ARM64 (Cost-Optimized)**
+```bash
+# Node pool configuration for ARM64
+az aks nodepool add \
+  --cluster-name falco-cluster \
+  --resource-group falco-rg \
+  --name arm64pool \
+  --node-vm-size Standard_D2ps_v5 \
+  --node-count 2 \
+  --min-count 1 \
+  --max-count 5 \
+  --enable-cluster-autoscaler
+```
+
+### **Deployment Commands by Architecture**
+
+#### **Multi-Architecture (Recommended)**
+```bash
+# Kubernetes automatically selects the correct architecture
+kubectl apply -k overlays/eks/    # AWS EKS
+kubectl apply -k overlays/gke/    # Google GKE
+kubectl apply -k overlays/aks/    # Azure AKS
+```
+
+#### **Force Specific Architecture (Advanced)**
+```bash
+# Force AMD64 deployment
+kubectl patch deployment prod-falco-ai-alerts -p '{"spec":{"template":{"spec":{"nodeSelector":{"kubernetes.io/arch":"amd64"}}}}}'
+
+# Force ARM64 deployment  
+kubectl patch deployment prod-falco-ai-alerts -p '{"spec":{"template":{"spec":{"nodeSelector":{"kubernetes.io/arch":"arm64"}}}}}'
+```
 
 ## 🚨 **Critical Cloud Deployment Constraints**
 

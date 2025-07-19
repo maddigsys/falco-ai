@@ -100,6 +100,92 @@ For cloud-specific deployments (EKS, GKE, AKS), see the **[Cloud Deployment Guid
 - **Enhanced Semantic Search**: Better integration with Weaviate
 - **Session Management**: Improved conversation persistence and retrieval
 
+## 🏗️ Multi-Architecture & Cloud Support
+
+### 🔧 **Multi-Architecture Container Support**
+
+The v2.1.0 container images are built for **multiple architectures** to support diverse cloud environments:
+
+| Architecture | Cloud Platforms | Instance Types |
+|--------------|-----------------|----------------|
+| **AMD64 (x86_64)** | All cloud providers | Standard compute instances |
+| **ARM64 (aarch64)** | AWS Graviton2/3, GCP Tau T2A, Azure Ampere | Cost-optimized ARM instances |
+
+**Benefits of Multi-Architecture Support:**
+- 📉 **Cost Savings**: ARM instances offer 20-40% cost reduction
+- ⚡ **Performance**: Native ARM execution eliminates emulation overhead
+- 🌍 **Compatibility**: Single deployment works across all architectures
+- 🔄 **Future-Proof**: Ready for emerging ARM-based cloud offerings
+
+### ☁️ **Cloud-Specific Optimizations**
+
+#### **AWS EKS (`overlays/eks/`)**
+- **Storage**: GP3 volumes for cost-effective SSD performance
+- **Load Balancer**: AWS ALB with SSL termination
+- **Instance Types**: Optimized for EC2 and Graviton2/3 instances
+- **Networking**: VPC CNI integration
+- **IAM**: IRSA (IAM Roles for Service Accounts) support
+
+#### **Google GKE (`overlays/gke/`)**
+- **Storage**: Premium-RWO (SSD) for performance-critical workloads
+- **Load Balancer**: Google Cloud Load Balancer with NEG
+- **Instance Types**: Optimized for standard and Tau T2A ARM instances
+- **Networking**: VPC-native networking
+- **Identity**: Workload Identity integration
+
+#### **Azure AKS (`overlays/aks/`)**
+- **Storage**: Managed-CSI-Premium for SSD performance
+- **Load Balancer**: Azure Load Balancer with health probes
+- **Instance Types**: Optimized for standard and Ampere Altra ARM instances
+- **Networking**: Azure CNI integration
+- **Identity**: Managed Identity support
+
+### 🏷️ **Container Image Tags**
+
+```bash
+# Multi-architecture manifest (recommended)
+maddigsys/falco-ai-alerts:v2.1.0
+maddigsys/falco-ai-alerts:latest
+
+# Architecture-specific (if needed)
+maddigsys/falco-ai-alerts:v2.1.0-amd64
+maddigsys/falco-ai-alerts:v2.1.0-arm64
+```
+
+**Kubernetes automatically selects the correct architecture** based on your node's CPU architecture.
+
+### 🚀 **Cloud Deployment Recommendations**
+
+#### **Cost-Optimized Deployment (ARM64)**
+```bash
+# Use ARM64 node pools for 20-40% cost savings
+# AWS: t4g, m6g, c6g instance families
+# GCP: t2a instance family  
+# Azure: Dpsv5, Epsv5 instance families
+
+kubectl apply -k overlays/eks/    # AWS EKS
+kubectl apply -k overlays/gke/    # Google GKE  
+kubectl apply -k overlays/aks/    # Azure AKS
+```
+
+#### **Performance-Optimized Deployment (AMD64)**
+```bash
+# Use high-performance AMD64 instances
+# AWS: c5, m5, r5 instance families
+# GCP: c2, n2 instance families
+# Azure: Fsv2, Dsv3 instance families
+
+kubectl apply -k overlays/production/  # Generic high-performance
+```
+
+#### **Hybrid Deployment (Mixed Architecture)**
+```bash
+# Deploy with node affinity for specific workloads
+# AI inference: ARM64 (cost-effective)
+# Vector database: AMD64 (performance)
+# Web frontend: Either architecture
+```
+
 ## 🚀 Quick Start
 
 ### ⚡ **Automated Installation (Recommended)**
@@ -200,11 +286,30 @@ kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-dev
 ```
 
 #### 4. Deploy Production Environment
-```bash
-# Update image reference in production overlay
-sed -i 's|newTag: "1.0.0"|newTag: "your-version"|' overlays/production/kustomization.yaml
 
-# Deploy to production
+**🌩️ Cloud-Managed Kubernetes Deployment (Recommended)**
+
+For cloud-managed Kubernetes services, use the cloud-specific optimized overlays:
+
+```bash
+# AWS EKS (with Graviton2/ARM64 support)
+kubectl apply -k overlays/eks/
+
+# Google GKE (with Tau T2A/ARM64 support) 
+kubectl apply -k overlays/gke/
+
+# Azure AKS (with Ampere Altra/ARM64 support)
+kubectl apply -k overlays/aks/
+
+# Verify deployment
+kubectl get all -n falco-ai-alerts
+kubectl get hpa -n falco-ai-alerts
+```
+
+**🖥️ Generic Production Deployment**
+
+```bash
+# Generic production deployment
 kubectl apply -k overlays/production/
 
 # Verify deployment
