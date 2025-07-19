@@ -198,7 +198,7 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: v2.1.0
+    newTag: $(if [[ "$environment" == "dev"* ]] || [[ "$environment" == "development"* ]]; then echo "latest"; else echo "v2.1.0"; fi)
 EOF
 
     echo "✅ Generated configuration: $output_dir/kustomization.yaml"

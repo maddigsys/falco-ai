@@ -144,13 +144,17 @@ The v2.1.0 container images are built for **multiple architectures** to support 
 
 ```bash
 # Multi-architecture manifest (recommended)
-maddigsys/falco-ai-alerts:v2.1.0
-maddigsys/falco-ai-alerts:latest
+maddigsys/falco-ai-alerts:v2.1.0  # Production deployments
+maddigsys/falco-ai-alerts:latest  # Development deployments
 
 # Architecture-specific (if needed)
 maddigsys/falco-ai-alerts:v2.1.0-amd64
 maddigsys/falco-ai-alerts:v2.1.0-arm64
 ```
+
+**Image Tag Strategy:**
+- 🔧 **Development environments** (`overlays/development/`, `dev-*`, `development-*`): Use `:latest` tag for rapid iteration
+- 🚀 **Production environments** (`overlays/production/`, `eks/`, `gke/`, `aks/`): Use specific version tags (e.g., `v2.1.0`) for stability
 
 **Kubernetes automatically selects the correct architecture** based on your node's CPU architecture.
 
@@ -273,7 +277,7 @@ kubectl create secret generic prod-falco-ai-alerts-secrets \
 
 #### 3. Deploy Development Environment
 ```bash
-# Deploy to development
+# Deploy to development (uses :latest tag automatically)
 kubectl apply -k overlays/development/
 
 # Check deployment status
