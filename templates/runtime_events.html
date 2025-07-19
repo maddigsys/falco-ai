@@ -468,10 +468,12 @@
 
     #alertsList {
         flex: 1;
-        min-height: 0;
         display: flex;
         flex-direction: column;
         min-height: 200px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        overflow: hidden;
     }
 
     .alert-item {
@@ -999,6 +1001,12 @@
         padding: var(--space-2xl);
         color: var(--text-secondary);
         text-align: center;
+        flex: 1;
+        min-height: 200px;
+        background: var(--bg-cards);
+        border-radius: var(--radius-md);
+        margin: var(--space-sm);
+        border: 2px dashed var(--border-light);
     }
 
     .loading i, .empty-state i {
@@ -1705,17 +1713,24 @@
     // Load alerts from API
     async function loadAlerts() {
         try {
-            console.log('Loading alerts...');
+            console.log('🔄 Loading alerts...');
+            const alertsContainer = document.getElementById('alertsList');
+            
+            if (!alertsContainer) {
+                console.error('❌ alerts container not found!');
+                return;
+            }
+            
             const response = await fetch('/api/alerts?limit=1000'); // Load more for better volume
             
-            console.log('API Response status:', response.status);
-            console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+            console.log('📡 API Response status:', response.status);
+            console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
             
             if (response.ok) {
                 const newAlerts = await response.json();
-                console.log('Raw API response:', newAlerts);
-                console.log('Type of response:', typeof newAlerts);
-                console.log('Is array:', Array.isArray(newAlerts));
+                console.log('📊 Raw API response:', newAlerts);
+                console.log('📊 Type of response:', typeof newAlerts);
+                console.log('📊 Is array:', Array.isArray(newAlerts));
                 
                 if (Array.isArray(newAlerts)) {
                     alerts = newAlerts;
@@ -1723,14 +1738,16 @@
                     
                     // Log sample alert structure
                     if (alerts.length > 0) {
-                        console.log('Sample alert structure:', alerts[0]);
+                        console.log('📋 Sample alert structure:', alerts[0]);
+                    } else {
+                        console.log('ℹ️ No alerts found in database');
                     }
                     
                     applyFilters();
                     updateStats();
                 } else {
                     console.error('❌ Invalid alerts data format:', newAlerts);
-                    console.error('Expected array, got:', typeof newAlerts);
+                    console.error('❌ Expected array, got:', typeof newAlerts);
                     alerts = [];
                     showError(`Invalid data format received from server. Expected array, got ${typeof newAlerts}`);
                     applyFilters();
@@ -1739,13 +1756,13 @@
             } else {
                 const errorText = await response.text();
                 console.error('❌ Failed to load alerts:', response.status, response.statusText);
-                console.error('Error response body:', errorText);
+                console.error('❌ Error response body:', errorText);
                 showError(`Failed to load alerts: ${response.status} ${response.statusText}`);
                 // Don't reset alerts on error, keep existing data
             }
         } catch (error) {
             console.error('❌ Error loading alerts:', error);
-            console.error('Error stack:', error.stack);
+            console.error('❌ Error stack:', error.stack);
             showError('Error loading alerts: ' + error.message);
             // Initialize empty alerts if this is the first load
             if (!alerts) {
@@ -2016,11 +2033,34 @@
         const pageAlerts = filteredAlerts.slice(startIndex, endIndex);
         
         if (pageAlerts.length === 0) {
+            const totalAlertsMessage = alerts.length === 0 
+                ? 'No security alerts have been received yet.' 
+                : `${alerts.length} alerts available, but none match your current filters.`;
+            
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-shield-alt"></i>
                     <h3>No Security Events</h3>
-                    <p>No alerts match your current filters.</p>
+                    <p>${totalAlertsMessage}</p>
+                    ${alerts.length === 0 ? `
+                        <div style="margin-top: var(--space-lg);">
+                            <p><strong>To get started:</strong></p>
+                            <ol style="text-align: left; max-width: 400px;">
+                                <li>Configure Falco to send alerts to this system</li>
+                                <li>Use webhook URL: <code>http://localhost:8080/webhook</code></li>
+                                <li>Or send a test alert to verify the system is working</li>
+                            </ol>
+                            <button onclick="sendTestAlert()" class="btn" style="margin-top: var(--space-md); background: var(--falco-primary); color: white; border: none; padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-md); cursor: pointer;">
+                                <i class="fas fa-paper-plane"></i> Send Test Alert
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="margin-top: var(--space-lg);">
+                            <button onclick="resetFilters()" class="btn" style="background: var(--falco-primary); color: white; border: none; padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-md); cursor: pointer;">
+                                <i class="fas fa-times"></i> Clear All Filters
+                            </button>
+                        </div>
+                    `}
                 </div>
             `;
             return;
@@ -3150,6 +3190,31 @@
                 alertDiv.remove();
             }
         }, 5000);
+    }
+
+    // Send test alert function
+    async function sendTestAlert() {
+        try {
+            console.log('Sending test alert...');
+            const response = await fetch('/api/test-alert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                showAlert('success', '✅ Test alert sent successfully! Refreshing alerts...');
+                // Refresh alerts after a short delay
+                setTimeout(() => {
+                    loadAlerts();
+                }, 2000);
+            } else {
+                const error = await response.text();
+                showAlert('error', `❌ Failed to send test alert: ${error}`);
+            }
+        } catch (error) {
+            console.error('Error sending test alert:', error);
+            showAlert('error', `❌ Error sending test alert: ${error.message}`);
+        }
     }
 </script>
 {% endblock %} 

@@ -2819,6 +2819,41 @@ def api_dismiss_multiple():
         logging.error(f"❌ Error dismissing multiple alerts: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/test-alert', methods=['POST'])
+def api_test_alert():
+    """Send a test alert to verify the system is working."""
+    try:
+        # Create a test alert
+        test_alert = {
+            "time": datetime.datetime.now().isoformat() + "Z",
+            "rule": "Test Alert Rule",
+            "priority": "Notice",
+            "output": "This is a test alert generated to verify the Falco AI Alert System is working correctly. This alert demonstrates the system's ability to receive, process, and display security events.",
+            "source": "falco_ai_test",
+            "hostname": "test-host",
+            "tags": ["test", "verification", "demo"],
+            "fields": {
+                "container.name": "test-container",
+                "proc.name": "test-process",
+                "user.name": "test-user",
+                "fd.name": "/test/file/path"
+            }
+        }
+        
+        # Process the test alert through the normal webhook flow
+        result = process_webhook_alert(test_alert)
+        
+        if result:
+            logging.info("✅ Test alert sent successfully")
+            return jsonify({'success': True, 'message': 'Test alert sent successfully'})
+        else:
+            logging.error("❌ Failed to process test alert")
+            return jsonify({'success': False, 'error': 'Failed to process test alert'}), 500
+            
+    except Exception as e:
+        logging.error(f"❌ Error sending test alert: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # AUDIT TRAIL API ENDPOINTS
 @app.route('/api/audit/trail')
 def api_audit_trail():
