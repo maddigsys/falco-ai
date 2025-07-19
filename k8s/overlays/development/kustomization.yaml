@@ -13,7 +13,7 @@ namePrefix: dev-
 
 commonLabels:
   environment: dev
-  app.kubernetes.io/version: "2.0.0-dev"
+  app.kubernetes.io/version: "2.1.0-dev"
 
 patches:
   # Reduce replicas for development
@@ -219,4 +219,4 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: v2.0.0-amd64 
+    newTag: v2.1.0 

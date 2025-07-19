@@ -198,7 +198,7 @@ patches:
 images:
   - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: v2.0.0-amd64
+    newTag: v2.1.0
 EOF
 
     echo "✅ Generated configuration: $output_dir/kustomization.yaml"

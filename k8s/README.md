@@ -1,6 +1,6 @@
 # Kubernetes Deployment Guide - Falco AI Alert System
 
-**Version: v2.0.0** (with enhanced UI/UX and improved runtime events page)
+**Version: v2.1.0** (with enhanced chat features, audit system, and MCP Hub)
 
 This guide provides comprehensive instructions for deploying the Falco AI Alert System on Kubernetes.
 
@@ -53,6 +53,52 @@ For cloud-specific deployments (EKS, GKE, AKS), see the **[Cloud Deployment Guid
 - `kustomize` (v3.2.0+) or `kubectl` with kustomize support
 - `docker` (for building custom images)
 - `helm` (optional, for managing dependencies)
+
+## ✨ New Features in v2.1.0
+
+### 💬 Enhanced Chat Interface
+- **Standard Chat Features**: Clear history, message search, export (Text/Markdown/JSON)
+- **Server-Side Synchronization**: Chat history automatically synced to backend database
+- **Real-Time Search**: Find previous conversations with highlighting
+- **Message Management**: Copy messages, timestamps, persistent storage
+- **Multi-Language Support**: Chat in any language with AI responses in same language
+- **Persona Selection**: Switch between Security Analyst, Incident Responder, Threat Hunter
+
+### 🔒 Comprehensive Audit System
+- **Complete Activity Tracking**: All user actions logged with full audit trails
+- **Advanced Filtering**: Filter by user, action type, time range, resource type
+- **Real-Time Statistics**: Activity summaries and performance monitoring
+- **Export Capabilities**: Export audit logs in CSV/JSON formats with pagination
+- **Anonymous User Identification**: Track users via IP+User-Agent hashing
+- **Session Analytics**: Session correlation and detailed event inspection
+
+### ⚡ Real-Time Features
+- **Server-Sent Events (SSE)**: Live status updates across all connected clients
+- **Multi-Client Synchronization**: Real-time collaboration for security teams
+- **Enhanced Visual Indicators**: Glowing borders, animations, and status notifications
+- **Keyboard Shortcuts**: Efficient navigation (R=read, D=dismiss, arrows=navigate)
+- **Connection Status**: Real-time indicators for SSE connectivity
+
+### 🎛️ MCP Hub (Model Context Protocol)
+- **Unified Dashboard**: Renamed from "MCP Integration Hub" to "MCP Hub" for simplicity
+- **Multi-Protocol Support**: JSON-RPC, Claude-optimized, gRPC, and Standard MCP
+- **Auto-Setup Scripts**: One-click configuration for Claude Desktop, VS Code, Cursor
+- **Web Configuration**: Real-time testing and setup interface
+- **15 Security Tools**: Direct access to Falco security capabilities via MCP
+
+### 🛠️ Technical Improvements
+- **Enhanced Database Schema**: New audit tables and optimized indexes
+- **Thread-Safe Operations**: Improved client management with auto-cleanup
+- **Better Error Handling**: Enhanced user feedback and notification system
+- **Performance Optimizations**: Memory management and efficient data handling
+- **Responsive Design**: Improved mobile and tablet compatibility
+
+### 📊 Advanced Filtering & Analytics
+- **Debounced Text Filtering**: Smooth performance with automatic filtering
+- **Filter Save/Load**: Save frequently used filter configurations
+- **Bulk Operations**: Enhanced bulk actions with confirmation dialogs
+- **Enhanced Semantic Search**: Better integration with Weaviate
+- **Session Management**: Improved conversation persistence and retrieval
 
 ## 🚀 Quick Start
 
@@ -331,6 +377,124 @@ kubectl top nodes
 kubectl get hpa -n falco-ai-alerts
 kubectl describe hpa falco-ai-alerts-hpa -n falco-ai-alerts
 ```
+
+## 🌐 Accessing v2.1.0 Features
+
+Once deployed, you can access all the new v2.1.0 features through the web interface:
+
+### **1. 💬 Enhanced Chat Interface**
+```bash
+# Access the AI Security Assistant
+kubectl port-forward svc/falco-ai-alerts 8080:8080 -n falco-ai-alerts
+# Open: http://localhost:8080/enhanced-chat
+```
+
+**New Features Available:**
+- **Standard Chat Controls**: Clear, search, export, history management
+- **Server-Side Sync**: Your conversations persist across sessions
+- **Real-Time Search**: Find any previous conversation instantly
+- **Export Options**: Download chat history in Text, Markdown, or JSON
+- **Multi-Language Support**: Chat in any language, AI responds in kind
+- **Persona Selection**: Choose from Security Analyst, Incident Responder, or Threat Hunter
+
+### **2. 🔒 Comprehensive Audit System**
+```bash
+# Access the audit dashboard
+# Open: http://localhost:8080/audit
+```
+
+**Audit Capabilities:**
+- **Complete Activity Tracking**: Every user action logged with full context
+- **Advanced Filtering**: Filter by user, action type, time range, resource
+- **Real-Time Statistics**: Live activity summaries and performance monitoring
+- **Export Functions**: Download audit logs in CSV or JSON formats
+- **Anonymous User Tracking**: Users identified via IP+User-Agent hashing
+- **Session Analytics**: Detailed session correlation and event inspection
+
+### **3. ⚡ Real-Time Collaboration**
+**Server-Sent Events (SSE)** for live updates:
+- **Multi-Client Sync**: All connected users see updates instantly
+- **Real-Time Status**: Alert status changes broadcast to all clients
+- **Live Notifications**: New alerts appear immediately across all sessions
+- **Connection Status**: Visual indicators show SSE connectivity
+
+### **4. 🎛️ MCP Hub (Model Context Protocol)**
+```bash
+# Access the unified MCP Hub
+# Open: http://localhost:8080/mcp-dashboard
+```
+
+**Available Protocols:**
+- **JSON-RPC MCP**: Universal AI client compatibility (Claude Desktop, VS Code, Cursor)
+- **Claude-Optimized MCP**: Enhanced Claude Desktop experience
+- **gRPC MCP**: High-performance streaming (10x faster throughput)
+- **Standard MCP**: Traditional HTTP/WebSocket implementations
+
+**15 Security Tools Available:**
+- Alert retrieval and analysis
+- AI-powered threat assessment
+- Interactive security chat
+- Dashboard data access
+- Semantic search capabilities
+- And 10+ more security tools
+
+### **5. 📊 Enhanced Dashboard Features**
+```bash
+# Access the improved dashboard
+# Open: http://localhost:8080/
+```
+
+**New Dashboard Capabilities:**
+- **Advanced Filtering**: Comprehensive alert filtering with save/load
+- **Keyboard Shortcuts**: Efficient navigation (R=read, D=dismiss, arrows=navigate)
+- **Visual Enhancements**: Glowing borders, animations, status indicators
+- **Bulk Operations**: Enhanced bulk actions with confirmation dialogs
+- **Real-Time Updates**: Live alert status synchronization
+
+### **6. 🔍 Advanced Analytics**
+```bash
+# Access AI-powered analytics
+# Open: http://localhost:8080/weaviate-analytics
+```
+
+**Analytics Features:**
+- **ML-Driven Clustering**: Automatic threat pattern detection
+- **Semantic Search**: Natural language security event queries
+- **Threat Intelligence**: AI-powered security insights
+- **Real-Time Insights**: Live security analytics and reporting
+
+### **Post-Deployment Quick Start Guide**
+
+1. **Configure Slack Integration** (if not done during install):
+   ```bash
+   # Update Slack token in secret
+   kubectl patch secret falco-ai-alerts-secrets -n falco-ai-alerts \
+     --patch='{"data":{"SLACK_BOT_TOKEN":"'$(echo -n "xoxb-your-token" | base64)'"}}'
+   ```
+
+2. **Set Up Falco Webhook** (point Falco to your deployment):
+   ```yaml
+   # In your falco.yaml
+   http_output:
+     enabled: true
+     url: http://falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/webhook
+   ```
+
+3. **Test the System**:
+   ```bash
+   # Send a test alert
+   curl -X POST http://localhost:8080/api/test-alert
+   ```
+
+4. **Explore the MCP Hub** (for AI client integration):
+   - Visit the MCP Hub dashboard
+   - Choose your preferred protocol (JSON-RPC recommended)
+   - Follow auto-setup instructions for your AI client
+
+5. **Enable Advanced Features**:
+   - Configure audit system for compliance requirements
+   - Set up real-time SSE connections for team collaboration
+   - Customize chat personas for different security analysis needs
 
 ## 🔧 Operational Procedures
 

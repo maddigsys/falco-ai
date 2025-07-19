@@ -15,7 +15,7 @@ namePrefix: prod-
 
 commonLabels:
   environment: production
-  app.kubernetes.io/version: "2.0.0"
+  app.kubernetes.io/version: "2.1.0"
 
 patches:
   # Increase replicas for production
@@ -134,4 +134,4 @@ patches:
 images:
   - name: maddigsys/falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: "v2.0.0" 
+    newTag: "v2.1.0" 
