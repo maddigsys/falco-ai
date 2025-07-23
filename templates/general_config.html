@@ -572,6 +572,9 @@
     </div>
 </div>
 
+<!-- Configuration Form -->
+<form id="generalConfigForm">
+
 <!-- Alert Processing Configuration -->
 <div class="falco-card" id="alert-processing">
     <div class="card-header">
@@ -976,6 +979,8 @@
         </div>
     </div>
 </div>
+
+</form>
 {% endblock %}
 
 {% block extra_js %}
@@ -1161,7 +1166,8 @@
     // Save configuration
     async function saveConfiguration(silent = false) {
         try {
-            const formData = new FormData(document.querySelector('form') || document.body);
+            const form = document.getElementById('generalConfigForm');
+            const formData = new FormData(form);
             const config = {};
             
             // Collect all form data
