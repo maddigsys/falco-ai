@@ -1802,6 +1802,8 @@
 
     // Update statistics
     function updateStats() {
+        console.log('📊 updateStats called with alerts:', alerts.length, 'alerts');
+        
         alertStats = {
             total: alerts.length,
             unread: alerts.filter(a => a.status === 'unread').length,
@@ -1809,17 +1811,20 @@
             dismissed: alerts.filter(a => a.status === 'dismissed').length,
             critical: alerts.filter(a => a.priority === 'critical').length,
             recent: alerts.filter(a => {
-                const alertTime = new Date(a.time);
+                const alertTime = new Date(a.time || a.timestamp);
                 const now = new Date();
                 return (now - alertTime) / (1000 * 60 * 60) <= 1;
             }).length
         };
         
+        console.log('📊 Calculated alertStats:', alertStats);
         updateStatElements();
     }
 
     // Update stat display elements
     function updateStatElements() {
+        console.log('📊 updateStatElements called with alertStats:', alertStats);
+        
         const elements = {
             'totalAlertsMain': alertStats.total,
             'criticalAlertsMain': alertStats.critical,
@@ -1833,10 +1838,15 @@
             'totalCountControl': alertStats.total
         };
         
+        console.log('📊 Elements to update:', elements);
+        
         Object.entries(elements).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) {
+                console.log(`✅ Updating ${id} with value: ${value}`);
                 element.textContent = value;
+            } else {
+                console.warn(`❌ Element with id '${id}' not found in DOM`);
             }
         });
         
@@ -2493,6 +2503,8 @@ data:
 
     // Update alert count elements
     function updateAlertCountElements(counts) {
+        console.log('📈 updateAlertCountElements called with counts:', counts);
+        
         const elements = {
             'unreadCount': counts.unread,
             'readCount': counts.read,
@@ -2500,10 +2512,15 @@ data:
             'totalCountControl': counts.total
         };
         
+        console.log('📈 Count elements to update:', elements);
+        
         Object.entries(elements).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) {
+                console.log(`✅ Updating count ${id} with value: ${value}`);
                 element.textContent = value;
+            } else {
+                console.warn(`❌ Count element with id '${id}' not found in DOM`);
             }
         });
     }
