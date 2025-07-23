@@ -439,7 +439,7 @@
 http_output:
   enabled: true
   url: ${externalUrl}
-  user_agent: "falco/0.41.3"
+  user_agent: "falcosecurity/falco"
   # For in-cluster communication (recommended):
   # url: ${internalUrl}
   # Target: ${namespace} namespace
@@ -452,10 +452,12 @@ http_output:
 # JSON Output Configuration
 json_output: true
 json_include_output_property: true
+json_include_output_fields_property: true
 json_include_tags_property: true
+json_include_message_property: false
 
 # Performance Settings
-buffered_outputs: true
+buffered_outputs: false
 syscall_event_drops:
   actions:
     - log
@@ -514,7 +516,7 @@ data:
     http_output:
       enabled: true
       url: ${internalUrl}
-      user_agent: "falco/0.41.3"
+      user_agent: "falcosecurity/falco"
       # For external access, use:
       # url: ${externalUrl}
       # Connection settings
@@ -525,11 +527,12 @@ data:
     # JSON Output Configuration
     json_output: true
     json_include_output_property: true
+    json_include_output_fields_property: true
     json_include_tags_property: true
     json_include_message_property: false
     
     # Performance Settings
-    buffered_outputs: true
+    buffered_outputs: false
     syscall_event_drops:
       actions:
         - log
