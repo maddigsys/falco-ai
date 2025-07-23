@@ -367,9 +367,9 @@
 {% block content %}
 <!-- Analytics Tabs -->
 <div class="analytics-tabs">
-    <button class="analytics-tab active" onclick="showSection('overview')">
-        <i class="fas fa-chart-bar"></i>
-        Overview
+    <button class="analytics-tab active" onclick="showSection('realtime')">
+        <i class="fas fa-bolt"></i>
+        Real-time Analysis
     </button>
     <button class="analytics-tab" onclick="showSection('clustering')">
         <i class="fas fa-sitemap"></i>
@@ -383,104 +383,8 @@
         <i class="fas fa-search"></i>
         Pattern Analysis
     </button>
-    <button class="analytics-tab" onclick="showSection('realtime')">
-        <i class="fas fa-bolt"></i>
-        Real-time Analysis
-    </button>
 </div>
 
-<!-- Overview Section -->
-<div id="overview-section" class="analytics-section active">
-    <div class="analytics-grid">
-        <div class="analytics-card">
-            <div class="card-header">
-                <h3 class="card-title">Weaviate Status</h3>
-                <span class="card-icon">🔧</span>
-            </div>
-            <div class="status-indicator success">
-                <i class="fas fa-check-circle"></i>
-                <span id="weaviate-status">Connected</span>
-            </div>
-            <div class="metric-label">AI Analytics Engine</div>
-        </div>
-
-        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('all')">
-            <div class="card-header">
-                <h3 class="card-title">Total Alerts</h3>
-                <span class="card-icon">📊</span>
-            </div>
-            <div class="metric-large clickable" id="total-alerts">-</div>
-            <div class="metric-label">Analyzed alerts</div>
-            <div class="breadcrumb-indicator">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Click to view all alerts</span>
-            </div>
-            <div class="navigation-hint">View Details</div>
-        </div>
-
-        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('clusters')">
-            <div class="card-header">
-                <h3 class="card-title">Alert Clusters</h3>
-                <span class="card-icon">🧠</span>
-            </div>
-            <div class="metric-large clickable" id="total-clusters">-</div>
-            <div class="metric-label">Identified patterns</div>
-            <div class="breadcrumb-indicator">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Click to view clustering details</span>
-            </div>
-            <div class="navigation-hint">View Clusters</div>
-        </div>
-
-        <div class="analytics-card clickable-metric" onclick="navigateToAlerts('high-risk')">
-            <div class="card-header">
-                <h3 class="card-title">High Risk Alerts</h3>
-                <span class="card-icon">⚠️</span>
-            </div>
-            <div class="metric-large clickable" id="high-risk-alerts">-</div>
-            <div class="metric-label">Requiring attention</div>
-            <div class="breadcrumb-indicator">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Click to view high-risk alerts</span>
-            </div>
-            <div class="navigation-hint">View High Risk</div>
-        </div>
-    </div>
-
-    <div class="analytics-grid">
-        <div class="analytics-card">
-            <div class="card-header">
-                <h3 class="card-title">Alert Trends</h3>
-                <span class="card-icon">📈</span>
-            </div>
-            <div class="chart-container" onclick="navigateToAlerts('trends')">
-                <canvas id="alertTrendsChart"></canvas>
-                <div class="chart-overlay"></div>
-                <div class="chart-hint">Click to view timeline alerts</div>
-            </div>
-            <div class="breadcrumb-indicator">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Click chart to view recent alerts</span>
-            </div>
-        </div>
-
-        <div class="analytics-card">
-            <div class="card-header">
-                <h3 class="card-title">Priority Distribution</h3>
-                <span class="card-icon">🎯</span>
-            </div>
-            <div class="chart-container" onclick="navigateToAlerts('priority')">
-                <canvas id="priorityChart"></canvas>
-                <div class="chart-overlay"></div>
-                <div class="chart-hint">Click to filter by priority</div>
-            </div>
-            <div class="breadcrumb-indicator">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Click chart to filter alerts by priority</span>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Clustering Section -->
 <div id="clustering-section" class="analytics-section">
@@ -528,7 +432,7 @@
 </div>
 
 <!-- Real-time Analysis Section -->
-<div id="realtime-section" class="analytics-section">
+<div id="realtime-section" class="analytics-section active">
     <div class="analytics-card">
         <div class="card-header">
             <h3 class="card-title">Real-time Classification</h3>
@@ -545,18 +449,15 @@
 
 {% block extra_js %}
 <script>
-    let alertTrendsChart = null;
-    let priorityChart = null;
-    let chartsInitialized = false;
+
 
     // Auto-refresh for real-time data
     let realtimeRefreshInterval = null;
     
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        loadOverviewData();
         // Only load the active section initially
-        loadSectionData('overview');
+        loadSectionData('realtime');
         
         // Start real-time refresh if on real-time tab
         if (document.getElementById('realtime-section').classList.contains('active')) {
@@ -596,9 +497,6 @@
         }
         
         switch(sectionName) {
-            case 'overview':
-                // Overview data is already loaded on page load, no need to reload
-                break;
             case 'clustering':
                 loadClusteringData();
                 break;
@@ -667,244 +565,9 @@
         }
     });
 
-    // Load overview data
-    async function loadOverviewData() {
-        try {
-            // Load Weaviate health
-            const healthResponse = await fetch('/api/weaviate/health');
-            const healthData = await healthResponse.json();
-            
-            document.getElementById('weaviate-status').textContent = 
-                healthData.connected ? 'Connected' : 'Disconnected';
-            
-            // Load actual alert counts from working API
-            const alertCountsResponse = await fetch('/api/alerts/counts');
-            if (alertCountsResponse.ok) {
-                const alertCounts = await alertCountsResponse.json();
-                document.getElementById('total-alerts').textContent = alertCounts.total || 0;
-                console.log('✅ Updated total-alerts with value:', alertCounts.total);
-            }
 
-            // Load alerts to count critical/high-risk ones  
-            const alertsResponse = await fetch('/api/alerts?limit=1000');
-            if (alertsResponse.ok) {
-                const alerts = await alertsResponse.json();
-                const criticalAlerts = alerts.filter(alert => 
-                    alert.priority === 'critical' || alert.priority === 'error'
-                ).length;
-                document.getElementById('high-risk-alerts').textContent = criticalAlerts;
-                console.log('✅ Updated high-risk-alerts with value:', criticalAlerts);
-            }
 
-            // Try to load threat intelligence (fallback if weaviate unavailable)
-            try {
-                const threatResponse = await fetch('/api/weaviate/threat-intelligence');
-                const threatData = await threatResponse.json();
-                
-                if (threatData.success && threatData.threat_intelligence?.summary?.high_risk_alerts) {
-                    document.getElementById('high-risk-alerts').textContent = 
-                        threatData.threat_intelligence.summary.high_risk_alerts;
-                    console.log('✅ Updated high-risk-alerts from threat intel');
-                }
-            } catch (error) {
-                console.log('ℹ️ Weaviate threat intelligence not available, using alert count');
-            }
 
-            // Load alert patterns for trends data
-            const patternsResponse = await fetch('/api/alert-patterns?days=30');
-            const patternsData = await patternsResponse.json();
-            
-            // Load clustering data
-            const clusterResponse = await fetch('/api/weaviate/cluster-alerts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ days: 30, min_cluster_size: 2 })
-            });
-            const clusterData = await clusterResponse.json();
-            
-            if (clusterData.success) {
-                document.getElementById('total-clusters').textContent = 
-                    clusterData.clustering_results.cluster_count || 0;
-            }
-
-            // Initialize charts with real data
-            initializeCharts(threatData.success ? threatData.threat_intelligence : null, 
-                           patternsData.success ? patternsData.patterns : null);
-            chartsInitialized = true;
-
-        } catch (error) {
-            console.error('❌ Analytics overview data unavailable:', error.message);
-            // Set default values if API calls fail
-            document.getElementById('total-alerts').textContent = '-';
-            document.getElementById('high-risk-alerts').textContent = '-';
-            document.getElementById('total-clusters').textContent = '-';
-            
-            // Try to load basic alert counts as fallback
-            try {
-                const fallbackResponse = await fetch('/api/alerts/counts');
-                if (fallbackResponse.ok) {
-                    const counts = await fallbackResponse.json();
-                    document.getElementById('total-alerts').textContent = counts.total || 0;
-                    console.log('✅ Fallback: Updated total-alerts with value:', counts.total);
-                }
-            } catch (fallbackError) {
-                console.error('❌ Fallback alert counts also failed:', fallbackError.message);
-            }
-        }
-    }
-
-    // Initialize charts
-    function initializeCharts(threatData = null, patternsData = null) {
-        // Destroy existing charts if they exist
-        if (alertTrendsChart) {
-            alertTrendsChart.destroy();
-            alertTrendsChart = null;
-        }
-        if (priorityChart) {
-            priorityChart.destroy();
-            priorityChart = null;
-        }
-        
-        // Prepare real timeline data for Alert Trends
-        let trendLabels = [];
-        let trendData = [];
-        
-        if (patternsData && patternsData.timeline && patternsData.timeline.length > 0) {
-            // Use real timeline data
-            patternsData.timeline.forEach(item => {
-                const date = new Date(item.date);
-                trendLabels.push(date.toLocaleDateString());
-                trendData.push(item.count);
-            });
-        } else {
-            // Fallback to recent days if no timeline data
-            trendLabels = generateDateLabels(7);
-            trendData = new Array(7).fill(0); // Show zero data instead of random
-        }
-        
-        // Alert Trends Chart with real data
-        const alertTrendsCtx = document.getElementById('alertTrendsChart').getContext('2d');
-        alertTrendsChart = new Chart(alertTrendsCtx, {
-            type: 'line',
-            data: {
-                labels: trendLabels,
-                datasets: [{
-                    label: 'Total Alerts',
-                    data: trendData,
-                    borderColor: '#00AEC7',
-                    backgroundColor: 'rgba(0, 174, 199, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            title: function(context) {
-                                return 'Alerts on ' + context[0].label;
-                            },
-                            label: function(context) {
-                                return context.parsed.y + ' alerts';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            maxTicksLimit: 10
-                        }
-                    }
-                }
-            }
-        });
-
-        // Priority Distribution Chart with real data
-        const priorityCtx = document.getElementById('priorityChart').getContext('2d');
-        
-        let priorityLabels = ['High Risk', 'Medium Risk', 'Low Risk'];
-        let priorityValues = [0, 0, 0];
-        let priorityColors = ['#EF4444', '#F59E0B', '#10B981'];
-        
-        if (threatData && threatData.summary) {
-            priorityValues = [
-                threatData.summary.high_risk_alerts || 0,
-                threatData.summary.medium_risk_alerts || 0,
-                threatData.summary.low_risk_alerts || 0
-            ];
-        } else if (patternsData && patternsData.priority_distribution) {
-            // Use pattern data as fallback
-            const priorities = patternsData.priority_distribution;
-            priorityLabels = Object.keys(priorities);
-            priorityValues = Object.values(priorities);
-            // Assign colors based on priority names
-            priorityColors = priorityLabels.map(label => {
-                const lowerLabel = label.toLowerCase();
-                if (lowerLabel.includes('critical') || lowerLabel.includes('error')) return '#EF4444';
-                if (lowerLabel.includes('warning')) return '#F59E0B';
-                if (lowerLabel.includes('notice')) return '#3B82F6';
-                return '#10B981';
-            });
-        }
-        
-        priorityChart = new Chart(priorityCtx, {
-            type: 'doughnut',
-            data: {
-                labels: priorityLabels,
-                datasets: [{
-                    data: priorityValues,
-                    backgroundColor: priorityColors,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Generate date labels for fallback chart data
-    function generateDateLabels(days) {
-        const labels = [];
-        for (let i = days - 1; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            labels.push(date.toLocaleDateString());
-        }
-        return labels;
-    }
 
     // Navigation functions
     function navigateToAlerts(filterType, value = null) {
