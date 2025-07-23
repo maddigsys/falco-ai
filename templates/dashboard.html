@@ -1610,21 +1610,23 @@
     // Load alerts with current filters
     async function loadAlerts() {
         try {
-            console.log('Loading alerts for Dashboard...');
+            console.log('🔄 Loading alerts for Dashboard...');
             // Fetch all alerts and let client-side filtering handle the work
             const response = await fetch('/api/alerts?limit=1000');
             
             if (response.ok) {
                 alerts = await response.json();
-                console.log(`✅ Loaded ${alerts.length} alerts for Dashboard`);
+                console.log(`✅ Loaded ${alerts.length} alerts for Dashboard`, alerts);
                 
                 // Apply filters and update display
                 applyFilters();
             } else {
-                console.error('Failed to load alerts:', response.statusText);
+                console.error('❌ Failed to load alerts:', response.status, response.statusText);
+                document.getElementById('alertList')?.innerHTML = '<div class="empty-state"><h4>Failed to load alerts</h4><p>Please check your connection and try refreshing.</p></div>';
             }
         } catch (error) {
-            console.error('Error loading alerts:', error);
+            console.error('❌ Error loading alerts:', error);
+            document.getElementById('alertList')?.innerHTML = '<div class="empty-state"><h4>Connection Error</h4><p>Failed to connect to the API. Please try again.</p></div>';
         }
     }
 
@@ -1846,9 +1848,12 @@
 
     // Update display based on alerts
     function updateDisplay() {
+        console.log(`🎨 Updating display with ${alerts.length} total alerts, ${filteredAlerts.length} filtered alerts`);
         if (alerts.length === 0) {
+            console.log('📋 Showing welcome state (no alerts)');
             showWelcomeState();
         } else {
+            console.log('📊 Showing alerts state');
             showAlertsState();
             renderAlertList();
             populateRuleFilter();
@@ -1941,11 +1946,13 @@
         const isProduction = environmentOverride !== null ? environmentOverride : detectEnvironment();
         const internalUrl = generateInternalWebhookUrl(isProduction);
         
-        // Debug: Log environment detection
-        console.log(`🔍 Environment Detection: ${isProduction ? 'Production' : 'Development'}`, {
+        // Debug: Log environment detection and URLs
+        console.log(`🔍 Environment Detection Result: ${isProduction ? 'Production' : 'Development'}`, {
             hostname: window.location.hostname,
             port: window.location.port,
-            protocol: window.location.protocol
+            protocol: window.location.protocol,
+            externalUrl: externalUrl,
+            internalUrl: internalUrl
         });
         
         document.getElementById('externalWebhookUrl').value = externalUrl;
@@ -1964,25 +1971,35 @@
         const port = window.location.port;
         const pathname = window.location.pathname;
         
-        // Production indicators
-        if (hostname.includes('prod') || 
-            hostname.includes('production') ||
-            (port !== '8080' && port !== '3000' && port !== '') ||
-            hostname.match(/^[^.]+\.[^.]+\.[^.]+$/)) { // Domain with TLD
-            return true;
-        }
+        console.log('🔍 Environment Detection Debug:', {
+            hostname: hostname,
+            port: port,
+            pathname: pathname,
+            portType: typeof port
+        });
         
-        // Development indicators
+        // Development indicators (check first to prioritize local development)
         if (hostname === 'localhost' || 
             hostname === '127.0.0.1' ||
             hostname.includes('dev') ||
             hostname.includes('development') ||
             port === '8080' || 
             port === '3000') {
+            console.log('✅ Development environment detected');
             return false;
         }
         
+        // Production indicators
+        if (hostname.includes('prod') || 
+            hostname.includes('production') ||
+            (port !== '8080' && port !== '3000' && port !== '') ||
+            hostname.match(/^[^.]+\.[^.]+\.[^.]+$/)) { // Domain with TLD
+            console.log('✅ Production environment detected');
+            return true;
+        }
+        
         // Default to production for safety
+        console.log('⚠️ Environment detection defaulted to production');
         return true;
     }
 
@@ -2460,15 +2477,17 @@ data:
     // Load alert counts
     async function loadAlertCounts() {
         try {
+            console.log('🔄 Loading alert counts...');
             const response = await fetch('/api/alerts/counts');
             if (response.ok) {
                 const counts = await response.json();
+                console.log('✅ Loaded alert counts:', counts);
                 updateAlertCountElements(counts);
             } else {
-                console.error('Failed to load alert counts:', response.statusText);
+                console.error('❌ Failed to load alert counts:', response.status, response.statusText);
             }
         } catch (error) {
-            console.error('Error loading alert counts:', error);
+            console.error('❌ Error loading alert counts:', error);
         }
     }
 
