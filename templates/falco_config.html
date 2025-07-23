@@ -339,65 +339,161 @@
         loadFalcoConfigurations();
     });
 
-    // Generate webhook URLs
+    // Environment detection and webhook URL generation
+    function detectEnvironment() {
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+        
+        console.log('🔍 Environment Detection:', { hostname, port });
+        
+        // Development indicators (check first to prioritize local development)
+        if (hostname === 'localhost' || 
+            hostname === '127.0.0.1' ||
+            hostname.includes('dev') ||
+            hostname.includes('development') ||
+            port === '8080' || 
+            port === '3000') {
+            console.log('✅ Development environment detected');
+            return false;
+        }
+        
+        // Production indicators
+        if (hostname.includes('prod') || 
+            hostname.includes('production') ||
+            (port !== '8080' && port !== '3000' && port !== '') ||
+            hostname.match(/^[^.]+\.[^.]+\.[^.]+$/)) { // Domain with TLD
+            console.log('✅ Production environment detected');
+            return true;
+        }
+        
+        // Default to production for safety
+        console.log('⚠️ Environment detection defaulted to production');
+        return true;
+    }
+
+    function generateInternalWebhookUrl(isProduction) {
+        if (isProduction) {
+            return 'http://prod-falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/falco-webhook';
+        } else {
+            return 'http://dev-falco-ai-alerts.falco-ai-alerts-dev.svc.cluster.local:8080/falco-webhook';
+        }
+    }
+
+    // Generate webhook URLs with environment detection
     function generateWebhookUrls() {
         const protocol = window.location.protocol;
         const host = window.location.host;
         const externalUrl = `${protocol}//${host}/falco-webhook`;
         
-        // For internal URL, use service name if available
-        const internalUrl = `http://falco-ai-gateway:8080/falco-webhook`;
+        // Detect environment and generate appropriate internal URL
+        const isProduction = detectEnvironment();
+        const internalUrl = generateInternalWebhookUrl(isProduction);
+        const envLabel = isProduction ? 'Production' : 'Development';
+        
+        console.log(`🔧 Generated URLs for ${envLabel} environment:`, {
+            external: externalUrl,
+            internal: internalUrl
+        });
         
         document.getElementById('externalWebhookUrl').value = externalUrl;
         document.getElementById('internalWebhookUrl').value = internalUrl;
+        
+        // Update labels to show detected environment
+        updateEnvironmentLabels(isProduction);
     }
 
-    // Load Falco configurations
+    function updateEnvironmentLabels(isProduction) {
+        const environmentBadge = isProduction ? 
+            '<span class="badge bg-success ms-2">Production</span>' : 
+            '<span class="badge bg-warning ms-2">Development</span>';
+        
+        // Update internal URL label
+        const internalLabel = document.querySelector('label[class="fw-bold"]:nth-of-type(2)');
+        if (internalLabel) {
+            internalLabel.innerHTML = `🏠 Internal/Kubernetes URL: ${environmentBadge}`;
+        }
+        
+        // Update description text
+        const internalDescription = internalLabel?.parentElement?.querySelector('small');
+        if (internalDescription) {
+            const envContext = isProduction ? 
+                'production (prod-) services in falco-ai-alerts namespace' : 
+                'development (dev-) services in falco-ai-alerts-dev namespace';
+            internalDescription.innerHTML = `Use this URL if Falco runs inside the same Kubernetes cluster (targets ${envContext})`;
+        }
+    }
+
+    // Load Falco configurations with environment context
     function loadFalcoConfigurations() {
         const externalUrl = document.getElementById('externalWebhookUrl').value;
         const internalUrl = document.getElementById('internalWebhookUrl').value;
+        const isProduction = detectEnvironment();
+        const envLabel = isProduction ? 'Production' : 'Development';
+        const namespace = isProduction ? 'falco-ai-alerts' : 'falco-ai-alerts-dev';
         
-        // Generate Falco YAML configuration
-        const falcoYaml = `# Falco Configuration - HTTP Output
+        // Generate Falco YAML configuration with environment context
+        const falcoYaml = `# Falco Configuration (falco.yaml) - ${envLabel} Environment
 # This configuration enables Falco to send alerts to the AI Gateway
 
-# HTTP Output Configuration
+# HTTP Output Configuration - ${envLabel} Environment
 http_output:
   enabled: true
-  url: "${externalUrl}"
-  # Use the internal URL if running in Kubernetes:
-  # url: "${internalUrl}"
+  url: ${externalUrl}
+  user_agent: "falco/0.41.3"
+  # For in-cluster communication (recommended):
+  # url: ${internalUrl}
+  # Target: ${namespace} namespace
 
 # Optional: Add custom headers for authentication
-# headers:
+# custom_headers:
 #   Authorization: "Bearer your-token-here"
-#   X-Custom-Header: "your-value"
+#   X-API-Key: "your-api-key-here"
 
 # JSON Output Configuration
 json_output: true
 json_include_output_property: true
 json_include_tags_property: true
 
-# Buffered Output (recommended for production)
+# Performance Settings
 buffered_outputs: true
+syscall_event_drops:
+  actions:
+    - log
+    - alert
+  rate: 0.03333
+  max_burst: 1000
 
-# Priority Configuration
-priority: debug
-# Change to 'warning' or 'error' to reduce noise in production
+# Priority Configuration (${envLabel.toLowerCase()} tuned)
+priority: ${isProduction ? 'warning' : 'debug'}
+# ${isProduction ? 'Production: Only warning+ events' : 'Development: All events including debug'}
 
-# Output Fields
+# Enhanced Output Fields for AI Analysis
 output_fields:
   - user.name
+  - user.uid
   - container.name
+  - container.id
+  - container.image.repository
+  - container.image.tag
   - proc.name
+  - proc.cmdline
+  - proc.pid
   - fd.name
   - evt.type
   - evt.time
   - k8s.pod.name
-  - k8s.ns.name`;
+  - k8s.ns.name
+  - k8s.deployment.name
+  - k8s.service.name
 
-        // Generate Kubernetes ConfigMap
-        const k8sConfig = `# Kubernetes ConfigMap for Falco AI Gateway Integration
+# Optional: Disable other outputs to reduce noise
+stdout_output:
+  enabled: ${isProduction ? 'false' : 'true'}
+file_output:
+  enabled: false`;
+
+        // Generate Kubernetes ConfigMap with environment context
+        const k8sConfig = `# Kubernetes ConfigMap for Falco AI Gateway Integration - ${envLabel} Environment
 # Apply this configuration to your Kubernetes cluster
 
 apiVersion: v1
@@ -408,33 +504,55 @@ metadata:
   labels:
     app: falco
     component: config
+    environment: ${envLabel.toLowerCase()}
 data:
   falco.yaml: |
-    # Falco Configuration with AI Gateway Integration
+    # Falco Configuration with AI Gateway Integration - ${envLabel} Environment
+    # Target: ${namespace} namespace
     
     # HTTP Output Configuration
     http_output:
       enabled: true
-      url: "${internalUrl}"
+      url: ${internalUrl}
+      user_agent: "falco/0.41.3"
       # For external access, use:
-      # url: "${externalUrl}"
+      # url: ${externalUrl}
+      # Connection settings
+      keep_alive: false
+      max_consecutive_timeouts: 5
+      compress_uploads: false
     
     # JSON Output Configuration
     json_output: true
     json_include_output_property: true
     json_include_tags_property: true
+    json_include_message_property: false
     
-    # Buffered Output for better performance
+    # Performance Settings
     buffered_outputs: true
+    syscall_event_drops:
+      actions:
+        - log
+        - alert
+      rate: 0.03333
+      max_burst: 1000
     
-    # Priority level (debug, info, notice, warning, error, critical)
-    priority: warning
+    # Priority Configuration (${envLabel} optimized)
+    priority: ${isProduction ? 'warning' : 'debug'}
+    # ${isProduction ? 'Production: Only warning+ to reduce noise' : 'Development: All events for debugging'}
     
-    # Output formatting
+    # Enhanced Output Fields for AI Analysis
     output_fields:
       - user.name
+      - user.uid
       - container.name
+      - container.id
+      - container.image.repository
+      - container.image.tag
       - proc.name
+      - proc.cmdline
+      - proc.pid
+      - proc.ppid
       - fd.name
       - evt.type
       - evt.time
@@ -443,29 +561,38 @@ data:
       - k8s.deployment.name
       - k8s.service.name
     
-    # Additional configuration options
+    # Environment-specific settings
     stdout_output:
-      enabled: true
+      enabled: ${isProduction ? 'false' : 'true'}
     
-    # Performance settings
-    syscall_event_drops:
-      actions:
-        - log
-        - alert
-      rate: 0.03333
-      max_burst: 1000
+    file_output:
+      enabled: false
     
     # Metadata configuration
     metadata:
       enabled: true
       hostname: true
+    
+    # Engine configuration
+    load_plugins:
+      - container
       
 ---
-# Deployment instructions:
-# 1. Save this as falco-config.yaml
-# 2. Apply: kubectl apply -f falco-config.yaml
-# 3. Restart Falco pods: kubectl rollout restart daemonset/falco -n falco
-# 4. Check logs: kubectl logs -n falco -l app=falco --tail=50`;
+# Deployment Instructions for ${envLabel} Environment:
+#
+# 1. Save this configuration as falco-config-${envLabel.toLowerCase()}.yaml
+# 2. Apply the ConfigMap:
+#    kubectl apply -f falco-config-${envLabel.toLowerCase()}.yaml
+# 3. Restart Falco to load new configuration:
+#    kubectl rollout restart daemonset/falco -n falco
+# 4. Verify configuration:
+#    kubectl logs -n falco -l app=falco --tail=20
+# 5. Test connectivity:
+#    kubectl logs -n ${namespace} -l app=falco-ai-alerts --tail=10
+#
+# Environment: ${envLabel}
+# Target Service: ${namespace}
+# Webhook URL: ${internalUrl}`;
 
         document.getElementById('falcoYamlConfig').textContent = falcoYaml;
         document.getElementById('falcoK8sConfig').textContent = k8sConfig;
