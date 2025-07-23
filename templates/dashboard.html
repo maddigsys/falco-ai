@@ -1616,9 +1616,22 @@
             
             if (response.ok) {
                 alerts = await response.json();
-                console.log(`✅ Loaded ${alerts.length} alerts for Dashboard`, alerts);
+                console.log(`✅ Loaded ${alerts.length} alerts for Dashboard:`, alerts);
+                
+                // Debug: Log alert details
+                alerts.forEach((alert, i) => {
+                    console.log(`Alert ${i+1}:`, {
+                        id: alert.id,
+                        rule: alert.rule,
+                        priority: alert.priority,
+                        status: alert.status,
+                        timestamp: alert.timestamp,
+                        time: alert.time
+                    });
+                });
                 
                 // Apply filters and update display
+                console.log('🔄 Calling applyFilters...');
                 applyFilters();
             } else {
                 console.error('❌ Failed to load alerts:', response.status, response.statusText);
@@ -1692,39 +1705,55 @@
         
         console.log('🔍 Dashboard filters applied:', currentFilters);
         
+        console.log('🔍 Starting to filter', alerts.length, 'alerts with filters:', currentFilters);
+        
         filteredAlerts = alerts.filter(alert => {
-            if (!alert) return false;
+            if (!alert) {
+                console.warn('⚠️ Skipping null/undefined alert');
+                return false;
+            }
 
-            // Time range filter
+            // Time range filter - only apply if not 'all'
             if (currentFilters.timeRange !== 'all') {
                 const alertTime = new Date(alert.timestamp || alert.time);
                 if (isNaN(alertTime.getTime())) {
-                    return false; // Skip alerts with invalid timestamps
+                    console.warn('⚠️ Alert has invalid timestamp:', alert.timestamp || alert.time);
+                    return true; // Include alerts with invalid timestamps when debugging
                 }
                 
                 const now = new Date();
                 const diffHours = (now - alertTime) / (1000 * 60 * 60);
                 
+                let shouldInclude = true;
                 switch (currentFilters.timeRange) {
-                    case '1h': if (diffHours > 1) return false; break;
-                    case '24h': if (diffHours > 24) return false; break;
-                    case '7d': if (diffHours > 24 * 7) return false; break;
-                    case '30d': if (diffHours > 24 * 30) return false; break;
+                    case '1h': shouldInclude = diffHours <= 1; break;
+                    case '24h': shouldInclude = diffHours <= 24; break;
+                    case '7d': shouldInclude = diffHours <= 24 * 7; break;
+                    case '30d': shouldInclude = diffHours <= 24 * 30; break;
                 }
-            }
-
-            // Priority filter
-            if (currentFilters.priority !== 'all') {
-                const alertPriority = alert.priority || 'info';
-                if (alertPriority !== currentFilters.priority) {
+                
+                if (!shouldInclude) {
+                    console.log(`⏰ Filtered out alert by time: ${diffHours.toFixed(1)}h ago, limit: ${currentFilters.timeRange}`);
                     return false;
                 }
             }
 
-            // Status filter  
+            // Priority filter - only apply if not 'all'
+            if (currentFilters.priority !== 'all') {
+                const alertPriority = (alert.priority || 'info').toLowerCase();
+                const filterPriority = currentFilters.priority.toLowerCase();
+                if (alertPriority !== filterPriority) {
+                    console.log(`🔸 Filtered out alert by priority: ${alertPriority} !== ${filterPriority}`);
+                    return false;
+                }
+            }
+
+            // Status filter - only apply if not 'all'
             if (currentFilters.status !== 'all') {
-                const alertStatus = alert.status || 'unread';
-                if (alertStatus !== currentFilters.status) {
+                const alertStatus = (alert.status || 'unread').toLowerCase();
+                const filterStatus = currentFilters.status.toLowerCase();
+                if (alertStatus !== filterStatus) {
+                    console.log(`📊 Filtered out alert by status: ${alertStatus} !== ${filterStatus}`);
                     return false;
                 }
             }
@@ -1781,16 +1810,22 @@
                 }
             }
 
+            console.log(`✅ Alert ${alert.id} passed all filters`);
             return true;
         });
         
+        console.log(`🔍 After filtering: ${filteredAlerts.length} of ${alerts.length} alerts remain`);
+        
         // Apply limit
+        const originalFilteredCount = filteredAlerts.length;
         if (currentFilters.limit !== 'all') {
             const limit = parseInt(currentFilters.limit);
             filteredAlerts = filteredAlerts.slice(0, limit);
+            console.log(`📊 Applied limit ${limit}: showing ${filteredAlerts.length} of ${originalFilteredCount} filtered alerts`);
         }
         
         // Update display
+        console.log('🎨 Starting display updates...');
         updateStats();
         updateDisplay();
         updateFilterStatus();
