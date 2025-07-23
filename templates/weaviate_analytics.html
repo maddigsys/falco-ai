@@ -677,18 +677,37 @@
             document.getElementById('weaviate-status').textContent = 
                 healthData.connected ? 'Connected' : 'Disconnected';
             
-            if (healthData.total_alerts !== undefined) {
-                document.getElementById('total-alerts').textContent = healthData.total_alerts;
+            // Load actual alert counts from working API
+            const alertCountsResponse = await fetch('/api/alerts/counts');
+            if (alertCountsResponse.ok) {
+                const alertCounts = await alertCountsResponse.json();
+                document.getElementById('total-alerts').textContent = alertCounts.total || 0;
+                console.log('✅ Updated total-alerts with value:', alertCounts.total);
             }
 
-            // Load threat intelligence summary
-            const threatResponse = await fetch('/api/weaviate/threat-intelligence');
-            const threatData = await threatResponse.json();
-            
-            if (threatData.success) {
-                const intel = threatData.threat_intelligence;
-                document.getElementById('high-risk-alerts').textContent = 
-                    intel.summary.high_risk_alerts || 0;
+            // Load alerts to count critical/high-risk ones  
+            const alertsResponse = await fetch('/api/alerts?limit=1000');
+            if (alertsResponse.ok) {
+                const alerts = await alertsResponse.json();
+                const criticalAlerts = alerts.filter(alert => 
+                    alert.priority === 'critical' || alert.priority === 'error'
+                ).length;
+                document.getElementById('high-risk-alerts').textContent = criticalAlerts;
+                console.log('✅ Updated high-risk-alerts with value:', criticalAlerts);
+            }
+
+            // Try to load threat intelligence (fallback if weaviate unavailable)
+            try {
+                const threatResponse = await fetch('/api/weaviate/threat-intelligence');
+                const threatData = await threatResponse.json();
+                
+                if (threatData.success && threatData.threat_intelligence?.summary?.high_risk_alerts) {
+                    document.getElementById('high-risk-alerts').textContent = 
+                        threatData.threat_intelligence.summary.high_risk_alerts;
+                    console.log('✅ Updated high-risk-alerts from threat intel');
+                }
+            } catch (error) {
+                console.log('ℹ️ Weaviate threat intelligence not available, using alert count');
             }
 
             // Load alert patterns for trends data
@@ -714,11 +733,23 @@
             chartsInitialized = true;
 
         } catch (error) {
-            console.warn('Analytics overview data unavailable:', error.message);
+            console.error('❌ Analytics overview data unavailable:', error.message);
             // Set default values if API calls fail
             document.getElementById('total-alerts').textContent = '-';
             document.getElementById('high-risk-alerts').textContent = '-';
             document.getElementById('total-clusters').textContent = '-';
+            
+            // Try to load basic alert counts as fallback
+            try {
+                const fallbackResponse = await fetch('/api/alerts/counts');
+                if (fallbackResponse.ok) {
+                    const counts = await fallbackResponse.json();
+                    document.getElementById('total-alerts').textContent = counts.total || 0;
+                    console.log('✅ Fallback: Updated total-alerts with value:', counts.total);
+                }
+            } catch (fallbackError) {
+                console.error('❌ Fallback alert counts also failed:', fallbackError.message);
+            }
         }
     }
 
