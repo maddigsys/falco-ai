@@ -6,7 +6,7 @@ metadata:
   annotations:
     platform: local
     storage-class: hostpath
-    generated-at: "2025-07-15T05:42:39Z"
+    generated-at: "2025-07-23T00:18:26Z"
 
 resources:
   - ../../base

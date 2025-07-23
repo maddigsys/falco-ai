@@ -1926,8 +1926,8 @@
     function generateWebhookUrls() {
         const protocol = window.location.protocol;
         const host = window.location.host;
-        const externalUrl = `${protocol}//${host}/webhook`;
-        const internalUrl = 'http://falco-ai-alerts:8080/webhook';
+        const externalUrl = `${protocol}//${host}/falco-webhook`;
+        const internalUrl = 'http://falco-ai-alerts:8080/falco-webhook';
         
         document.getElementById('externalWebhookUrl').value = externalUrl;
         document.getElementById('internalWebhookUrl').value = internalUrl;

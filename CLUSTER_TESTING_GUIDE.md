@@ -174,10 +174,10 @@ kubectl create secret generic dev-falco-ai-alerts-secrets \
 ```bash
 # Configure Falco to send alerts (adjust URL based on your setup)
 # Internal cluster URL:
-# http://prod-falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/webhook
+# http://prod-falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/falco-webhook
 
 # External URL (with ingress):
-# https://your-domain.com/webhook
+# https://your-domain.com/falco-webhook
 ```
 
 ---

@@ -586,7 +586,7 @@ kubectl port-forward svc/falco-ai-alerts 8080:8080 -n falco-ai-alerts
    # In your falco.yaml
    http_output:
      enabled: true
-     url: http://falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/webhook
+     url: http://falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/falco-webhook
    ```
 
 3. **Test the System**:
