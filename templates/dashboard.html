@@ -1067,8 +1067,17 @@
                                     <button class="btn btn-sm btn-outline" onclick="copyToClipboard('internalWebhookUrl')" title="Copy URL">
                                         <i class="fas fa-copy"></i>
                                     </button>
+                                    <button class="btn btn-sm btn-outline" onclick="toggleEnvironment()" title="Switch Environment" id="envToggleBtn">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
                                 </div>
                                 <small class="text-muted">Use this URL if Falco runs inside the same Kubernetes cluster</small>
+                                <div class="mt-2">
+                                    <small class="text-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        Environment auto-detected. Click <i class="fas fa-sync-alt"></i> to switch between Production/Development URLs.
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1922,22 +1931,121 @@
         card.classList.toggle('collapsed');
     }
 
-    // Webhook URL generation
+    // Webhook URL generation with environment detection
     function generateWebhookUrls() {
         const protocol = window.location.protocol;
         const host = window.location.host;
         const externalUrl = `${protocol}//${host}/falco-webhook`;
-        const internalUrl = 'http://falco-ai-alerts:8080/falco-webhook';
+        
+        // Detect environment based on various indicators (or use override)
+        const isProduction = environmentOverride !== null ? environmentOverride : detectEnvironment();
+        const internalUrl = generateInternalWebhookUrl(isProduction);
+        
+        // Debug: Log environment detection
+        console.log(`🔍 Environment Detection: ${isProduction ? 'Production' : 'Development'}`, {
+            hostname: window.location.hostname,
+            port: window.location.port,
+            protocol: window.location.protocol
+        });
         
         document.getElementById('externalWebhookUrl').value = externalUrl;
         document.getElementById('internalWebhookUrl').value = internalUrl;
         
-        generateFalcoConfig(externalUrl, internalUrl);
+        // Update UI labels to show detected environment
+        updateEnvironmentLabels(isProduction);
+        
+        generateFalcoConfig(externalUrl, internalUrl, isProduction);
     }
 
-    // Generate Falco configuration
-    function generateFalcoConfig(externalUrl, internalUrl) {
-        const falcoYaml = `# Falco Configuration (falco.yaml)
+    // Detect if running in production or development environment
+    function detectEnvironment() {
+        // Check multiple indicators to determine environment
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+        const pathname = window.location.pathname;
+        
+        // Production indicators
+        if (hostname.includes('prod') || 
+            hostname.includes('production') ||
+            (port !== '8080' && port !== '3000' && port !== '') ||
+            hostname.match(/^[^.]+\.[^.]+\.[^.]+$/)) { // Domain with TLD
+            return true;
+        }
+        
+        // Development indicators
+        if (hostname === 'localhost' || 
+            hostname === '127.0.0.1' ||
+            hostname.includes('dev') ||
+            hostname.includes('development') ||
+            port === '8080' || 
+            port === '3000') {
+            return false;
+        }
+        
+        // Default to production for safety
+        return true;
+    }
+
+    // Generate environment-appropriate internal webhook URL
+    function generateInternalWebhookUrl(isProduction) {
+        if (isProduction) {
+            return 'http://prod-falco-ai-alerts.falco-ai-alerts.svc.cluster.local:8080/falco-webhook';
+        } else {
+            return 'http://dev-falco-ai-alerts.falco-ai-alerts-dev.svc.cluster.local:8080/falco-webhook';
+        }
+    }
+
+    // Update UI labels to show detected environment
+    function updateEnvironmentLabels(isProduction) {
+        const environmentBadge = isProduction ? 
+            '<span class="badge bg-success ms-2">Production</span>' : 
+            '<span class="badge bg-warning ms-2">Development</span>';
+        
+        // Update internal URL label
+        const internalLabel = document.querySelector('label[class="fw-bold"]:nth-of-type(2)');
+        if (internalLabel) {
+            internalLabel.innerHTML = `🏠 Internal/Kubernetes URL: ${environmentBadge}`;
+        }
+        
+        // Update description text
+        const internalDescription = internalLabel?.parentElement?.querySelector('small');
+        if (internalDescription) {
+            const envContext = isProduction ? 
+                'production (prod-) services in falco-ai-alerts namespace' : 
+                'development (dev-) services in falco-ai-alerts-dev namespace';
+            internalDescription.innerHTML = `Use this URL if Falco runs inside the same Kubernetes cluster (targets ${envContext})`;
+        }
+    }
+
+    // Global variable to track current environment override
+    let environmentOverride = null;
+
+    // Toggle between production and development environment URLs
+    function toggleEnvironment() {
+        const currentlyProduction = environmentOverride !== null ? environmentOverride : detectEnvironment();
+        const newEnvironment = !currentlyProduction;
+        
+        // Set override
+        environmentOverride = newEnvironment;
+        
+        // Regenerate URLs with new environment
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        const externalUrl = `${protocol}//${host}/falco-webhook`;
+        const internalUrl = generateInternalWebhookUrl(newEnvironment);
+        
+        document.getElementById('internalWebhookUrl').value = internalUrl;
+        updateEnvironmentLabels(newEnvironment);
+        generateFalcoConfig(externalUrl, internalUrl, newEnvironment);
+        
+        console.log(`🔄 Environment switched to: ${newEnvironment ? 'Production' : 'Development'} (manual override)`);
+    }
+
+    // Generate Falco configuration with environment context
+    function generateFalcoConfig(externalUrl, internalUrl, isProduction) {
+        const environmentLabel = isProduction ? 'Production' : 'Development';
+        const namespaceLabel = isProduction ? 'falco-ai-alerts' : 'falco-ai-alerts-dev';
+        const falcoYaml = `# Falco Configuration (falco.yaml) - ${environmentLabel} Environment
 # Add this to your existing falco.yaml configuration file
 
 http_output:
@@ -1959,7 +2067,7 @@ buffered_outputs: true
 # Optional: Set output priority threshold
 priority: debug`;
 
-        const falcoK8sConfig = `# Kubernetes ConfigMap for Falco Configuration
+        const falcoK8sConfig = `# Kubernetes ConfigMap for Falco Configuration - ${environmentLabel} Environment
 # Apply this with: kubectl apply -f falco-config.yaml
 
 apiVersion: v1
@@ -1970,13 +2078,15 @@ metadata:
   labels:
     app: falco
     component: config
+    environment: ${isProduction ? 'production' : 'development'}
 data:
   falco.yaml: |
-    # HTTP Output Configuration
+    # HTTP Output Configuration - ${environmentLabel} Environment
     http_output:
       enabled: true
       url: ${internalUrl}
       user_agent: "falco/0.34.0"
+      # Target: ${namespaceLabel} namespace
       # Use internal service name for in-cluster communication
       # custom_headers:
       #   Authorization: "Bearer your-token-here"
