@@ -2327,11 +2327,6 @@ def weaviate_analytics():
     """Weaviate analytics page (same as root)."""
     return render_template('weaviate_analytics.html', page='enhanced_analytics')
 
-@app.route('/alerts-dashboard')
-def alerts_dashboard():
-    """Alternative alerts-focused dashboard."""
-    return render_template('dashboard.html', page='dashboard')
-
 @app.route('/api/alerts')
 def api_alerts():
     """Return alerts as JSON for dashboard."""
