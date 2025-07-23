@@ -419,6 +419,15 @@
         </h5>
         <p>Unified dashboard for all Model Context Protocol integrations and AI client connections.</p>
         
+        <!-- Environment Detection Badge -->
+        <div style="margin: var(--space-md) 0; display: flex; align-items: center; gap: var(--space-sm);">
+            <span style="color: var(--text-secondary); font-size: var(--text-sm);">🌐 Detected Environment:</span>
+            <span id="environmentBadge" class="status-indicator success">
+                <i class="fas fa-docker"></i>
+                Docker Compose - localhost:8080
+            </span>
+        </div>
+        
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="totalIntegrations">4</div>
@@ -956,12 +965,53 @@ function updateConfigPaths() {
     updateConfigContent('claude-optimized', `${serverPath}/claude_mcp_server.py`);
 }
 
-// Update config content
+// Environment detection for MCP configurations
+function detectDeploymentEnvironment() {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    
+    console.log('🔍 MCP Environment Detection:', { hostname, port, origin: window.location.origin });
+    
+    // Kubernetes detection patterns
+    if (hostname.includes('cluster.local') || 
+        hostname.includes('k8s') || 
+        hostname.includes('kubernetes') ||
+        (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.includes('.'))) {
+        return {
+            type: 'kubernetes',
+            apiBase: `http://${hostname}:${port || '8080'}`
+        };
+    }
+    
+    // Docker Compose detection (usually localhost with specific ports)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return {
+            type: 'docker-compose',
+            apiBase: `http://${hostname}:${port || '8080'}`
+        };
+    }
+    
+    // External/Production deployment
+    return {
+        type: 'external',
+        apiBase: window.location.origin
+    };
+}
+
+// Update config content with dynamic environment detection
 function updateConfigContent(client, serverPath) {
     const element = document.getElementById(client + '-config-content');
     if (element) {
+        const env = detectDeploymentEnvironment();
         let content = element.textContent;
+        
+        // Update file paths
         content = content.replace(/\/path\/to\/falco-rag-ai-gateway\//g, serverPath.replace('/jsonrpc_mcp_server.py', '/').replace('/claude_mcp_server.py', '/'));
+        
+        // Update FALCO_API_BASE with detected environment
+        content = content.replace(/http:\/\/localhost:8080/g, env.apiBase);
+        
+        console.log(`✅ Updated ${client} config for ${env.type} environment: ${env.apiBase}`);
         element.textContent = content;
     }
 }
@@ -1141,6 +1191,56 @@ function showAlert(type, message) {
         }
     }, 5000);
 }
+
+// Update environment badge
+function updateEnvironmentBadge() {
+    const env = detectDeploymentEnvironment();
+    const badge = document.getElementById('environmentBadge');
+    
+    let icon, label, className;
+    
+    switch(env.type) {
+        case 'kubernetes':
+            icon = 'fas fa-dharmachakra';
+            label = `Kubernetes - ${env.apiBase}`;
+            className = 'status-indicator warning';
+            break;
+        case 'docker-compose':
+            icon = 'fab fa-docker';
+            label = `Docker Compose - ${env.apiBase}`;
+            className = 'status-indicator success';
+            break;
+        case 'external':
+            icon = 'fas fa-cloud';
+            label = `External - ${env.apiBase}`;
+            className = 'status-indicator success';
+            break;
+        default:
+            icon = 'fas fa-server';
+            label = `Unknown - ${env.apiBase}`;
+            className = 'status-indicator warning';
+    }
+    
+    badge.className = className;
+    badge.innerHTML = `<i class="${icon}"></i> ${label}`;
+    
+    console.log(`🏷️ Environment badge updated: ${env.type} - ${env.apiBase}`);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Update environment badge
+    updateEnvironmentBadge();
+    
+    // Update config paths (this will now include environment-specific API URLs)
+    updateConfigPaths();
+    
+    // Load initial data
+    loadOverallStatus();
+    loadAvailableTools();
+    
+    console.log('✅ MCP Dashboard initialized with environment detection');
+});
 </script>
 
 {% endblock %} 
