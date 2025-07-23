@@ -2311,16 +2311,16 @@ def runtime_events():
 
 @app.route('/')
 def index():
-    """Enhanced Analytics dashboard home page."""
+    """Security Dashboard home page."""
     if WEB_UI_ENABLED:
-        return render_template('weaviate_analytics.html', page='enhanced_analytics')
+        return render_template('dashboard.html', page='dashboard')
     else:
         return jsonify({"message": "Falco AI Alert System", "status": "running", "webhook": "/falco-webhook"})
 
 @app.route('/dashboard')
 def dashboard():
-    """Dashboard page (same as root)."""
-    return render_template('weaviate_analytics.html', page='enhanced_analytics')
+    """Security Dashboard page (same as root)."""
+    return render_template('dashboard.html', page='dashboard')
 
 @app.route('/weaviate-analytics')
 def weaviate_analytics():
