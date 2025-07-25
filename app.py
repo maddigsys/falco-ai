@@ -1235,9 +1235,157 @@ def parse_command(message, persona):
     
     return actions
 
+def diagnose_system_configuration():
+    """Comprehensive system configuration diagnosis."""
+    issues = []
+    fixes = []
+    
+    try:
+        # Check alert processing configuration
+        general_config = get_cached_general_config()
+        
+        # Age filter check
+        ignore_older = int(general_config.get('ignore_older_minutes', {}).get('value', '1'))
+        if ignore_older <= 5:
+            issues.append({
+                'type': 'warning',
+                'component': 'Alert Processing',
+                'issue': f'Age filter set to {ignore_older} minutes - may filter out legitimate alerts',
+                'impact': 'Many alerts could be ignored due to processing delays',
+                'fix_available': True
+            })
+            fixes.append({
+                'action': 'update_age_filter',
+                'description': 'Set age filter to 1440 minutes (24 hours)',
+                'api_call': '/api/general/config',
+                'payload': {'ignore_older_minutes': '1440'}
+            })
+        
+        # Priority filter check
+        min_priority = general_config.get('min_priority', {}).get('value', 'warning')
+        if min_priority in ['emergency', 'alert', 'critical']:
+            issues.append({
+                'type': 'info',
+                'component': 'Alert Processing',
+                'issue': f'High priority filter ({min_priority}) - only critical alerts will be processed',
+                'impact': 'Lower priority alerts will be ignored',
+                'fix_available': True
+            })
+        
+        # AI configuration check
+        ai_config = get_ai_config()
+        if ai_config.get('enabled', {}).get('value') != 'true':
+            issues.append({
+                'type': 'error',
+                'component': 'AI Analysis',
+                'issue': 'AI analysis is disabled',
+                'impact': 'No intelligent analysis of security alerts',
+                'fix_available': True
+            })
+        
+    except Exception as e:
+        issues.append({
+            'type': 'error',
+            'component': 'System Diagnostics',
+            'issue': f'Diagnostic check failed: {str(e)}',
+            'impact': 'Unable to assess system health',
+            'fix_available': False
+        })
+    
+    return {
+        'issues': issues,
+        'fixes': fixes,
+        'overall_health': 'good' if len([i for i in issues if i['type'] == 'error']) == 0 else 'issues_detected'
+    }
+
+def generate_troubleshooting_response(message, context):
+    """Generate intelligent troubleshooting responses."""
+    message_lower = message.lower()
+    
+    # Configuration-related queries
+    if any(word in message_lower for word in ['config', 'configuration', 'setting', 'settings', 'no alerts', 'not working']):
+        diagnosis = diagnose_system_configuration()
+        
+        response = "## 🔧 Configuration Analysis\n\n"
+        
+        if diagnosis['issues']:
+            response += "**Issues Found:**\n"
+            for issue in diagnosis['issues']:
+                icon = "🔴" if issue['type'] == 'error' else "🟡" if issue['type'] == 'warning' else "ℹ️"
+                response += f"{icon} **{issue['component']}**: {issue['issue']}\n"
+                response += f"   *Impact*: {issue['impact']}\n\n"
+        else:
+            response += "✅ No configuration issues detected!\n\n"
+        
+        if diagnosis['fixes']:
+            response += "**Available Fixes:**\n"
+            for i, fix in enumerate(diagnosis['fixes'], 1):
+                response += f"{i}. {fix['description']}\n"
+            response += "\n💡 Type 'apply fix [number]' to apply a specific fix.\n"
+        
+        return response
+    
+    # Fix application
+    elif message_lower.startswith('apply fix'):
+        try:
+            import re
+            match = re.search(r'apply fix (\d+)', message_lower)
+            if match:
+                fix_num = int(match.group(1)) - 1
+                diagnosis = diagnose_system_configuration()
+                
+                if 0 <= fix_num < len(diagnosis['fixes']):
+                    fix = diagnosis['fixes'][fix_num]
+                    
+                    if fix['action'] == 'update_age_filter':
+                        update_general_config('ignore_older_minutes', '1440')
+                        response = "✅ **Age Filter Updated!**\n\nChanged from 1 minute to 1440 minutes (24 hours). This should allow older alerts to be processed."
+                    else:
+                        response = "🔧 Fix not yet implemented for this issue."
+                    
+                    return response
+                else:
+                    return "❌ Invalid fix number. Please check the available fixes first."
+        except Exception as e:
+            return f"❌ Error applying fix: {str(e)}"
+    
+    # General troubleshooting help
+    else:
+        return """## 🔍 Troubleshooting Assistant
+
+I can help you diagnose and fix system issues! Try asking:
+
+**Configuration Issues:**
+- "Check my configuration"
+- "Why no alerts showing?"
+- "Configuration problems"
+
+**Apply Fixes:**
+- "Apply fix 1" (after getting fix suggestions)
+
+💡 I can automatically detect and fix common configuration issues like we just solved with the age filter!
+"""
+
 def generate_persona_response(message, persona, context, history, language="en"):
     """Generate persona-based AI response with semantic search integration and multilingual support."""
     try:
+        # Check if this is a troubleshooting request - handle immediately without AI calls
+        if persona == 'troubleshooter' or any(word in message.lower() for word in ['troubleshoot', 'diagnose', 'fix', 'config', 'not working', 'no alerts', 'apply fix']):
+            try:
+                troubleshooting_response = generate_troubleshooting_response(message, context)
+                return {
+                    'response': troubleshooting_response,
+                    'metadata': {'type': 'troubleshooting', 'persona': 'troubleshooter'},
+                    'context': {'troubleshooting_active': True}
+                }
+            except Exception as e:
+                logging.error(f"Troubleshooting error: {e}")
+                return {
+                    'response': f"🔧 **Troubleshooting Error**\n\nSorry, I encountered an error while analyzing your system: {str(e)}\n\nPlease try again or check the system logs.",
+                    'metadata': {'type': 'error', 'persona': 'troubleshooter'},
+                    'context': {'troubleshooting_active': True}
+                }
+        
         # Get AI configuration
         ai_config = get_ai_config()
         provider_name = ai_config.get('provider_name', {}).get('value', 'ollama')

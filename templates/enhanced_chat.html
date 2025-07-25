@@ -653,9 +653,10 @@
             <div class="setting-group">
                 <label class="setting-label">AI Persona</label>
                 <select class="setting-control" id="personaSelector" onchange="changePersona(this.value)">
-                    <option value="security_analyst">Security Analyst</option>
-                    <option value="incident_responder">Incident Responder</option>
-                    <option value="threat_hunter">Threat Hunter</option>
+                                            <option value="security_analyst">Security Analyst</option>
+                        <option value="incident_responder">Incident Responder</option>
+                        <option value="threat_hunter">Threat Hunter</option>
+                        <option value="troubleshooter">🔧 System Troubleshooter</option>
                 </select>
             </div>
             <div class="setting-group">
@@ -686,7 +687,7 @@
     <div class="chat-messages" id="messagesContainer">
         <div class="welcome-message">
             <h3>👋 Welcome to AI Security Assistant</h3>
-            <p>I'm here to help you analyze security alerts, understand threats, and provide security insights. Ask me anything about your Falco security events!</p>
+            <p>I'm here to help you analyze security alerts, understand threats, provide security insights, and troubleshoot system issues. Ask me anything about your Falco security events!</p>
             <div style="margin-top: 1rem; font-size: 0.9em; color: var(--text-muted);">
                 <p><strong>Quick Tips:</strong></p>
                 <ul style="text-align: left; display: inline-block;">
@@ -694,7 +695,22 @@
                     <li>Use the search function to find previous conversations</li>
                     <li>Export your chat history for documentation</li>
                     <li>Switch personas for different types of analysis</li>
+                    <li><strong>🔧 NEW: Use "System Troubleshooter" persona for configuration help!</strong></li>
                 </ul>
+            </div>
+            <div style="margin-top: 1rem;">
+                <p><strong>🔧 Troubleshooting Quick Start:</strong></p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+                    <button class="btn btn-outline btn-sm" onclick="activateTroubleshooting('Check my configuration')" style="font-size: 0.8em;">
+                        <i class="fas fa-cogs"></i> Check Config
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="activateTroubleshooting('Why no alerts showing?')" style="font-size: 0.8em;">
+                        <i class="fas fa-exclamation-triangle"></i> No Alerts?
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="activateTroubleshooting('System status')" style="font-size: 0.8em;">
+                        <i class="fas fa-heartbeat"></i> Health Check
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -816,9 +832,10 @@
             'it': 'Italiano', 'pt': 'Português', 'ja': '日本語', 'ko': '한국어', 'zh': '中文'
         };
         const personaNames = {
-            'security_analyst': 'Security Analyst',
-            'incident_responder': 'Incident Responder',
-            'threat_hunter': 'Threat Hunter'
+                    'security_analyst': 'Security Analyst',
+        'incident_responder': 'Incident Responder',
+        'threat_hunter': 'Threat Hunter',
+        'troubleshooter': 'System Troubleshooter'
         };
         
         document.getElementById('currentLang').textContent = langNames[currentLanguage] || 'English';
@@ -1414,5 +1431,20 @@
             saveConversationHistory();
         }
     });
+    
+    // Troubleshooting helper function
+    function activateTroubleshooting(message) {
+        // Switch to troubleshooter persona
+        currentPersona = 'troubleshooter';
+        document.getElementById('personaSelector').value = 'troubleshooter';
+        settings.persona = 'troubleshooter';
+        saveSettings();
+        updateSettingsDisplay();
+        
+        // Send the troubleshooting message
+        document.getElementById('messageInput').value = message;
+        document.getElementById('messageInput').focus();
+        sendMessage();
+    }
 </script>
 {% endblock %} 
