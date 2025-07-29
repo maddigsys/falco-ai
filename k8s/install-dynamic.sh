@@ -345,6 +345,14 @@ show_access_info() {
             print_info "Access the application at: http://localhost:$nodeport"
             ;;
     esac
+    
+    echo ""
+    print_info "📋 For comprehensive operational commands see: k8s/OPERATIONAL_COMMANDS.md"
+    echo "   • Port forwarding to all components"
+    echo "   • Log checking and monitoring"
+    echo "   • Troubleshooting and debugging"
+    echo "   • Configuration management"
+    echo "   • Scaling and resource management"
 }
 
 # Main installation flow

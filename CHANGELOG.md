@@ -5,6 +5,38 @@ All notable changes to the Falco AI Alert System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2025-01-17
+
+### Added
+- **Comprehensive Operational Commands Guide**: New `k8s/OPERATIONAL_COMMANDS.md` with 500+ operational commands
+- **Multi-Architecture EKS Support**: Enhanced EKS overlay with proper AMD64 and ARM64 support
+- **Cost Optimization Features**: ARM64 Graviton instance support for 20-40% cost savings
+- **EKS-Specific Troubleshooting**: Dedicated troubleshooting commands for AWS EKS deployments
+- **Architecture Verification Commands**: Tools to verify multi-architecture deployments
+- **Post-Deployment Operations**: Comprehensive port forwarding, UI access, and monitoring commands
+- **Database Operations Guide**: Backup, restore, and maintenance procedures
+- **Performance Monitoring**: Resource usage analysis and optimization commands
+- **Emergency Commands**: Quick reference for critical situations
+
+### Enhanced
+- **EKS Configuration**: Updated `overlays/eks/kustomization.yaml` with proper node affinity for multi-architecture
+- **Installation Scripts**: Added operational commands references to `install.sh` and `install-dynamic.sh`
+- **Cloud Documentation**: Enhanced all cloud deployment guides with operational commands references
+- **README Documentation**: Updated main README with comprehensive operational commands section
+
+### Fixed
+- **EKS Node Selection**: Removed hard-coded AMD64-only node selector, now supports both architectures
+- **Multi-Architecture Images**: Verified and documented existing multi-arch container support
+- **Cost Optimization**: Proper ARM64 Graviton instance support for AWS cost savings
+
+### Operational
+- **Port Forwarding**: Commands for all environments (dev/prod) and components (app/ollama/weaviate)
+- **Log Management**: Comprehensive log checking, filtering, and export procedures
+- **Status Monitoring**: Health checks, deployment status, and resource monitoring
+- **Configuration Management**: ConfigMap and Secret management with restart procedures
+- **Scaling Operations**: Manual scaling, HPA monitoring, and resource management
+- **Troubleshooting**: Common issue resolution and debugging procedures
+
 ## [2.1.0] - 2025-01-17
 
 ### Added

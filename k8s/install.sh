@@ -469,8 +469,17 @@ show_post_install() {
     echo "   • Events: kubectl get events -n $namespace --sort-by='.lastTimestamp'"
     echo ""
     
+    print_info "4. 📋 Operational Commands Reference:"
+    echo "   • For comprehensive operational commands see: k8s/OPERATIONAL_COMMANDS.md"
+    echo "   • Port forwarding to all components"
+    echo "   • Log checking and monitoring"
+    echo "   • Troubleshooting and debugging"
+    echo "   • Configuration management"
+    echo "   • Scaling and resource management"
+    echo ""
+    
     if [ "$environment" = "production" ]; then
-        print_info "4. 🏭 Production Considerations:"
+        print_info "5. 🏭 Production Considerations:"
         echo "   • Configure Ingress for external webhook access"
         echo "   • Set up monitoring (Prometheus metrics available)"
         echo "   • Configure backup schedules for persistent data"
@@ -478,7 +487,7 @@ show_post_install() {
         echo "   • Consider upgrading to cybersecurity model (jimscard/whiterabbit-neo)"
         echo "   • Consider setting up external AI providers for redundancy"
         echo ""
-        print_info "5. 🛡️ Cybersecurity Model Upgrade:"
+        print_info "6. 🛡️ Cybersecurity Model Upgrade:"
         echo "   • Default: tinyllama (ultra-fast, minimal RAM)"
         echo "   • Upgrade: jimscard/whiterabbit-neo:latest (specialized, 16GB RAM)"
         echo "   • Upgrade via: http://localhost:8080/config/ai"

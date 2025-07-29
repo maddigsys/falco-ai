@@ -533,4 +533,43 @@ For detailed troubleshooting, see the platform-specific sections above.
 **Legend:**
 - ✅ **Full Support**: Extensively tested, documented, and supported
 - ⚠️ **Basic Support**: Should work but may require adjustments
-- ❌ **No Support**: Not tested, may have compatibility issues 
+- ❌ **No Support**: Not tested, may have compatibility issues
+
+---
+
+## 📋 **Post-Deployment Operations**
+
+### **Operational Commands Reference**
+
+For comprehensive day-to-day operational commands including port forwarding, UI access, log checking, and troubleshooting, see the **[Operational Commands Guide](OPERATIONAL_COMMANDS.md)**.
+
+This comprehensive guide includes:
+- 🌐 **Port forwarding commands** for all environments and components  
+- 📊 **Log checking** for applications, Ollama, Weaviate, and Kubernetes events
+- 🔍 **Status monitoring** for deployments, health checks, and resource usage
+- ⚙️ **Configuration management** for ConfigMaps and Secrets
+- 🔧 **Scaling and resource management** commands
+- 🗄️ **Database operations** including backup and restore
+- 🚨 **Troubleshooting** for common deployment issues
+- 🔄 **Deployment management** for updates and rollbacks
+
+**Quick Start Example:**
+```bash
+# Port forward and access the UI
+kubectl port-forward svc/prod-falco-ai-alerts 8080:8080 -n falco-ai-alerts
+# Then open: http://localhost:8080/
+```
+
+**Essential Operations:**
+```bash
+# Check deployment status
+kubectl get all -n falco-ai-alerts
+
+# View application logs  
+kubectl logs -f deployment/prod-falco-ai-alerts -n falco-ai-alerts
+
+# Check health
+kubectl port-forward svc/prod-falco-ai-alerts 8080:8080 -n falco-ai-alerts &
+curl http://localhost:8080/health
+kill %1
+``` 

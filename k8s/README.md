@@ -119,12 +119,14 @@ The v2.1.0 container images are built for **multiple architectures** to support 
 
 ### ☁️ **Cloud-Specific Optimizations**
 
-#### **AWS EKS (`overlays/eks/`)**
+#### **AWS EKS (`overlays/eks/`)** - **✅ MULTI-ARCHITECTURE READY**
 - **Storage**: GP3 volumes for cost-effective SSD performance
 - **Load Balancer**: AWS ALB with SSL termination
-- **Instance Types**: Optimized for EC2 and Graviton2/3 instances
-- **Networking**: VPC CNI integration
+- **Instance Types**: **Multi-architecture support** (AMD64: t3/m5, ARM64: t4g/m6g)
+- **Cost Optimization**: ARM64 Graviton instances provide 20-40% cost savings
+- **Networking**: VPC CNI integration with Security Groups for Pods
 - **IAM**: IRSA (IAM Roles for Service Accounts) support
+- **Testing**: Fully tested on both x86_64 and arm64 architectures
 
 #### **Google GKE (`overlays/gke/`)**
 - **Storage**: Premium-RWO (SSD) for performance-critical workloads
@@ -296,7 +298,7 @@ kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-dev
 For cloud-managed Kubernetes services, use the cloud-specific optimized overlays:
 
 ```bash
-# AWS EKS (with Graviton2/ARM64 support)
+# AWS EKS (with Graviton2/ARM64 support) - RECOMMENDED FOR TESTING
 kubectl apply -k overlays/eks/
 
 # Google GKE (with Tau T2A/ARM64 support) 
@@ -308,6 +310,10 @@ kubectl apply -k overlays/aks/
 # Verify deployment
 kubectl get all -n falco-ai-alerts
 kubectl get hpa -n falco-ai-alerts
+
+# EKS-specific: Verify multi-architecture deployment
+kubectl get nodes -o custom-columns=NAME:.metadata.name,ARCH:.status.nodeInfo.architecture,INSTANCE:.metadata.labels.node\.kubernetes\.io/instance-type
+kubectl get pods -n falco-ai-alerts -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName
 ```
 
 **🖥️ Generic Production Deployment**
@@ -604,6 +610,27 @@ kubectl port-forward svc/falco-ai-alerts 8080:8080 -n falco-ai-alerts
    - Configure audit system for compliance requirements
    - Set up real-time SSE connections for team collaboration
    - Customize chat personas for different security analysis needs
+
+### **📋 Operational Commands Reference**
+
+For comprehensive day-to-day operational commands including port forwarding, UI access, log checking, and troubleshooting, see the **[Operational Commands Guide](OPERATIONAL_COMMANDS.md)**.
+
+This guide includes:
+- 🌐 **Port forwarding commands** for all environments and components
+- 📊 **Log checking** for applications, Ollama, Weaviate, and Kubernetes events
+- 🔍 **Status monitoring** for deployments, health checks, and resource usage
+- ⚙️ **Configuration management** for ConfigMaps and Secrets
+- 🔧 **Scaling and resource management** commands
+- 🗄️ **Database operations** including backup and restore
+- 🚨 **Troubleshooting** for common deployment issues
+- 🔄 **Deployment management** for updates and rollbacks
+
+**Quick Access Example:**
+```bash
+# Port forward and access the UI
+kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-dev
+# Then open: http://localhost:8080/
+```
 
 ## 🔧 Operational Procedures
 

@@ -286,4 +286,21 @@ For issues or questions:
 
 ---
 
+## 📋 **Post-Deployment Operations**
+
+For comprehensive operational commands including port forwarding, UI access, log checking, and troubleshooting, see the **[Operational Commands Guide](OPERATIONAL_COMMANDS.md)**.
+
+**Quick Access Example:**
+```bash
+# Development environment access
+kubectl port-forward svc/dev-falco-ai-alerts 8080:8080 -n falco-ai-alerts-development &
+open http://localhost:8080/
+
+# Production environment access  
+kubectl port-forward svc/prod-falco-ai-alerts 8080:8080 -n falco-ai-alerts &
+open http://localhost:8080/
+```
+
+---
+
 **🎉 Enjoy seamless multi-platform Kubernetes deployments!** 
