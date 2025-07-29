@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **EKS Node Selection**: Removed hard-coded AMD64-only node selector, now supports both architectures
 - **Multi-Architecture Images**: Verified and documented existing multi-arch container support
 - **Cost Optimization**: Proper ARM64 Graviton instance support for AWS cost savings
+- **Pattern Analysis Error**: Fixed "'<' not supported between instances of 'NoneType' and 'str'" error in analytics
+- **Timestamp Parsing**: Enhanced timestamp parsing with proper None value filtering and ISO format support
+- **Data Validation**: Added robust None value filtering for rule, priority, and source data in analytics
 
 ### Operational
 - **Port Forwarding**: Commands for all environments (dev/prod) and components (app/ollama/weaviate)
