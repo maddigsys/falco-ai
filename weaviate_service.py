@@ -527,10 +527,10 @@ class WeaviateService:
                     "message": "No alerts found for the specified time period"
                 }
             
-            # Analyze patterns
-            rules = [alert[0] for alert in alerts]
-            priorities = [alert[1] for alert in alerts]
-            sources = [alert[2] for alert in alerts]
+            # Analyze patterns - filter out None values
+            rules = [alert[0] for alert in alerts if alert[0] is not None]
+            priorities = [alert[1] for alert in alerts if alert[1] is not None]
+            sources = [alert[2] for alert in alerts if alert[2] is not None]
             
             # Count frequencies
             rule_frequency = dict(Counter(rules).most_common(10))
@@ -543,15 +543,23 @@ class WeaviateService:
             
             for alert in alerts:
                 timestamp = alert[3]
+                # Ensure timestamp is not None and is a string
+                if timestamp is None or not isinstance(timestamp, str):
+                    continue
+                    
                 try:
-                    date = datetime.fromisoformat(timestamp).date()
+                    # Parse the timestamp and extract date
+                    date = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).date()
                     date_str = date.isoformat()
                     date_counts[date_str] = date_counts.get(date_str, 0) + 1
-                except:
+                except (ValueError, TypeError, AttributeError) as e:
+                    # Log specific parsing errors for debugging
+                    logger.debug(f"Failed to parse timestamp '{timestamp}': {e}")
                     continue
             
-            # Sort by date
-            sorted_dates = sorted(date_counts.keys())
+            # Sort by date - ensure all keys are valid strings
+            valid_dates = [date for date in date_counts.keys() if date is not None and isinstance(date, str)]
+            sorted_dates = sorted(valid_dates)
             timeline = [{"date": date, "count": date_counts[date]} for date in sorted_dates]
             
             patterns = {
