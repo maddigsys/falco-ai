@@ -1298,12 +1298,108 @@ def diagnose_system_configuration():
         'overall_health': 'good' if len([i for i in issues if i['type'] == 'error']) == 0 else 'issues_detected'
     }
 
+def generate_configuration_summary():
+    """Generate a comprehensive configuration summary for users."""
+    try:
+        # Get all configuration data
+        ai_config = get_ai_config()
+        general_config = get_cached_general_config()
+        slack_config = get_slack_config()
+        
+        summary = "## 🤖 Current AI Configuration Summary\n\n"
+        
+        # AI Provider and Model Information
+        provider = ai_config.get('provider_name', {}).get('value', 'ollama')
+        model_name = ai_config.get('model_name', {}).get('value', 'tinyllama')
+        ai_enabled = ai_config.get('enabled', {}).get('value', 'true')
+        
+        summary += "### 🧠 AI Engine\n"
+        summary += f"- **Status**: {'🟢 Enabled' if ai_enabled == 'true' else '🔴 Disabled'}\n"
+        summary += f"- **Provider**: {provider.title()}\n"
+        
+        if provider == 'ollama':
+            ollama_model = ai_config.get('ollama_model_name', {}).get('value', model_name)
+            ollama_url = ai_config.get('ollama_api_url', {}).get('value', 'http://prod-ollama:11434/api/generate')
+            summary += f"- **Model**: {ollama_model}\n"
+            summary += f"- **API URL**: {ollama_url}\n"
+        elif provider == 'openai':
+            openai_model = ai_config.get('openai_model_name', {}).get('value', 'gpt-3.5-turbo')
+            summary += f"- **Model**: {openai_model}\n"
+            summary += f"- **API**: Portkey (Security Layer)\n"
+        elif provider == 'gemini':
+            gemini_model = ai_config.get('gemini_model_name', {}).get('value', 'gemini-pro')
+            summary += f"- **Model**: {gemini_model}\n"
+            summary += f"- **API**: Portkey (Security Layer)\n"
+        
+        # AI Settings
+        max_tokens = ai_config.get('max_tokens', {}).get('value', '500')
+        temperature = ai_config.get('temperature', {}).get('value', '0.7')
+        summary += f"- **Max Tokens**: {max_tokens}\n"
+        summary += f"- **Temperature**: {temperature}\n\n"
+        
+        # Alert Processing Configuration
+        summary += "### ⚙️ Alert Processing\n"
+        min_priority = general_config.get('min_priority', {}).get('value', 'warning')
+        ignore_older = general_config.get('ignore_older_minutes', {}).get('value', '1')
+        dedup_enabled = general_config.get('deduplication_enabled', {}).get('value', 'true')
+        
+        summary += f"- **Minimum Priority**: {min_priority.title()}\n"
+        summary += f"- **Age Filter**: {ignore_older} minutes\n"
+        summary += f"- **Deduplication**: {'🟢 Enabled' if dedup_enabled == 'true' else '🔴 Disabled'}\n\n"
+        
+        # Slack Integration
+        summary += "### 💬 Slack Integration\n"
+        slack_enabled = slack_config.get('enabled', {}).get('value', 'false')
+        if slack_enabled == 'true':
+            channel = slack_config.get('channel_name', {}).get('value', '#security-alerts')
+            template_style = slack_config.get('template_style', {}).get('value', 'detailed')
+            summary += f"- **Status**: 🟢 Enabled\n"
+            summary += f"- **Channel**: {channel}\n"
+            summary += f"- **Template**: {template_style.title()}\n"
+        else:
+            summary += f"- **Status**: 🔴 Disabled\n"
+        
+        summary += "\n"
+        
+        # Web UI Status
+        summary += "### 🌐 Web Interface\n"
+        summary += f"- **Dashboard**: http://localhost:8080/\n"
+        summary += f"- **Enhanced Chat**: http://localhost:8080/enhanced-chat\n"
+        summary += f"- **AI Config**: http://localhost:8080/config/ai\n"
+        
+        return summary
+        
+    except Exception as e:
+        return f"❌ Error generating configuration summary: {str(e)}"
+
 def generate_troubleshooting_response(message, context):
     """Generate intelligent troubleshooting responses."""
     message_lower = message.lower()
     
-    # Configuration-related queries
-    if any(word in message_lower for word in ['config', 'configuration', 'setting', 'settings', 'no alerts', 'not working']):
+    # Configuration summary queries - provide comprehensive info first
+    if any(word in message_lower for word in ['my ai config', 'ai configuration', 'current config', 'my configuration', 'what is my']):
+        # Provide comprehensive configuration summary first
+        response = generate_configuration_summary()
+        
+        # Then add any detected issues
+        diagnosis = diagnose_system_configuration()
+        if diagnosis['issues']:
+            response += "\n## ⚠️ Detected Issues\n\n"
+            for issue in diagnosis['issues']:
+                icon = "🔴" if issue['type'] == 'error' else "🟡" if issue['type'] == 'warning' else "ℹ️"
+                response += f"{icon} **{issue['component']}**: {issue['issue']}\n"
+                response += f"   *Impact*: {issue['impact']}\n\n"
+            
+            if diagnosis['fixes']:
+                response += "**Available Fixes:**\n"
+                for i, fix in enumerate(diagnosis['fixes'], 1):
+                    response += f"{i}. {fix['description']}\n"
+                response += "\n💡 Type 'apply fix [number]' to apply a specific fix.\n"
+        
+        return response
+    
+    # Troubleshooting and diagnostic queries
+    elif any(word in message_lower for word in ['config', 'configuration', 'setting', 'settings', 'no alerts', 'not working', 'troubleshoot', 'diagnose', 'problem']):
         diagnosis = diagnose_system_configuration()
         
         response = "## 🔧 Configuration Analysis\n\n"
@@ -2983,15 +3079,68 @@ def api_test_alert():
             }
         }
         
-        # Process the test alert through the normal webhook flow
-        result = process_webhook_alert(test_alert)
-        
-        if result:
-            logging.info("✅ Test alert sent successfully")
+        # Process the test alert through the webhook processing logic
+        try:
+            # Simulate the webhook request processing
+            
+            # Extract alert metadata for logging
+            rule_name = test_alert.get('rule', 'Unknown')
+            alert_priority = test_alert.get('priority', 'unknown').lower()
+            alert_time = test_alert.get('time', 'Unknown')
+            
+            logging.info(f"📥 TEST_ALERT: Processing test alert '{rule_name}' | Priority: {alert_priority}")
+
+            # Get current configuration from database (same as webhook)
+            min_priority = get_general_setting('min_priority', 'warning')
+            
+            # Generate AI explanation
+            logging.info(f"🤖 AI_ANALYSIS: Starting AI explanation generation | Rule: {rule_name}")
+            explanation_sections = generate_explanation_portkey(test_alert)
+            
+            ai_success = explanation_sections and not explanation_sections.get("error")
+            if ai_success:
+                ai_provider = explanation_sections.get("llm_provider", "Unknown")
+                logging.info(f"✅ AI_SUCCESS: Generated explanation using {ai_provider} | Rule: {rule_name}")
+            else:
+                error_msg = explanation_sections.get("error", "Unknown error") if explanation_sections else "No response"
+                logging.warning(f"❌ AI_FAILED: {error_msg} | Rule: {rule_name}")
+            
+            # Store alert in database for Web UI
+            if WEB_UI_ENABLED:
+                try:
+                    store_alert_enhanced(test_alert, explanation_sections if ai_success else None)
+                    logging.info(f"💾 DB_STORED: Test alert saved to database | Rule: {rule_name}")
+                except Exception as e:
+                    logging.error(f"❌ DB_ERROR: Failed to store test alert: {e} | Rule: {rule_name}")
+            
+            # Check Slack configuration and send if enabled
+            slack_config = get_slack_config()
+            current_token = slack_config.get('bot_token', {}).get('value', '')
+            current_channel = slack_config.get('channel_name', {}).get('value', slack_channel_name)
+            slack_enabled = slack_config.get('enabled', {}).get('value', 'false').lower() == 'true'
+            
+            if slack_enabled and current_token and current_token != 'xoxb-your-token-here':
+                try:
+                    from slack_sdk import WebClient
+                    current_slack_client = WebClient(token=current_token)
+                    
+                    if ai_success:
+                        post_to_slack(test_alert, explanation_sections, current_slack_client, current_channel)
+                        logging.info(f"📢 SLACK_SUCCESS: Test alert sent with AI analysis to {current_channel} | Rule: {rule_name}")
+                    else:
+                        error_msg = explanation_sections.get("error", "AI analysis failed") if explanation_sections else "AI analysis failed"
+                        basic_message = format_slack_message_basic(test_alert, error_msg)
+                        send_slack_message(basic_message, current_slack_client, current_channel)
+                        logging.warning(f"📢 SLACK_PARTIAL: Test alert sent without AI analysis to {current_channel} | Rule: {rule_name}")
+                except Exception as e:
+                    logging.error(f"❌ SLACK_ERROR: Failed to send test alert to Slack: {e} | Rule: {rule_name}")
+            
+            logging.info("✅ Test alert processed successfully")
             return jsonify({'success': True, 'message': 'Test alert sent successfully'})
-        else:
-            logging.error("❌ Failed to process test alert")
-            return jsonify({'success': False, 'error': 'Failed to process test alert'}), 500
+            
+        except Exception as e:
+            logging.error(f"❌ Error processing test alert: {e}")
+            return jsonify({'success': False, 'error': f'Processing error: {str(e)}'}), 500
             
     except Exception as e:
         logging.error(f"❌ Error sending test alert: {e}")
@@ -7318,595 +7467,6 @@ def api_test_multilingual():
         logging.error(f"❌ Error testing multilingual functionality: {e}")
         return jsonify({'error': str(e)}), 500
 
-# --- Multilingual Configuration Management ---
-def get_multilingual_config():
-    """Get all multilingual configuration settings."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute('SELECT setting_name, setting_value FROM multilingual_config')
-        settings = cursor.fetchall()
-        
-        config = {}
-        for setting_name, setting_value in settings:
-            config[setting_name] = setting_value
-        
-        # Set defaults if not configured
-        defaults = {
-            'general_default_language': 'en',
-            'general_auto_detect_language': 'true',
-            'general_enable_ui_translation': 'auto',
-            'general_fallback_behavior': 'english',
-            'general_persist_language': 'true',
-            'ai_default_model': 'llama3:latest',
-            'ai_timeout': '60',
-            'ai_temperature': '0.7',
-            'ai_max_tokens': '1000',
-            'ai_ollama_endpoint': 'http://ollama:11434',
-            'ai_enabled': 'true',
-            'enabled_languages': json.dumps(['en', 'es', 'fr', 'de', 'pt', 'zh', 'hi', 'ar', 'bn', 'ru']),
-            'master_enabled': 'false',  # Disabled by default - experimental feature
-            'translation_ui_provider': 'google',
-            'translation_ai_provider': 'local',
-            'google_translate_api_key': '',
-            'deepl_api_key': '',
-            'azure_translator_api_key': '',
-            'azure_translator_region': 'global'
-        }
-        
-        for key, default_value in defaults.items():
-            if key not in config:
-                config[key] = default_value
-        
-        return config
-        
-    except sqlite3.OperationalError:
-        # Table doesn't exist, create it
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS multilingual_config (
-                setting_name TEXT PRIMARY KEY,
-                setting_value TEXT,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        conn.commit()
-        return get_multilingual_config()  # Recursive call after creating table
-    finally:
-        conn.close()
-
-def update_multilingual_config(setting_name, setting_value):
-    """Update a multilingual configuration setting."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    
-    try:
-        # Ensure table exists
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS multilingual_config (
-                setting_name TEXT PRIMARY KEY,
-                setting_value TEXT,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            INSERT OR REPLACE INTO multilingual_config (setting_name, setting_value, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-        ''', (setting_name, str(setting_value)))
-        
-        conn.commit()
-        logging.info(f"📝 Updated multilingual config: {setting_name} = {setting_value}")
-        
-    finally:
-        conn.close()
-
-def get_multilingual_setting(setting_name, default_value=None):
-    """Get a specific multilingual configuration setting."""
-    config = get_multilingual_config()
-    return config.get(setting_name, default_value)
-
-@app.route('/api/translate/debug', methods=['GET'])
-def api_translate_debug():
-    """Debug translation system - provides detailed information."""
-    try:
-        current_lang = get_locale()
-        requested_lang = request.args.get('lang', current_lang)
-        
-        # Test translation service
-        translation_service = get_multilingual_service()
-        test_translation = translation_service.translate_ui_string("Hello World", requested_lang)
-        
-        return jsonify({
-            'success': True,
-            'current_language': current_lang,
-            'requested_language': requested_lang,
-            'test_translation': test_translation,
-            'translation_available': translation_service.is_available(),
-            'translation_model': translation_service.model_name,
-            'session_language': session.get('language', 'not_set'),
-            'multilingual_config': get_multilingual_config()
-        })
-        
-    except Exception as e:
-        logging.error(f"❌ Error in translation debug API: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/translate/ui', methods=['GET'])
-def api_translate_ui():
-    """Get UI translation strings"""
-    try:
-        language = request.args.get('lang', 'en')
-        if language not in LANGUAGES:
-            language = 'en'
-        
-        # Get translation strings for UI
-        translation_strings = {
-            'en': {
-                'dashboard': 'Dashboard',
-                'alerts': 'Alerts',
-                'chat': 'Chat',
-                'config': 'Configuration',
-                'settings': 'Settings',
-                'help': 'Help',
-                'logout': 'Logout'
-            },
-            'es': {
-                'dashboard': 'Panel de Control',
-                'alerts': 'Alertas',
-                'chat': 'Chat',
-                'config': 'Configuración',
-                'settings': 'Ajustes',
-                'help': 'Ayuda',
-                'logout': 'Cerrar Sesión'
-            },
-            'fr': {
-                'dashboard': 'Tableau de Bord',
-                'alerts': 'Alertes',
-                'chat': 'Chat',
-                'config': 'Configuration',
-                'settings': 'Paramètres',
-                'help': 'Aide',
-                'logout': 'Déconnexion'
-            },
-            'de': {
-                'dashboard': 'Dashboard',
-                'alerts': 'Warnungen',
-                'chat': 'Chat',
-                'config': 'Konfiguration',
-                'settings': 'Einstellungen',
-                'help': 'Hilfe',
-                'logout': 'Abmelden'
-            },
-            'pt': {
-                'dashboard': 'Painel de Controle',
-                'alerts': 'Alertas',
-                'chat': 'Chat',
-                'config': 'Configuração',
-                'settings': 'Configurações',
-                'help': 'Ajuda',
-                'logout': 'Sair'
-            }
-        }
-        
-        return jsonify({
-            'success': True,
-            'language': language,
-            'translations': translation_strings.get(language, translation_strings['en'])
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# MCP Integration Routes
-@app.route('/mcp-dashboard')
-def mcp_dashboard():
-    """Unified MCP Hub"""
-    return render_template('unified_mcp_dashboard.html')
-
-# Backward compatibility routes
-@app.route('/mcp-integration-hub')
-def mcp_integration_hub():
-    """Alias for unified MCP dashboard"""
-    return render_template('unified_mcp_dashboard.html')
-
-@app.route('/claude-mcp-config')
-def claude_mcp_config():
-    """Claude MCP Configuration (redirects to unified dashboard)"""
-    return redirect('/mcp-dashboard?tab=claude')
-
-@app.route('/api/mcp/status')
-def get_mcp_status():
-    """Get MCP integration status"""
-    if not MCP_AVAILABLE:
-        logging.warning("🚫 MCP Status request denied - MCP features not available")
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            logging.info("🔄 Initializing MCP manager for status check...")
-            init_success = mcp_manager.initialize()
-            if not init_success:
-                logging.error("❌ MCP manager initialization failed")
-                return jsonify({"error": "Failed to initialize MCP manager"}), 500
-        
-        status = mcp_manager.get_status()
-        logging.info(f"✅ MCP Status retrieved: Available={status['available']}, Tools={status['tools_count']}, Clients={status['clients_count']}")
-        
-        response_data = {
-            "overall_status": "active" if status["available"] else "inactive",
-            "external_clients_status": "connected" if status["clients_count"] > 0 else "disconnected",
-            "integration_status": "active" if status["available"] else "inactive",
-            "external_sources_available": status["clients_count"] > 0,
-            "metrics": {
-                "total_servers": 1,  # Our local server
-                "total_tools": status["tools_count"],
-                "active_integrations": status["clients_count"],
-                "context_enrichments": status.get("enrichments_count", 0)
-            },
-            "last_updated": datetime.datetime.now().isoformat()
-        }
-        
-        return jsonify(response_data)
-    except Exception as e:
-        logging.error(f"❌ Error getting MCP status: {e}")
-        return jsonify({"error": str(e), "details": "Failed to retrieve MCP status"}), 500
-
-@app.route('/api/mcp/test-server')
-def test_mcp_server():
-    """Test Falco MCP server"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            mcp_manager.initialize()
-        
-        # Test basic server functionality
-        import asyncio
-        result = asyncio.run(mcp_manager.start_server())
-        if result:
-            return jsonify({"success": True, "message": "Falco MCP server is working correctly"})
-        else:
-            return jsonify({"success": False, "message": "Falco MCP server test failed"})
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Error testing server: {str(e)}"})
-
-@app.route('/api/mcp/connect-clients', methods=['POST'])
-def connect_mcp_clients():
-    """Connect to external MCP clients"""
-    if not MCP_AVAILABLE:
-        logging.warning("🚫 MCP Client connection denied - MCP features not available")
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        logging.info("🔗 Attempting to connect MCP clients...")
-        
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            logging.info("🔄 Initializing MCP manager for client connection...")
-            init_success = mcp_manager.initialize()
-            if not init_success:
-                logging.error("❌ MCP manager initialization failed during client connection")
-                return jsonify({
-                    "success": False, 
-                    "message": "Failed to initialize MCP manager before connecting clients",
-                    "details": "Manager initialization error"
-                })
-        
-        # Get current status
-        status = mcp_manager.get_status()
-        clients_before = status.get("clients_count", 0)
-        
-        # Attempt to connect to any external clients
-        # For now, this initializes the server and reports success
-        tools_available = len(mcp_manager.get_tools())
-        
-        logging.info(f"✅ MCP client connection process completed - {tools_available} tools ready, {clients_before} clients")
-        
-        return jsonify({
-            "success": True, 
-            "message": f"MCP manager initialized successfully with {tools_available} tools available",
-            "tools_count": tools_available,
-            "clients_connected": clients_before,
-            "connection_timestamp": datetime.datetime.now().isoformat(),
-            "details": "Local MCP server is running and ready for external client connections"
-        })
-    except Exception as e:
-        logging.error(f"❌ Error connecting MCP clients: {e}")
-        return jsonify({
-            "success": False, 
-            "message": f"Error connecting clients: {str(e)}",
-            "details": "Exception occurred during client connection",
-            "error_type": type(e).__name__
-        })
-
-@app.route('/api/mcp/test-integration')
-def test_mcp_integration():
-    """Test MCP integration"""
-    if not MCP_AVAILABLE:
-        logging.warning("🚫 MCP Integration test denied - MCP features not available")
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        logging.info("🧪 Starting comprehensive MCP integration test...")
-        
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            logging.info("🔄 Initializing MCP manager for integration test...")
-            init_success = mcp_manager.initialize()
-            if not init_success:
-                logging.error("❌ MCP manager initialization failed during integration test")
-                return jsonify({
-                    "success": False, 
-                    "message": "MCP integration test failed - could not initialize manager",
-                    "details": "Manager initialization error"
-                })
-        
-        # Test integration functionality
-        tools = mcp_manager.get_tools()
-        resources = mcp_manager.get_resources()
-        status = mcp_manager.get_status()
-        
-        # Test a sample tool if available
-        test_results = []
-        if tools:
-            logging.info(f"🔄 Testing sample MCP tool from {len(tools)} available tools...")
-            
-            # Test the first security alert tool
-            for tool in tools:
-                if tool['name'] == 'get_security_alerts':
-                    try:
-                        # Test with minimal parameters
-                        test_result = mcp_manager.server.tools['get_security_alerts'].handler(
-                            status="all", priority="all", limit=1, time_range="1h"
-                        )
-                        test_results.append({
-                            "tool": "get_security_alerts",
-                            "status": "success",
-                            "result": "Tool executed successfully"
-                        })
-                        logging.info("✅ Sample MCP tool test successful")
-                        break
-                    except Exception as tool_error:
-                        test_results.append({
-                            "tool": "get_security_alerts",
-                            "status": "error", 
-                            "error": str(tool_error)
-                        })
-                        logging.warning(f"⚠️ Sample MCP tool test failed: {tool_error}")
-                        break
-        
-        if tools:
-            logging.info(f"✅ MCP integration test successful - {len(tools)} tools, {len(resources)} resources available")
-            return jsonify({
-                "success": True, 
-                "message": f"MCP integration is working correctly with {len(tools)} tools and {len(resources)} resources available",
-                "tools_count": len(tools),
-                "resources_count": len(resources),
-                "server_status": status,
-                "test_results": test_results,
-                "test_timestamp": datetime.datetime.now().isoformat(),
-                "details": "All MCP components are functioning properly"
-            })
-        else:
-            logging.error("❌ MCP integration test failed - no tools available")
-            return jsonify({
-                "success": False, 
-                "message": "MCP integration test failed - no tools available",
-                "tools_count": 0,
-                "resources_count": len(resources),
-                "details": "No MCP tools were loaded or available for testing"
-            })
-    except Exception as e:
-        logging.error(f"❌ Error during MCP integration test: {e}")
-        return jsonify({
-            "success": False, 
-            "message": f"Error testing integration: {str(e)}",
-            "details": "Exception occurred during integration test",
-            "error_type": type(e).__name__
-        })
-
-@app.route('/api/mcp/config', methods=['GET', 'POST'])
-def mcp_config():
-    """Get or update MCP configuration"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    if request.method == 'GET':
-        try:
-            # Get current MCP configuration
-            config = {
-                "ai_provider": "ollama",  # Default
-                "ai_model": "tinyllama",  # Default
-                "ai_api_url": "http://ollama:11434",  # Default
-                "mcp_enabled": "true"  # Default
-            }
-            
-            # Get actual config from database
-            ai_config = get_ai_config()
-            if ai_config:
-                config["ai_provider"] = ai_config.get("provider_name", {}).get("value", "ollama")
-                config["ai_model"] = ai_config.get("ollama_model_name", {}).get("value", "tinyllama")
-                config["ai_api_url"] = ai_config.get("ollama_api_url", {}).get("value", "http://ollama:11434")
-                config["mcp_enabled"] = "true"  # MCP is always enabled if this endpoint is accessible
-            
-            return jsonify(config)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
-    elif request.method == 'POST':
-        try:
-            config_data = request.json
-            
-            # Update AI configuration
-            if "ai_provider" in config_data:
-                update_ai_config("provider_name", config_data["ai_provider"])
-            
-            if "ai_model" in config_data:
-                if config_data.get("ai_provider") == "ollama":
-                    update_ai_config("ollama_model_name", config_data["ai_model"])
-                elif config_data.get("ai_provider") == "openai":
-                    update_ai_config("openai_model_name", config_data["ai_model"])
-                elif config_data.get("ai_provider") == "gemini":
-                    update_ai_config("gemini_model_name", config_data["ai_model"])
-            
-            if "ai_api_url" in config_data:
-                if config_data.get("ai_provider") == "ollama":
-                    update_ai_config("ollama_api_url", config_data["ai_api_url"])
-            
-            return jsonify({"success": True, "message": "MCP configuration updated"})
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-@app.route('/api/mcp/export-config')
-def export_mcp_config():
-    """Export MCP configuration"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            mcp_manager.initialize()
-        
-        config = {
-            "mcp_version": "1.0.0",
-            "server_status": mcp_manager.get_status(),
-            "tools": mcp_manager.get_tools(),
-            "resources": mcp_manager.get_resources(),
-            "export_timestamp": datetime.datetime.now().isoformat()
-        }
-        return jsonify({"success": True, "config": config})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/mcp/enhanced-chat', methods=['POST'])
-def mcp_enhanced_chat():
-    """Enhanced chat with MCP context gathering"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        data = request.json
-        message = data.get('message', '')
-        alert_context = data.get('context', {})
-        
-        if not message:
-            return jsonify({"error": "Message is required"}), 400
-        
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            mcp_manager.initialize()
-        
-        # Use MCP tools to enhance the response
-        tools = mcp_manager.get_tools()
-        context_sources = []
-        
-        # Analyze the message and use appropriate tools
-        if "security" in message.lower() or "alert" in message.lower():
-            # Use security analysis tool
-            analysis_result = mcp_manager.server.tools["analyze_security_alert"].handler(alert_context, message)
-            context_sources.append("security_analysis")
-        else:
-            analysis_result = {"analysis": "No specific security context found"}
-        
-        # Generate enhanced response
-        enhanced_response = f"MCP Enhanced Response: {message}\n\nContext Analysis: {analysis_result['analysis']}\n\nAvailable MCP Tools: {len(tools)}"
-        
-        return jsonify({
-            "response": enhanced_response,
-            "mcp_context_used": True,
-            "context_sources": context_sources,
-            "tools_available": len(tools)
-        })
-            
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/mcp/enrich-alert/<int:alert_id>')
-def mcp_enrich_alert(alert_id):
-    """Enrich alert with MCP data"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        # Get the alert
-        alerts = get_alerts()
-        alert = None
-        for a in alerts:
-            if a.get("id") == alert_id:
-                alert = a
-                break
-        
-        if not alert:
-            return jsonify({"error": f"Alert {alert_id} not found"}), 404
-        
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            mcp_manager.initialize()
-        
-        # Enrich with MCP data using our tools
-        if "analyze_security_alert" in mcp_manager.server.tools:
-            analysis_result = mcp_manager.server.tools["analyze_security_alert"].handler(alert, "Alert enrichment")
-            
-            enriched_alert = alert.copy()
-            enriched_alert["mcp_enrichment"] = {
-                "analysis": analysis_result,
-                "enrichment_timestamp": datetime.datetime.now().isoformat(),
-                "tools_used": ["analyze_security_alert"]
-            }
-            
-            return jsonify({
-                "success": True,
-                "enriched_alert": enriched_alert,
-                "analysis": analysis_result
-            })
-        else:
-            return jsonify({"error": "Security analysis tool not available"}), 500
-            
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/mcp/threat-intelligence')
-def mcp_threat_intelligence():
-    """Get threat intelligence with MCP enhancements"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        analysis_type = request.args.get('type', 'summary')
-        time_range_days = int(request.args.get('days', 7))
-        
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            mcp_manager.initialize()
-        
-        # Get threat intelligence using our tools
-        if "get_threat_intelligence" in mcp_manager.server.tools:
-            # Get recent alerts for analysis
-            alerts = get_alerts()
-            indicators = []
-            for alert in alerts[-10:]:  # Last 10 alerts
-                if "output" in alert:
-                    indicators.append(alert["output"][:100])  # First 100 chars as indicator
-            
-            intelligence_result = mcp_manager.server.tools["get_threat_intelligence"].handler(indicators, "falco_alerts")
-            
-            return jsonify({
-                "success": True,
-                "threat_intelligence": intelligence_result,
-                "analysis_type": analysis_type,
-                "time_range_days": time_range_days,
-                "indicators_analyzed": len(indicators)
-            })
-        else:
-            return jsonify({"error": "Threat intelligence tool not available"}), 500
-            
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/api/mcp/system-health')
 def mcp_system_health():
     """Get comprehensive system health including MCP status"""
@@ -7937,600 +7497,6 @@ def mcp_system_health():
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# New endpoint for tool execution testing
-@app.route('/api/mcp/test-tool/<tool_name>', methods=['POST'])
-def test_mcp_tool(tool_name):
-    """Test a specific MCP tool"""
-    if not MCP_AVAILABLE:
-        logging.warning(f"🚫 MCP Tool test denied for '{tool_name}' - MCP features not available")
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        logging.info(f"🧪 Testing MCP tool: {tool_name}")
-        
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            logging.info("🔄 Initializing MCP manager for tool test...")
-            init_success = mcp_manager.initialize()
-            if not init_success:
-                logging.error("❌ MCP manager initialization failed during tool test")
-                return jsonify({
-                    "success": False,
-                    "message": "Failed to initialize MCP manager for tool test"
-                })
-        
-        # Check if tool exists
-        if tool_name not in mcp_manager.server.tools:
-            logging.warning(f"⚠️ Tool '{tool_name}' not found in available tools")
-            available_tools = list(mcp_manager.server.tools.keys())
-            return jsonify({
-                "success": False,
-                "message": f"Tool '{tool_name}' not found",
-                "available_tools": available_tools
-            })
-        
-        # Get test parameters from request or use defaults
-        test_params = request.json.get('parameters', {}) if request.json else {}
-        
-        # Set default parameters for common tools
-        if tool_name == 'get_security_alerts' and not test_params:
-            test_params = {"status": "all", "priority": "all", "limit": 5, "time_range": "1h"}
-        elif tool_name == 'get_alert_statistics' and not test_params:
-            test_params = {"time_range": "24h", "include_breakdown": True}
-        
-        # Execute the tool with test parameters
-        tool = mcp_manager.server.tools[tool_name]
-        start_time = datetime.datetime.now()
-        
-        try:
-            result = tool.handler(**test_params)
-            end_time = datetime.datetime.now()
-            execution_time = (end_time - start_time).total_seconds()
-            
-            logging.info(f"✅ Tool '{tool_name}' executed successfully in {execution_time:.2f}s")
-            
-            return jsonify({
-                "success": True,
-                "message": f"Tool '{tool_name}' executed successfully",
-                "result": result,
-                "execution_time_seconds": execution_time,
-                "test_timestamp": start_time.isoformat(),
-                "parameters_used": test_params
-            })
-            
-        except Exception as tool_error:
-            end_time = datetime.datetime.now()
-            execution_time = (end_time - start_time).total_seconds()
-            
-            logging.error(f"❌ Tool '{tool_name}' execution failed: {tool_error}")
-            
-            return jsonify({
-                "success": False,
-                "message": f"Tool '{tool_name}' execution failed: {str(tool_error)}",
-                "execution_time_seconds": execution_time,
-                "test_timestamp": start_time.isoformat(),
-                "parameters_used": test_params,
-                "error_type": type(tool_error).__name__
-            })
-            
-    except Exception as e:
-        logging.error(f"❌ Error testing MCP tool '{tool_name}': {e}")
-        return jsonify({
-            "success": False,
-            "message": f"Error testing tool: {str(e)}",
-            "error_type": type(e).__name__
-        })
-
-# New endpoint for getting MCP logs
-@app.route('/api/mcp/logs')
-def get_mcp_logs():
-    """Get MCP-related logs"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        # Get recent MCP activity from logs
-        logs = []
-        
-        # Add current status as a log entry
-        if mcp_manager.is_available:
-            status = mcp_manager.get_status()
-            logs.append({
-                "timestamp": datetime.datetime.now().isoformat(),
-                "level": "INFO",
-                "message": f"MCP Status Check: {status['tools_count']} tools available, server {'active' if status['available'] else 'inactive'}",
-                "component": "mcp_status"
-            })
-        
-        # Add initialization log
-        logs.append({
-            "timestamp": (datetime.datetime.now() - timedelta(minutes=1)).isoformat(),
-            "level": "INFO", 
-            "message": f"MCP manager {'initialized' if mcp_manager.is_available else 'not initialized'}",
-            "component": "mcp_manager"
-        })
-        
-        # Add recent tool activity if available
-        if mcp_manager.is_available:
-            tools = mcp_manager.get_tools()
-            logs.append({
-                "timestamp": (datetime.datetime.now() - timedelta(minutes=2)).isoformat(),
-                "level": "INFO",
-                "message": f"MCP Tools loaded: {', '.join([tool['name'] for tool in tools[:5]])}{'...' if len(tools) > 5 else ''}",
-                "component": "mcp_tools"
-            })
-        
-        return jsonify({
-            "success": True,
-            "logs": logs,
-            "total_logs": len(logs),
-            "log_level": "INFO",
-            "retrieved_at": datetime.datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logging.error(f"❌ Error retrieving MCP logs: {e}")
-        return jsonify({"error": str(e), "details": "Failed to retrieve MCP logs"}), 500
-
-# Claude MCP Integration endpoints
-@app.route('/api/claude-mcp/setup', methods=['POST'])
-def setup_claude_mcp():
-    """Setup Claude MCP integration automatically"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        import subprocess
-        import os
-        
-        # Get the current script directory
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        setup_script = os.path.join(script_dir, 'setup_claude_mcp.sh')
-        
-        if not os.path.exists(setup_script):
-            return jsonify({
-                "success": False,
-                "message": "Setup script not found",
-                "details": f"Expected at: {setup_script}"
-            }), 404
-        
-        # Run the setup script
-        result = subprocess.run([setup_script], capture_output=True, text=True, cwd=script_dir)
-        
-        if result.returncode == 0:
-            return jsonify({
-                "success": True,
-                "message": "Claude MCP setup completed successfully",
-                "output": result.stdout,
-                "script_path": setup_script
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": "Setup script failed",
-                "error": result.stderr,
-                "output": result.stdout
-            }), 500
-            
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": f"Setup failed: {str(e)}",
-            "error_type": type(e).__name__
-        }), 500
-
-@app.route('/api/claude-mcp/config')
-def get_claude_mcp_config():
-    """Get Claude MCP configuration"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        import os
-        
-        # Get current script directory and paths
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        claude_server_script = os.path.join(script_dir, 'claude_mcp_server.py')
-        
-        config = {
-            "mcpServers": {
-                "falco-ai-alerts": {
-                    "command": "python3",
-                    "args": [claude_server_script],
-                    "env": {
-                        "FALCO_API_BASE": f"http://localhost:{falco_ai_port}"
-                    }
-                }
-            }
-        }
-        
-        return jsonify({
-            "success": True,
-            "config": config,
-            "script_path": claude_server_script,
-            "config_directory": "~/.config/claude-desktop",
-            "config_file": "~/.config/claude-desktop/config.json"
-        })
-        
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-@app.route('/api/mcp/tools')
-def get_mcp_tools():
-    """Get list of available MCP tools"""
-    if not MCP_AVAILABLE:
-        return jsonify({"error": "MCP features not available"}), 503
-    
-    try:
-        # Initialize MCP manager if not already done
-        if not mcp_manager.is_available:
-            mcp_manager.initialize()
-        
-        tools = mcp_manager.get_tools()
-        return jsonify(tools)
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# JSON-RPC MCP Integration Routes
-@app.route('/jsonrpc-mcp-config')
-def jsonrpc_mcp_config():
-    """JSON-RPC MCP Configuration (redirects to unified dashboard)"""
-    return redirect('/mcp-dashboard?tab=jsonrpc')
-
-@app.route('/api/jsonrpc-mcp/setup', methods=['POST'])
-def jsonrpc_mcp_setup():
-    """Auto-setup JSON-RPC MCP configuration for supported clients"""
-    try:
-        import subprocess
-        import os
-        
-        # Run the setup script
-        script_path = os.path.join(os.getcwd(), 'setup_jsonrpc_mcp.sh')
-        if not os.path.exists(script_path):
-            return jsonify({
-                "success": False,
-                "message": "Setup script not found. Please ensure setup_jsonrpc_mcp.sh exists."
-            }), 404
-        
-        # Make script executable and run it
-        result = subprocess.run(['bash', script_path], capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            return jsonify({
-                "success": True,
-                "message": "JSON-RPC MCP auto-setup completed successfully",
-                "output": result.stdout
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": f"Setup failed: {result.stderr}",
-                "output": result.stdout
-            }), 500
-            
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": f"Setup error: {str(e)}"
-        }), 500
-
-@app.route('/api/jsonrpc-mcp/test')
-def jsonrpc_mcp_test():
-    """Test JSON-RPC MCP integration"""
-    try:
-        import subprocess
-        import os
-        
-        # Run the test script
-        test_script = os.path.join(os.getcwd(), 'test_jsonrpc_mcp.py')
-        if not os.path.exists(test_script):
-            return jsonify({
-                "success": False,
-                "message": "Test script not found. Please ensure test_jsonrpc_mcp.py exists."
-            }), 404
-        
-        result = subprocess.run(['python3', test_script], capture_output=True, text=True, timeout=30)
-        
-        if result.returncode == 0:
-            # Parse output to get tools count
-            lines = result.stdout.split('\n')
-            tools_count = 4  # Default fallback
-            for line in lines:
-                if 'tools available' in line:
-                    try:
-                        tools_count = int(line.split()[0])
-                    except:
-                        pass
-            
-            return jsonify({
-                "success": True,
-                "message": "JSON-RPC MCP integration test passed",
-                "tools_count": tools_count,
-                "output": result.stdout
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": f"Test failed: {result.stderr}",
-                "output": result.stdout
-            }), 500
-            
-    except subprocess.TimeoutExpired:
-        return jsonify({
-            "success": False,
-            "message": "Test timed out after 30 seconds"
-        }), 500
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "message": f"Test error: {str(e)}"
-        }), 500
-
-@app.route('/api/jsonrpc-mcp/config/<client>')
-def jsonrpc_mcp_config_download(client):
-    """Download configuration for specific MCP client"""
-    try:
-        import os
-        from flask import send_file
-        
-        # Map client names to config file paths
-        config_files = {
-            'claude': 'config_templates/claude_desktop_config.json',
-            'vscode': 'config_templates/vscode_mcp_config.json',
-            'cursor': 'config_templates/cursor_mcp_config.json'
-        }
-        
-        if client not in config_files:
-            return jsonify({"error": "Unsupported client"}), 404
-        
-        config_path = config_files[client]
-        if not os.path.exists(config_path):
-            return jsonify({"error": "Configuration file not found"}), 404
-        
-        # Update the path in the config file with current server path
-        with open(config_path, 'r') as f:
-            config_content = f.read()
-        
-        current_dir = os.getcwd()
-        server_path = os.path.join(current_dir, 'jsonrpc_mcp_server.py')
-        config_content = config_content.replace('/path/to/your/falco-rag-ai-gateway/jsonrpc_mcp_server.py', server_path)
-        
-        # Return the updated config
-        return config_content, 200, {
-            'Content-Type': 'application/json',
-            'Content-Disposition': f'attachment; filename={client}_mcp_config.json'
-        }
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    """Get UI translations for the current language."""
-    try:
-        target_language = request.args.get('lang', get_locale())
-        
-        # Dictionary of UI strings that need translation
-        ui_strings = {
-            # General UI
-            'Security Dashboard': 'Security Dashboard',
-            'Security Alert': 'Security Alert', 
-            'Alerts': 'Alerts',
-            'High': 'High',
-            'Medium': 'Medium', 
-            'Low': 'Low',
-            'Critical': 'Critical',
-            'Warning': 'Warning',
-            'Info': 'Info',
-            'Save': 'Save',
-            'Cancel': 'Cancel',
-            'Delete': 'Delete',
-            'Edit': 'Edit',
-            'View': 'View',
-            'Settings': 'Settings',
-            'Configuration': 'Configuration',
-            'Status': 'Status',
-            'Available': 'Available',
-            'Unavailable': 'Unavailable',
-            'Enabled': 'Enabled',
-            'Disabled': 'Disabled',
-            'Test': 'Test',
-            'Download': 'Download',
-            'Upload': 'Upload',
-            'Export': 'Export',
-            'Import': 'Import',
-            'Refresh': 'Refresh',
-            
-            # Multilingual UI strings
-            'Enable Multilingual Features': 'Enable Multilingual Features',
-            'Turn off to save compute resources - system will use English-only analysis': 'Turn off to save compute resources - system will use English-only analysis',
-            'System Status': 'System Status',
-            'General Settings': 'General Settings',
-            'AI Translation Model': 'AI Translation Model',
-            'Languages': 'Languages',
-            'Model Management': 'Model Management',
-            
-            # Alert priorities
-            'debug': 'Debug',
-            'informational': 'Informational',
-            'notice': 'Notice', 
-            'warning': 'Warning',
-            'error': 'Error',
-            'critical': 'Critical',
-            'alert': 'Alert',
-            'emergency': 'Emergency',
-            
-            # Common actions
-            'Show Details': 'Show Details',
-            'Hide Details': 'Hide Details',
-            'Mark as Resolved': 'Mark as Resolved',
-            'Mark as False Positive': 'Mark as False Positive',
-            'Reprocess Alert': 'Reprocess Alert',
-            'View Similar Alerts': 'View Similar Alerts',
-            
-            # Dashboard elements
-            'Total Alerts': 'Total Alerts',
-            'Recent Alerts': 'Recent Alerts',
-            'Alert Trends': 'Alert Trends',
-            'Top Rules': 'Top Rules',
-            'AI Analysis': 'AI Analysis',
-            'Generated': 'Generated',
-            'Last 24 Hours': 'Last 24 Hours',
-            'Last 7 Days': 'Last 7 Days',
-            'Last 30 Days': 'Last 30 Days',
-            
-            # Time formats
-            'minute ago': 'minute ago',
-            'minutes ago': 'minutes ago',
-            'hour ago': 'hour ago', 
-            'hours ago': 'hours ago',
-            'day ago': 'day ago',
-            'days ago': 'days ago',
-            'week ago': 'week ago',
-            'weeks ago': 'weeks ago',
-            'month ago': 'month ago',
-            'months ago': 'months ago',
-            
-            # Configuration sections
-            'General Configuration': 'General Configuration',
-            'AI Configuration': 'AI Configuration', 
-            'Slack Configuration': 'Slack Configuration',
-            'Multilingual Configuration': 'Multilingual Configuration',
-            
-            # Form labels
-            'API Key': 'API Key',
-            'Model': 'Model',
-            'Temperature': 'Temperature',
-            'Max Tokens': 'Max Tokens',
-            'Timeout': 'Timeout',
-            'Endpoint': 'Endpoint',
-            'Channel': 'Channel',
-            'Username': 'Username',
-            'Password': 'Password',
-        }
-        
-        # If target language is English, return the original strings
-        if target_language == 'en':
-            return jsonify({
-                'success': True,
-                'language': target_language,
-                'translations': ui_strings
-            })
-        
-        # Get translation service
-        translation_service = get_multilingual_service()
-        
-        # Batch translate all UI strings for efficiency
-        translations = {}
-        try:
-            # Create smaller batch translation requests to avoid timeouts
-            batch_size = 10  # Translate in smaller batches
-            ui_items = list(ui_strings.items())
-            
-            for i in range(0, len(ui_items), batch_size):
-                batch_items = ui_items[i:i + batch_size]
-                batch_dict = dict(batch_items)
-                
-                batch_prompt = f"""Translate these UI strings to {target_language}. Return ONLY a JSON object with the original English text as keys and translations as values:
-
-{json.dumps(batch_dict, indent=2)}
-
-Required JSON format:
-{{"English String": "Translated String", ...}}"""
-
-                try:
-                    translated_batch = translation_service.translate_ui_batch(batch_prompt, target_language)
-                    
-                    # Parse the batch result
-                    if translated_batch:
-                        try:
-                            # Try to parse as JSON
-                            import re
-                            json_match = re.search(r'\{.*\}', translated_batch, re.DOTALL)
-                            if json_match:
-                                batch_translations = json.loads(json_match.group())
-                                for key, original_text in batch_dict.items():
-                                    translations[key] = batch_translations.get(original_text, original_text)
-                            else:
-                                raise ValueError("No JSON found in response")
-                        except (json.JSONDecodeError, ValueError) as e:
-                            logging.warning(f"Failed to parse batch translation JSON: {e}")
-                            # Use originals for this batch
-                            for key, text in batch_dict.items():
-                                translations[key] = text
-                    else:
-                        # Use originals for this batch
-                        for key, text in batch_dict.items():
-                            translations[key] = text
-                            
-                except Exception as e:
-                    logging.warning(f"Batch translation failed: {e}")
-                    # Use originals for this batch
-                    for key, text in batch_dict.items():
-                        translations[key] = text
-            
-            # Ensure all keys are covered
-            for key, text in ui_strings.items():
-                if key not in translations:
-                    translations[key] = text
-                
-        except Exception as e:
-            logging.error(f"Batch translation failed: {e}")
-            # Fallback: just translate critical strings
-            critical_strings = ['Security Dashboard', 'Alerts', 'High', 'Medium', 'Low', 'Critical', 'Warning']
-            for key, text in ui_strings.items():
-                if any(critical in key for critical in critical_strings):
-                    try:
-                        translated = translation_service.translate_ui_string(text, target_language)
-                        translations[key] = translated
-                    except Exception:
-                        translations[key] = text
-                else:
-                    translations[key] = text  # Use original for non-critical
-        
-        return jsonify({
-            'success': True,
-            'language': target_language,
-            'translations': translations
-        })
-        
-    except Exception as e:
-        logging.error(f"❌ Error getting UI translations: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# REAL-TIME UPDATES WITH SERVER-SENT EVENTS
-import threading
-import queue
-import time
-
-# Global SSE clients management
-sse_clients = []
-sse_client_lock = threading.Lock()
-
-class SSEClient:
-    def __init__(self):
-        self.queue = queue.Queue()
-        self.id = str(time.time())
-    
-    def put(self, data):
-        try:
-            self.queue.put(data, timeout=1)
-        except queue.Full:
-            pass  # Drop message if queue is full
-
-def add_sse_client(client):
-    with sse_client_lock:
-        sse_clients.append(client)
-        logging.info(f"📡 SSE client connected. Total clients: {len(sse_clients)}")
-
-def remove_sse_client(client):
-    with sse_client_lock:
-        if client in sse_clients:
-            sse_clients.remove(client)
-            logging.info(f"📡 SSE client disconnected. Total clients: {len(sse_clients)}")
 
 def broadcast_to_clients(event_type, data):
     """Broadcast event to all connected SSE clients."""

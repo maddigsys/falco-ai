@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: falco-ai-alerts
     app.kubernetes.io/component: application
-    app.kubernetes.io/version: "2.1.0"
+    app.kubernetes.io/version: "2.1.4"
     app.kubernetes.io/part-of: falco-ecosystem
 spec:
   replicas: 2
@@ -35,7 +35,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: falco-ai-alerts
-        image: maddigsys/falco-ai-alerts:v2.1.0
+        image: maddigsys/falco-ai-alerts:v2.1.4
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

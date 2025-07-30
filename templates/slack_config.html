@@ -851,13 +851,17 @@
     // Update status info with validation
     async function updateStatusInfo() {
         const statusDiv = document.getElementById('statusInfo');
-        if (statusDiv) {
-            const enabled = document.getElementById('slackEnabled')?.checked;
-            const botToken = document.getElementById('botToken')?.value;
-            const channelName = document.getElementById('channelName')?.value;
-            
-            // Show initial status
-            statusDiv.innerHTML = `
+        if (!statusDiv) {
+            console.log('Status div not found, skipping status update');
+            return;
+        }
+        
+        const enabled = document.getElementById('slackEnabled')?.checked;
+        const botToken = document.getElementById('botToken')?.value;
+        const channelName = document.getElementById('channelName')?.value;
+        
+                // Show initial status
+        statusDiv.innerHTML = `
                 <div class="col-md-3 col-sm-6">
                     <div class="status-card alert-${enabled ? 'success' : 'warning'}">
                         <i class="fab fa-slack"></i>
@@ -890,7 +894,7 @@
                         <i class="fas fa-plug"></i>
                         <div class="status-card-content">
                             <div class="status-card-title">Connection</div>
-                            <div class="status-card-value" id="connectionStatus">Checking...</div>
+                            <div class="status-card-value" id="connectionStatusValue">Checking...</div>
                         </div>
                     </div>
                 </div>
@@ -903,22 +907,31 @@
                 // Show basic validation for missing fields
                 const tokenStatusElement = document.getElementById('tokenStatus');
                 const channelStatusElement = document.getElementById('channelStatus');
-                const connectionStatusElement = document.getElementById('connectionStatus');
+                const connectionStatusElement = document.getElementById('connectionStatusValue');
                 
                 if (tokenStatusElement) {
                     tokenStatusElement.innerHTML = botToken ? 'Configured' : 'Missing';
-                    tokenStatusElement.closest('.status-card').className = `status-card alert-${botToken ? 'success' : 'danger'}`;
+                    const tokenCard = tokenStatusElement.closest('.status-card');
+                    if (tokenCard) {
+                        tokenCard.className = `status-card alert-${botToken ? 'success' : 'danger'}`;
+                    }
                 }
                 
                 if (channelStatusElement) {
                     channelStatusElement.innerHTML = channelName || 'Not set';
-                    channelStatusElement.closest('.status-card').className = `status-card alert-${channelName ? 'success' : 'warning'}`;
+                    const channelCard = channelStatusElement.closest('.status-card');
+                    if (channelCard) {
+                        channelCard.className = `status-card alert-${channelName ? 'success' : 'warning'}`;
+                    }
                 }
                 
                 if (connectionStatusElement) {
                     const configCount = Object.keys(configData).length;
                     connectionStatusElement.innerHTML = `${configCount}/17 fields loaded`;
-                    connectionStatusElement.closest('.status-card').className = 'status-card alert-secondary';
+                    const connectionCard = connectionStatusElement.closest('.status-card');
+                    if (connectionCard) {
+                        connectionCard.className = 'status-card alert-secondary';
+                    }
                 }
             }
         }
@@ -926,13 +939,47 @@
     
     // Validate configuration
     async function validateConfiguration(botToken, channelName) {
+        console.log('Starting Slack validation...', {botToken: botToken ? '***' + botToken.slice(-4) : 'none', channelName});
+        
         try {
             // Trim whitespace and validate inputs before sending
             const cleanToken = botToken.trim();
             const cleanChannel = channelName.trim();
             
+            console.log('Cleaned inputs:', {token: cleanToken ? '***' + cleanToken.slice(-4) : 'none', channel: cleanChannel});
+            
+            // Detect placeholder/fake tokens and skip API validation
+            const isPlaceholderToken = !cleanToken || 
+                cleanToken === 'xoxb-your-slack-bot-token-here' || 
+                cleanToken === 'xoxb-your-bot-token-here' ||
+                cleanToken.includes('your-') ||
+                cleanToken.includes('placeholder') ||
+                cleanToken.length < 20; // Real Slack tokens are much longer
+                
+            const isPlaceholderChannel = !cleanChannel || 
+                cleanChannel === '#your-channel' ||
+                cleanChannel === '#security-alerts' && isPlaceholderToken;
+
+            // Handle placeholder/incomplete configurations
+            if (isPlaceholderToken || !cleanToken) {
+                updateValidationStatus({
+                    valid: false,
+                    bot_token: {
+                        valid: false, 
+                        message: isPlaceholderToken && cleanToken ? 'Please enter your real Slack bot token' : 'Bot token is required'
+                    },
+                    channel_name: {
+                        valid: cleanChannel && cleanChannel.startsWith('#'), 
+                        message: cleanChannel ? 'Channel format is valid' : 'Channel name is required'
+                    },
+                    connection: {valid: false, message: 'Configuration incomplete'},
+                    overall_status: 'warning'
+                });
+                return;
+            }
+            
             // Basic validation before API call
-            if (!cleanToken || cleanToken.length < 10) {
+            if (cleanToken.length < 10) {
                 updateValidationStatus({
                     valid: false,
                     bot_token: {valid: false, message: 'Token appears incomplete'},
@@ -954,6 +1001,10 @@
                 return;
             }
             
+            // Only make API call for tokens that look real
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // Reduced to 10 second timeout
+            
             const response = await fetch('/api/slack/validate', {
                 method: 'POST',
                 headers: {
@@ -962,11 +1013,17 @@
                 body: JSON.stringify({
                     bot_token: cleanToken,
                     channel_name: cleanChannel
-                })
+                }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
+            
+            console.log('Fetch completed, response status:', response.status);
             
             if (response.ok) {
                 const validation = await response.json();
+                console.log('Validation successful:', validation);
                 updateValidationStatus(validation);
             } else {
                 const errorData = await response.json().catch(() => ({}));
@@ -980,11 +1037,21 @@
             }
         } catch (error) {
             console.error('Validation error:', error);
+            
+            let errorMessage = 'Network error during validation';
+            if (error.name === 'AbortError') {
+                errorMessage = 'Validation timed out after 10 seconds';
+            } else if (error.message.includes('fetch')) {
+                errorMessage = 'Unable to connect to server';
+            } else if (error.message) {
+                errorMessage = `Error: ${error.message}`;
+            }
+            
             updateValidationStatus({
                 valid: false,
-                bot_token: {valid: false, message: 'Network error during validation'},
-                channel_name: {valid: false, message: 'Network error during validation'},
-                connection: {valid: false, message: 'Network error during validation'},
+                bot_token: {valid: false, message: errorMessage},
+                channel_name: {valid: false, message: errorMessage},
+                connection: {valid: false, message: errorMessage},
                 overall_status: 'error'
             });
         }
@@ -994,21 +1061,30 @@
     function updateValidationStatus(validation) {
         const tokenStatusElement = document.getElementById('tokenStatus');
         const channelStatusElement = document.getElementById('channelStatus');
-        const connectionStatusElement = document.getElementById('connectionStatus');
+        const connectionStatusElement = document.getElementById('connectionStatusValue');
         
         if (tokenStatusElement) {
             tokenStatusElement.innerHTML = validation.bot_token.message || (validation.bot_token.valid ? 'Valid' : 'Invalid');
-            tokenStatusElement.closest('.status-card').className = `status-card alert-${validation.bot_token.valid ? 'success' : 'danger'}`;
+            const tokenCard = tokenStatusElement.closest('.status-card');
+            if (tokenCard) {
+                tokenCard.className = `status-card alert-${validation.bot_token.valid ? 'success' : 'danger'}`;
+            }
         }
         
         if (channelStatusElement) {
             channelStatusElement.innerHTML = validation.channel_name.message || (validation.channel_name.valid ? 'Valid' : 'Invalid');
-            channelStatusElement.closest('.status-card').className = `status-card alert-${validation.channel_name.valid ? 'success' : 'danger'}`;
+            const channelCard = channelStatusElement.closest('.status-card');
+            if (channelCard) {
+                channelCard.className = `status-card alert-${validation.channel_name.valid ? 'success' : 'danger'}`;
+            }
         }
         
         if (connectionStatusElement) {
             connectionStatusElement.innerHTML = validation.connection.message || (validation.connection.valid ? 'Connected' : 'Failed');
-            connectionStatusElement.closest('.status-card').className = `status-card alert-${validation.connection.valid ? 'success' : 'danger'}`;
+            const connectionCard = connectionStatusElement.closest('.status-card');
+            if (connectionCard) {
+                connectionCard.className = `status-card alert-${validation.connection.valid ? 'success' : 'danger'}`;
+            }
         }
         
         // Update form field validation styling
@@ -1094,7 +1170,64 @@
                 configData = config;
                 showConnectionStatus('success', 'Slack configuration saved successfully');
                 updateSaveStatus();
-                updateStatusInfo();
+                
+                // Only update status if we have a real token to avoid validation timeouts
+                const botToken = document.getElementById('botToken')?.value?.trim();
+                const isRealToken = botToken && 
+                    !botToken.includes('your-') && 
+                    !botToken.includes('placeholder') &&
+                    botToken.length > 20 &&
+                    botToken.startsWith('xoxb-');
+                    
+                if (isRealToken) {
+                    updateStatusInfo();
+                } else {
+                    // Show helpful status for placeholder tokens without API validation
+                    const statusDiv = document.getElementById('statusInfo');
+                    if (statusDiv) {
+                        const enabled = document.getElementById('slackEnabled')?.checked;
+                        const channelName = document.getElementById('channelName')?.value;
+                        
+                        statusDiv.innerHTML = `
+                            <div class="col-md-3 col-sm-6">
+                                <div class="status-card alert-${enabled ? 'success' : 'warning'}">
+                                    <i class="fab fa-slack"></i>
+                                    <div class="status-card-content">
+                                        <div class="status-card-title">Slack</div>
+                                        <div class="status-card-value">${enabled ? 'Enabled' : 'Disabled'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="status-card alert-warning">
+                                    <i class="fas fa-key"></i>
+                                    <div class="status-card-content">
+                                        <div class="status-card-title">Token</div>
+                                        <div class="status-card-value">Please enter real token</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="status-card alert-${channelName ? 'success' : 'warning'}">
+                                    <i class="fas fa-hashtag"></i>
+                                    <div class="status-card-content">
+                                        <div class="status-card-title">Channel</div>
+                                        <div class="status-card-value">${channelName || 'Not set'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="status-card alert-info">
+                                    <i class="fas fa-plug"></i>
+                                    <div class="status-card-content">
+                                        <div class="status-card-title">Connection</div>
+                                        <div class="status-card-value">Ready to configure</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to save configuration');
