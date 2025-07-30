@@ -1,4 +1,4 @@
-# Comprehensive Deployment Guide - Falco AI Alert System v2.1.4
+# Comprehensive Deployment Guide - Falco AI Alert System v2.1.12
 
 ## 🚀 Quick Start - One Command Deployment
 
@@ -169,7 +169,7 @@ cd k8s && ./install.sh --cloud azure
 ## 📦 Component Architecture
 
 ### **Core Services**
-- **falco-ai-alerts**: Main application (maddigsys/falco-ai-alerts:v2.1.4)
+- **falco-ai-alerts**: Main application (maddigsys/falco-ai-alerts:v2.1.12)
 - **ollama**: Local LLM service for AI analysis
 - **weaviate**: Vector database for enhanced search and analytics
 
@@ -248,7 +248,7 @@ kubectl get storageclass
 ### **Rolling Update**
 ```bash
 # Update to new version
-kubectl set image deployment/falco-ai-alerts falco-ai-alerts=maddigsys/falco-ai-alerts:v2.1.4
+kubectl set image deployment/falco-ai-alerts falco-ai-alerts=maddigsys/falco-ai-alerts:v2.1.12
 
 # Monitor rollout
 kubectl rollout status deployment/falco-ai-alerts
@@ -263,5 +263,5 @@ kubectl rollout undo deployment/falco-ai-alerts
 kubectl apply -f k8s/overlays/blue-green/
 
 # Switch traffic
-kubectl patch service falco-ai-alerts -p '{"spec":{"selector":{"version":"v2.1.4"}}}'
+kubectl patch service falco-ai-alerts -p '{"spec":{"selector":{"version":"v2.1.12"}}}'
 ``` 

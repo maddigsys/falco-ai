@@ -5,6 +5,34 @@ All notable changes to the Falco AI Alert System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.12] - 2025-01-30
+
+### Added
+- **MCP API Endpoints**: New `/api/mcp/status`, `/api/mcp/tools`, `/api/jsonrpc-mcp/setup`, `/api/claude-mcp/setup` endpoints
+- **Comprehensive URL Parameter Support**: Runtime events page now supports all filter types via URL parameters
+- **Enhanced Navigation Functions**: All analytics dashboard clickable elements now properly filter results
+- **Deep-Linking Capabilities**: Users can bookmark and share filtered views with complete parameter support
+- **AI Analysis Filtering**: Added `aiAnalysis` parameter for filtering alerts by AI analysis status
+
+### Enhanced
+- **Processing Queue Navigation**: Fixed Processing Queue card to properly filter for unprocessed alerts
+- **Filter Visibility**: Enhanced page titles and descriptions to show all active filter types
+- **URL Parameter Handling**: Added support for container, user, process, command, file, k8s, output, sortBy parameters
+- **Dashboard Filtering**: Comprehensive review and improvement of all dashboard filtering functions
+- **Button Styling**: Fixed inconsistent button backgrounds in general configuration page
+
+### Fixed
+- **Namespace Cleanup**: Removed duplicate Kubernetes namespace and restored proper dev/prod deployment strategy
+- **JavaScript Errors**: Fixed `loadAvailableTools is not defined` and other MCP dashboard errors
+- **Button CSS**: Resolved black button backgrounds in general configuration with proper gradient styling
+- **Filter Parameter Mapping**: Fixed analytics dashboard risk level mapping to proper priority values
+- **Active Filter Display**: All filter types now properly display in page titles and breadcrumbs
+
+### Operational
+- **Deployment Strategy**: Restored clean dev (`latest` tag) vs production (versioned tags) image tagging
+- **Container Versioning**: Updated all deployment documentation to reference v2.1.12
+- **Kubernetes Manifests**: Cleaned up duplicate overlays and maintained single source of truth
+
 ## [2.1.1] - 2025-01-17
 
 ### Added

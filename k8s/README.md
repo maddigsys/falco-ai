@@ -1,10 +1,10 @@
-# Kubernetes Deployment - Falco AI Alert System v2.1.4
+# Kubernetes Deployment - Falco AI Alert System v2.1.12
 
 > **🚀 One-Command Deployment**: `cd k8s && ./install-dynamic.sh`
 
 This comprehensive Kubernetes deployment provides AI-enhanced security alerting with automatic platform detection and optimization.
 
-## ✨ What's New in v2.1.4
+## ✨ What's New in v2.1.12
 
 ### **🛠 Enhanced Configuration System**
 - **Comprehensive AI Config Responses**: Ask "what is my AI configuration?" for detailed setup information
@@ -74,7 +74,7 @@ kubectl apply -k overlays/production/
 ## 📦 Architecture
 
 ### **Core Components**
-- **falco-ai-alerts**: Main application (`maddigsys/falco-ai-alerts:v2.1.4`)
+- **falco-ai-alerts**: Main application (`maddigsys/falco-ai-alerts:v2.1.12`)
 - **ollama**: Local LLM service for AI analysis
 - **weaviate**: Vector database for enhanced search
 
@@ -138,7 +138,7 @@ kubectl get all -n falco-ai-alerts
 ### **Container Updates**
 ```bash
 # Update to latest version
-kubectl set image deployment/falco-ai-alerts falco-ai-alerts=maddigsys/falco-ai-alerts:v2.1.4 -n falco-ai-alerts
+kubectl set image deployment/falco-ai-alerts falco-ai-alerts=maddigsys/falco-ai-alerts:v2.1.12 -n falco-ai-alerts
 
 # Monitor rollout
 kubectl rollout status deployment/falco-ai-alerts -n falco-ai-alerts
@@ -206,7 +206,7 @@ The system automatically detects and optimizes for ARM64 architectures when avai
 
 ## 🏷️ Version History
 
-- **v2.1.4** - Enhanced configuration system, fixed Slack loading, improved troubleshooting
+- **v2.1.12** - Comprehensive dashboard filtering improvements, MCP API endpoints, button styling fixes
 - **v2.1.0** - MCP Hub integration, enhanced chat, audit system
 - **v2.0.0** - Multi-architecture support, dynamic deployment
 - **v1.x.x** - Initial Kubernetes deployment

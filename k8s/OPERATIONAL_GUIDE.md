@@ -1,4 +1,4 @@
-# Operational Guide - Falco AI Alert System v2.1.4
+# Operational Guide - Falco AI Alert System v2.1.12
 
 ## 🚀 Quick Access Commands
 
@@ -168,7 +168,7 @@ kubectl patch deployment falco-ai-alerts -n falco-ai-alerts -p '{"spec":{"templa
 ### **Rolling Updates**
 ```bash
 # Update to new version
-kubectl set image deployment/falco-ai-alerts falco-ai-alerts=maddigsys/falco-ai-alerts:v2.1.4 -n falco-ai-alerts
+kubectl set image deployment/falco-ai-alerts falco-ai-alerts=maddigsys/falco-ai-alerts:v2.1.12 -n falco-ai-alerts
 
 # Check rollout progress
 kubectl rollout status deployment/falco-ai-alerts -n falco-ai-alerts
