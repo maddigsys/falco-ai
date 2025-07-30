@@ -31,26 +31,23 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: var(--space-xl);
-        height: 100%;
         transition: all 0.3s ease;
-        /* Use flexbox approach instead of calc */
-        flex: 1;
         min-height: 0;
+        /* Removed height: 100% and flex: 1 to allow natural content sizing */
     }
 
     .events-container.with-sidebar {
         grid-template-columns: 2fr 3fr;
-        grid-template-rows: 1fr;
-        align-items: stretch;
+        align-items: start; /* Changed from stretch to start for natural height behavior */
     }
 
     .events-main {
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow: visible; /* Allow content to expand naturally */
         min-height: 0;
-        height: 100%;
         padding-top: var(--space-lg);
+        /* Removed height: 100% and changed overflow to allow natural content sizing */
     }
 
     .events-sidebar {
@@ -398,12 +395,11 @@
         border-top: 4px solid var(--accent);
         box-shadow: var(--shadow-lg);
         overflow: hidden;
-        flex: 1;
         display: flex;
         flex-direction: column;
-        min-height: 0;
-        height: 100%;
         min-height: 400px;
+        /* Removed height: 100% to allow natural content sizing */
+        /* Removed flex: 1 to prevent forced expansion */
     }
 
     .alerts-header {
@@ -461,19 +457,19 @@
         overflow-y: auto;
         padding: var(--space-md);
         min-height: 0;
-        height: 100%;
         display: flex;
         flex-direction: column;
+        /* Removed height: 100% to allow natural content sizing */
     }
 
     #alertsList {
-        flex: 1;
         display: flex;
         flex-direction: column;
-        min-height: 200px;
+        min-height: 100px;
         background: var(--bg-cards);
         border-radius: var(--radius-md);
         overflow: hidden;
+        /* Removed flex: 1 and reduced min-height for better content-based sizing */
     }
 
     .alert-item {
