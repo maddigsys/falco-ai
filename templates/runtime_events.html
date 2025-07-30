@@ -1602,11 +1602,102 @@
             currentFilters.source = source;
         }
         
+        // Set AI analysis filter
+        const aiAnalysis = urlParams.get('aiAnalysis');
+        if (aiAnalysis) {
+            const aiAnalysisSelect = document.getElementById('aiAnalysisFilter');
+            if (aiAnalysisSelect) {
+                aiAnalysisSelect.value = aiAnalysis;
+                currentFilters.aiAnalysis = aiAnalysis;
+            }
+        }
+        
+        // Set container filter
+        const container = urlParams.get('container');
+        if (container) {
+            const containerInput = document.getElementById('containerFilter');
+            if (containerInput) {
+                containerInput.value = container;
+                currentFilters.container = container;
+            }
+        }
+        
+        // Set user filter
+        const user = urlParams.get('user');
+        if (user) {
+            const userInput = document.getElementById('userFilter');
+            if (userInput) {
+                userInput.value = user;
+                currentFilters.user = user;
+            }
+        }
+        
+        // Set process filter
+        const process = urlParams.get('process');
+        if (process) {
+            const processInput = document.getElementById('processFilter');
+            if (processInput) {
+                processInput.value = process;
+                currentFilters.process = process;
+            }
+        }
+        
+        // Set command filter
+        const command = urlParams.get('command');
+        if (command) {
+            const commandInput = document.getElementById('commandFilter');
+            if (commandInput) {
+                commandInput.value = command;
+                currentFilters.command = command;
+            }
+        }
+        
+        // Set file filter
+        const file = urlParams.get('file');
+        if (file) {
+            const fileInput = document.getElementById('fileFilter');
+            if (fileInput) {
+                fileInput.value = file;
+                currentFilters.file = file;
+            }
+        }
+        
+        // Set k8s filter
+        const k8s = urlParams.get('k8s');
+        if (k8s) {
+            const k8sInput = document.getElementById('k8sFilter');
+            if (k8sInput) {
+                k8sInput.value = k8s;
+                currentFilters.k8s = k8s;
+            }
+        }
+        
+        // Set output filter
+        const output = urlParams.get('output');
+        if (output) {
+            const outputInput = document.getElementById('outputFilter');
+            if (outputInput) {
+                outputInput.value = output;
+                currentFilters.output = output;
+            }
+        }
+        
+        // Set sort order
+        const sortBy = urlParams.get('sortBy');
+        if (sortBy) {
+            const sortSelect = document.getElementById('sortBy');
+            if (sortSelect) {
+                sortSelect.value = sortBy;
+                currentFilters.sortBy = sortBy;
+            }
+        }
+        
         // Update page title if filters are applied
         updatePageTitle();
         
         // Show filters panel if any URL parameters are set
-        if (timeRange || priority || status || limit || rule || source) {
+        if (timeRange || priority || status || limit || rule || source || aiAnalysis || 
+            container || user || process || command || file || k8s || output || sortBy) {
             const filtersContent = document.getElementById('filtersContent');
             const filtersToggle = document.getElementById('filtersToggle');
             if (filtersContent && filtersToggle) {
@@ -1638,6 +1729,37 @@
         }
         if (currentFilters.source) {
             activeFilters.push(`source: ${currentFilters.source}`);
+        }
+        if (currentFilters.aiAnalysis && currentFilters.aiAnalysis !== 'all') {
+            const aiLabel = currentFilters.aiAnalysis === 'without_ai' ? 'without AI analysis' :
+                           currentFilters.aiAnalysis === 'with_ai' ? 'with AI analysis' :
+                           currentFilters.aiAnalysis === 'ai_error' ? 'AI analysis errors' :
+                           currentFilters.aiAnalysis;
+            activeFilters.push(aiLabel);
+        }
+        if (currentFilters.container) {
+            activeFilters.push(`container: ${currentFilters.container}`);
+        }
+        if (currentFilters.user) {
+            activeFilters.push(`user: ${currentFilters.user}`);
+        }
+        if (currentFilters.process) {
+            activeFilters.push(`process: ${currentFilters.process}`);
+        }
+        if (currentFilters.command) {
+            activeFilters.push(`command: ${currentFilters.command}`);
+        }
+        if (currentFilters.file) {
+            activeFilters.push(`file: ${currentFilters.file}`);
+        }
+        if (currentFilters.k8s) {
+            activeFilters.push(`k8s: ${currentFilters.k8s}`);
+        }
+        if (currentFilters.output) {
+            activeFilters.push(`output: ${currentFilters.output}`);
+        }
+        if (currentFilters.sortBy && currentFilters.sortBy !== 'timestamp_desc') {
+            activeFilters.push(`sorted by: ${currentFilters.sortBy.replace('_', ' ')}`);
         }
         
         if (activeFilters.length > 0) {

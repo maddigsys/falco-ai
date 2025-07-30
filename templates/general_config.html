@@ -45,6 +45,31 @@
         background: rgba(var(--bg-cards-rgb, 33, 37, 41), 0.95);
     }
 
+    /* Fix button styling consistency */
+    .action-buttons .btn-primary {
+        background: var(--primary-gradient) !important;
+        color: var(--text-inverse) !important;
+        border: none !important;
+    }
+
+    .action-buttons .btn-success {
+        background: var(--success-gradient) !important;
+        color: var(--text-inverse) !important;
+        border: none !important;
+    }
+
+    .action-buttons .btn-warning {
+        background: var(--warning-gradient) !important;
+        color: var(--text-inverse) !important;
+        border: none !important;
+    }
+
+    .action-buttons .btn-secondary {
+        background: linear-gradient(135deg, var(--gray-500), var(--gray-600)) !important;
+        color: var(--text-inverse) !important;
+        border: none !important;
+    }
+
     .action-buttons {
         display: flex;
         gap: var(--space-md);

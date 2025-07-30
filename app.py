@@ -7566,6 +7566,161 @@ def mcp_system_health():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/mcp/status')
+def mcp_status():
+    """Get basic MCP status"""
+    try:
+        if not MCP_AVAILABLE:
+            return jsonify({
+                "success": False,
+                "error": "MCP features not available",
+                "status": "unavailable"
+            }), 503
+        
+        # Initialize MCP manager if not already done
+        if not mcp_manager.is_available:
+            mcp_manager.initialize()
+        
+        mcp_status = mcp_manager.get_status()
+        return jsonify({
+            "success": True,
+            "status": "available" if mcp_manager.is_available else "unavailable",
+            "mcp_status": mcp_status
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "status": "error"
+        }), 500
+
+@app.route('/api/mcp/tools')
+def mcp_tools():
+    """Get list of available MCP tools"""
+    try:
+        if not MCP_AVAILABLE:
+            return jsonify([])
+        
+        # Initialize MCP manager if not already done
+        if not mcp_manager.is_available:
+            mcp_manager.initialize()
+        
+        # Get available tools
+        tools = []
+        if mcp_manager.is_available and hasattr(mcp_manager.server, 'tools'):
+            for tool_name, tool in mcp_manager.server.tools.items():
+                tools.append({
+                    "name": tool_name,
+                    "description": getattr(tool, 'description', f"Security tool: {tool_name}")
+                })
+        
+        return jsonify(tools)
+    except Exception as e:
+        logging.error(f"Error getting MCP tools: {e}")
+        return jsonify([]), 500
+
+@app.route('/api/jsonrpc-mcp/setup', methods=['POST'])
+def jsonrpc_mcp_setup():
+    """Auto setup JSON-RPC MCP integration"""
+    try:
+        # Run the setup script
+        import subprocess
+        result = subprocess.run(['bash', 'setup_jsonrpc_mcp.sh'], 
+                              capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            return jsonify({
+                "success": True,
+                "message": "JSON-RPC MCP setup completed successfully",
+                "output": result.stdout
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "Setup failed",
+                "error": result.stderr
+            }), 500
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            "success": False,
+            "message": "Setup timed out"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Setup failed: {str(e)}"
+        }), 500
+
+@app.route('/api/jsonrpc-mcp/test')
+def jsonrpc_mcp_test():
+    """Test JSON-RPC MCP integration"""
+    try:
+        # Test if the jsonrpc_mcp_server.py file exists and can be imported
+        import os
+        if not os.path.exists('jsonrpc_mcp_server.py'):
+            return jsonify({
+                "success": False,
+                "message": "JSON-RPC MCP server file not found"
+            })
+        
+        # Try to run a simple test
+        import subprocess
+        result = subprocess.run(['python3', 'test_jsonrpc_mcp.py'], 
+                              capture_output=True, text=True, timeout=10)
+        
+        if result.returncode == 0:
+            # Count available tools
+            tools_count = len(mcp_manager.server.tools) if MCP_AVAILABLE and mcp_manager.is_available else 0
+            return jsonify({
+                "success": True,
+                "message": "JSON-RPC MCP test passed",
+                "tools_count": tools_count,
+                "output": result.stdout
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "Test failed",
+                "error": result.stderr
+            })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Test failed: {str(e)}"
+        })
+
+@app.route('/api/claude-mcp/setup', methods=['POST'])
+def claude_mcp_setup():
+    """Auto setup Claude MCP integration"""
+    try:
+        # Run the setup script
+        import subprocess
+        result = subprocess.run(['bash', 'setup_claude_mcp.sh'], 
+                              capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            return jsonify({
+                "success": True,
+                "message": "Claude MCP setup completed successfully",
+                "output": result.stdout
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "Setup failed",
+                "error": result.stderr
+            }), 500
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            "success": False,
+            "message": "Setup timed out"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Setup failed: {str(e)}"
+        }), 500
+
 def broadcast_to_clients(event_type, data):
     """Broadcast event to all connected SSE clients."""
     with sse_client_lock:

@@ -132,6 +132,6 @@ patches:
           echo "      via the AI Configuration dashboard after deployment."
 
 images:
-  - name: maddigsys/falco-ai-alerts
+  - name: falco-ai-alerts
     newName: maddigsys/falco-ai-alerts
-    newTag: "v2.1.0" 
+    newTag: "v2.1.10" 

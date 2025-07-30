@@ -721,6 +721,7 @@
         const params = new URLSearchParams();
         params.append('time_range', '24h');
         params.append('limit', '100');
+        params.append('aiAnalysis', 'without_ai'); // Filter for alerts without AI analysis
         
         const url = '/runtime-events?' + params.toString();
         window.open(url, '_blank');
