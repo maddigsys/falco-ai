@@ -2571,6 +2571,11 @@ def weaviate_analytics():
     """Weaviate analytics page (same as root)."""
     return render_template('weaviate_analytics.html', page='enhanced_analytics')
 
+@app.route('/mcp-dashboard')
+def mcp_dashboard():
+    """Unified MCP Dashboard page."""
+    return render_template('unified_mcp_dashboard.html', page='mcp')
+
 @app.route('/api/alerts')
 def api_alerts():
     """Return alerts as JSON for dashboard."""
@@ -4516,15 +4521,20 @@ def slack_config_ui():
         return jsonify({"error": "Web UI disabled"}), 404
     return render_template('slack_config.html', page='slack')
 
-@app.route('/api/slack/config')
+@app.route('/api/slack/config', methods=['GET'])
 def api_slack_config():
     """API endpoint to get Slack configuration."""
+    logging.info("GET /api/slack/config called")  # Add logging
     if not WEB_UI_ENABLED:
         return jsonify({"error": "Web UI disabled"}), 404
     
-    config = get_slack_config()
-    logging.debug(f"Returning Slack config: {list(config.keys())}")  # Debug log
-    return jsonify(config)
+    try:
+        config = get_slack_config()
+        logging.info(f"Returning Slack config with {len(config)} settings")
+        return jsonify(config)
+    except Exception as e:
+        logging.error(f"Error in /api/slack/config: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/slack/config', methods=['POST'])
 def api_update_slack_config():
