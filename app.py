@@ -634,11 +634,22 @@ def generate_explanation_portkey(alert_payload, language: str = "en"):
         return {"error": "AI analysis is disabled"}
     
     provider_name = ai_config.get('provider_name', {}).get('value', 'openai').lower()
-    model_name = ai_config.get('model_name', {}).get('value')
+    
+    # Use provider-specific model names (fix for startup logic issue)
+    if provider_name == 'openai':
+        model_name = ai_config.get('openai_model_name', {}).get('value', 'gpt-3.5-turbo')
+    elif provider_name == 'gemini':
+        model_name = ai_config.get('gemini_model_name', {}).get('value', 'gemini-pro')
+    elif provider_name == 'ollama':
+        model_name = ai_config.get('ollama_model_name', {}).get('value', 'phi3:mini')
+    else:
+        # Fallback to generic model_name for backward compatibility
+        model_name = ai_config.get('model_name', {}).get('value', 'gpt-3.5-turbo')
+    
     max_tokens = int(ai_config.get('max_tokens', {}).get('value', '500'))
     temperature = float(ai_config.get('temperature', {}).get('value', '0.7'))
     
-    logging.info(f"🤖 Using AI provider: {provider_name} with model: {model_name}")
+    logging.info(f"🤖 Using AI provider: {provider_name} with model: {model_name} (provider-specific)")
     
     # For non-English languages, try multilingual AI model first
     if language != "en":
@@ -4888,9 +4899,21 @@ def api_update_ai_config():
                          'ollama_model_name', 'max_tokens', 'temperature', 'enabled', 'system_prompt', 
                          'ollama_timeout', 'ollama_keep_alive', 'ollama_parallel', 'openai_timeout', 'gemini_timeout']
         
+        provider_changed = False
+        new_provider = None
+        
         for setting_name, setting_value in data.items():
             if setting_name in valid_settings:
                 update_ai_config(setting_name, setting_value)
+                
+                # Track if provider_name was changed
+                if setting_name == 'provider_name':
+                    provider_changed = True
+                    new_provider = setting_value
+        
+        # Auto-sync model name when provider changes (fix startup logic issue)
+        if provider_changed and new_provider:
+            sync_model_with_provider(new_provider)
         
         return jsonify({"success": True, "message": "AI configuration updated successfully"})
     except Exception as e:
@@ -5646,6 +5669,28 @@ def test_slack_connection(bot_token, channel_name):
         return {'success': False, 'error': f'Slack API error: {e.response["error"]}'}
     except Exception as e:
         return {'success': False, 'error': f'Connection error: {str(e)}'}
+
+def sync_model_with_provider(provider_name):
+    """Sync the main model_name field with the provider-specific model name."""
+    try:
+        ai_config = get_ai_config()
+        
+        if provider_name == 'openai':
+            model_name = ai_config.get('openai_model_name', {}).get('value', 'gpt-3.5-turbo')
+        elif provider_name == 'gemini':
+            model_name = ai_config.get('gemini_model_name', {}).get('value', 'gemini-pro')
+        elif provider_name == 'ollama':
+            model_name = ai_config.get('ollama_model_name', {}).get('value', 'phi3:mini')
+        else:
+            logging.warning(f"Unknown AI provider: {provider_name}, using default model")
+            model_name = 'gpt-3.5-turbo'
+        
+        update_ai_config('model_name', model_name)
+        logging.info(f"🔄 SYNC: Updated main model_name to '{model_name}' for provider '{provider_name}'")
+        return model_name
+    except Exception as e:
+        logging.error(f"❌ Failed to sync model with provider: {e}")
+        return None
 
 def get_ai_config():
     """Get all AI configuration settings."""
@@ -6982,7 +7027,20 @@ def apply_auto_configuration():
             current_provider = get_ai_config().get('provider_name', {}).get('value', 'openai')
             if current_provider != features['recommended_provider']:
                 update_ai_config('provider_name', features['recommended_provider'])
-                logging.info(f"✅ AUTO_CONFIG: AI provider set to {features['recommended_provider']}")
+                
+                # Sync main model_name with provider-specific model (fix startup logic issue)
+                ai_config = get_ai_config()
+                if features['recommended_provider'] == 'openai':
+                    model_name = ai_config.get('openai_model_name', {}).get('value', 'gpt-3.5-turbo')
+                elif features['recommended_provider'] == 'gemini':
+                    model_name = ai_config.get('gemini_model_name', {}).get('value', 'gemini-pro')
+                elif features['recommended_provider'] == 'ollama':
+                    model_name = ai_config.get('ollama_model_name', {}).get('value', 'phi3:mini')
+                else:
+                    model_name = 'gpt-3.5-turbo'  # Safe default
+                
+                update_ai_config('model_name', model_name)
+                logging.info(f"✅ AUTO_CONFIG: AI provider set to {features['recommended_provider']} with model {model_name}")
         except Exception as e:
             logging.warning(f"⚠️ AUTO_CONFIG: Failed to update AI provider: {e}")
     
