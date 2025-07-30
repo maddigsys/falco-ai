@@ -63,14 +63,13 @@
         box-shadow: var(--shadow-lg);
         display: none;
         flex-direction: column;
-        overflow: hidden;
+        overflow: visible;
         animation: slideIn 0.3s ease;
         min-width: 400px;
         max-width: none;
-        max-height: 85vh; /* Limit sidebar height to 85% of viewport */
-        margin-top: var(--space-lg); /* Add space from top */
+        margin-top: var(--space-lg); /* Keep the top spacing */
         min-height: 0;
-        /* Constrained sidebar height with top spacing */
+        /* Sidebar shows all content without scrolling */
     }
 
     .events-sidebar.active {
