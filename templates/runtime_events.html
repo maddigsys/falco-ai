@@ -58,11 +58,11 @@
         box-shadow: var(--shadow-lg);
         display: none;
         flex-direction: column;
-        overflow: hidden;
+        overflow: visible; /* Allow content to expand naturally */
         animation: slideIn 0.3s ease;
         min-width: 400px;
         max-width: none;
-        height: 100%;
+        /* Removed height: 100% to allow natural content sizing */
         min-height: 0;
     }
 
@@ -601,10 +601,10 @@
     }
 
     .detail-body {
-        flex: 1;
         overflow-y: auto;
         padding: var(--space-md);
-        height: 0; /* Allow flex to work properly */
+        max-height: 80vh; /* Limit height instead of forcing it */
+        /* Removed flex: 1 and height: 0 to allow natural content sizing */
     }
 
     .detail-section {
