@@ -4,6 +4,9 @@
 
 This comprehensive Kubernetes deployment provides AI-enhanced security alerting with automatic platform detection and optimization.
 
+![System Architecture](../assets/Arch_Diagram.png)
+*Kubernetes deployment architecture showing the complete AI-enhanced security alerting system.*
+
 ## ✨ What's New in v2.1.12
 
 ### **🛠 Enhanced Configuration System**

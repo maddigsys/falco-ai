@@ -6,6 +6,9 @@ Your Falco AI Alert System supports **multiple MCP protocols** and **AI clients*
 
 **🎯 UNIFIED INTERFACE**: All MCP integrations consolidated into a single **MCP Hub** at `/mcp-dashboard`
 
+![MCP Hub](assets/MCP_Hub.png)
+*Unified MCP Hub dashboard providing centralized management and testing for all MCP protocol integrations.*
+
 ## 🛡️ Available MCP Integrations
 
 ### 1. JSON-RPC MCP (stdio) - ✅ READY
@@ -15,6 +18,9 @@ Your Falco AI Alert System supports **multiple MCP protocols** and **AI clients*
 - **Setup**: `./setup_jsonrpc_mcp.sh`
 - **Test**: `python3 test_jsonrpc_mcp.py`
 - **Web Config**: http://localhost:8080/mcp-dashboard
+
+![AI Assistant Persona](assets/AI_Assistant_Persona.png)
+*AI security assistant persona demonstrating intelligent interaction capabilities.*
 
 **Features:**
 - Universal compatibility with Claude Desktop, VS Code, Cursor

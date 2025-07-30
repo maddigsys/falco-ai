@@ -18,6 +18,12 @@ A comprehensive security alert system that combines Falco runtime security with 
 - **Multilingual Support** - AI analysis in multiple languages
 - **Enhanced UI/UX** - Modern interface with responsive design
 
+## System Architecture
+
+![System Architecture](assets/Arch_Diagram.png)
+
+*Comprehensive overview of the Falco AI Alert System architecture showing data flow from Falco runtime security through AI analysis to various output channels.*
+
 ## Quick Start
 
 > **Note**: This is experimental software. Please test thoroughly before using in production environments.
@@ -48,6 +54,26 @@ docker-compose up -d
 # Access Web UI
 open http://localhost:8080/dashboard
 ```
+
+## Dashboard Features
+
+The interactive web dashboard provides comprehensive security monitoring with multiple analysis views:
+
+### Real-time Security Analysis
+![Real-time Analysis](assets/HomeScreen_Realtime_Analysis.png)
+*Live monitoring of security events with real-time threat detection and analysis.*
+
+### Threat Intelligence
+![Threat Intelligence](assets/HomeScreen_Threat_Intelligence.png)
+*Advanced threat intelligence dashboard showing security patterns and indicators.*
+
+### Alert Clustering
+![Alert Clustering](assets/HomeScreen_Alert_Clustering.png)
+*Intelligent alert clustering to reduce noise and identify related security events.*
+
+### Pattern Analysis
+![Pattern Analysis](assets/HomeScreen_Pattern_Analysis.png)
+*Deep pattern analysis to detect anomalies and emerging security threats.*
 
 ### Docker Run (Quick Test)
 ```bash
@@ -154,6 +180,9 @@ docker pull maddigsys/falco-ai-alerts:v2.0.0-amd64
 
 ## API Endpoints
 
+![API Explorer](assets/API_Explorer.png)
+*Interactive API explorer showing available endpoints and their capabilities.*
+
 - `POST /falco-webhook` - Receive Falco alerts
 - `GET /dashboard` - Web UI dashboard
 - `GET /api/alerts` - Get alerts with filtering
@@ -162,6 +191,9 @@ docker pull maddigsys/falco-ai-alerts:v2.0.0-amd64
 - `GET /runtime-events` - Enhanced events page with pagination
 
 ## MCP Tools
+
+![AI Assistant](assets/AI_Assistant.png)
+*AI-powered security assistant providing intelligent analysis and chat capabilities through MCP integration.*
 
 The system includes 15 functional MCP (Model Context Protocol) tools:
 
