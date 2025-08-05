@@ -106,5 +106,5 @@ patches:
 
 images:
   - name: falco-ai-alerts
-    newName: maddigsys/falco-ai-alerts
+    newName: maddigsys/falco-vanguard
     newTag: latest
