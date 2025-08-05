@@ -33,7 +33,7 @@ syslog_output:
 # HTTP webhook output - THIS IS THE KEY PART FOR YOUR INTEGRATION
 http_output:
   enabled: true
-  url: "http://falco-ai-alerts:8080/falco-webhook"  # Use service name for Docker Compose
+  url: "http://falco-vanguard:8080/falco-webhook"  # Use service name for Docker Compose
   # If running Falco outside Docker, use: "http://localhost:8080/falco-webhook"
   user_agent: "falcosecurity/falco"
   ca_cert: ""

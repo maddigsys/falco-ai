@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: falco-ai-alerts-aks
+  name: falco-vanguard-aks
   annotations:
     cloud-provider: aks
     optimized-for: "Azure Kubernetes Service"
@@ -12,7 +12,7 @@ resources:
   - ../../base
   - hpa.yaml
 
-namespace: falco-ai-alerts
+namespace: falco-vanguard
 
 namePrefix: prod-
 
@@ -25,7 +25,7 @@ patches:
   # Increase replicas for production
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/replicas
@@ -34,7 +34,7 @@ patches:
   # AKS-optimized resource configuration
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/resources/requests/memory
@@ -52,7 +52,7 @@ patches:
   # AKS-specific storage class (managed-csi-premium for SSD performance)
   - target:
       kind: PersistentVolumeClaim
-      name: falco-ai-alerts-data
+      name: falco-vanguard-data
     patch: |-
       - op: replace
         path: /spec/storageClassName
@@ -124,7 +124,7 @@ patches:
   # AKS-specific service optimizations
   - target:
       kind: Service
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: add
         path: /metadata/annotations
@@ -132,6 +132,6 @@ patches:
           service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/health"
 
 images:
-  - name: maddigsys/falco-ai-alerts
-    newName: maddigsys/falco-ai-alerts
+  - name: maddigsys/falco-vanguard
+    newName: maddigsys/falco-vanguard
     newTag: "v2.1.0" 

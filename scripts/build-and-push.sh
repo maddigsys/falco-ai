@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 DOCKER_REPO="maddigsys"
-IMAGE_NAME="falco-ai-alerts"
+IMAGE_NAME="falco-vanguard"
 DEFAULT_VERSION="latest"
 DEFAULT_PLATFORMS="linux/amd64,linux/arm64"
 

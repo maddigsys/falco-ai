@@ -1,17 +1,17 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: falco-ai-alerts-hpa
-  namespace: falco-ai-alerts
+  name: falco-vanguard-hpa
+  namespace: falco-vanguard
   labels:
-    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/name: falco-vanguard
     app.kubernetes.io/component: autoscaling
     platform: eks
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: prod-falco-ai-alerts
+    name: prod-falco-vanguard
   minReplicas: 2
   maxReplicas: 8
   metrics:

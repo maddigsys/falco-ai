@@ -19,7 +19,7 @@ fi
 cat > "$CLAUDE_CONFIG_FILE" << EOF
 {
   "mcpServers": {
-    "falco-ai-alerts": {
+    "falco-vanguard": {
       "command": "python3",
       "args": ["$SCRIPT_DIR/claude_mcp_server.py"],
       "env": {

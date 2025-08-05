@@ -88,7 +88,7 @@ generate_dynamic_config() {
 # Create secrets
 create_secrets() {
     local environment=${1:-dev}
-    local namespace="falco-ai-alerts-$environment"
+    local namespace="falco-vanguard-$environment"
     
     print_info "Creating namespace and secrets for $environment..."
     
@@ -96,7 +96,7 @@ create_secrets() {
     kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
     
     # Create secrets
-    kubectl create secret generic "${environment:0:3}-falco-ai-alerts-secrets" \
+    kubectl create secret generic "${environment:0:3}-falco-vanguard-secrets" \
         -n "$namespace" \
         --from-literal=SLACK_BOT_TOKEN="not-set" \
         --from-literal=PORTKEY_API_KEY="not-set" \
@@ -302,7 +302,7 @@ deploy_application() {
 # Wait for deployment
 wait_for_deployment() {
     local environment=${1:-dev}
-    local namespace="falco-ai-alerts-$environment"
+    local namespace="falco-vanguard-$environment"
     
     print_info "Waiting for deployments to be ready..."
     
@@ -319,7 +319,7 @@ wait_for_deployment() {
     fi
     
     # Wait for main app
-    kubectl rollout status deployment/${environment:0:3}-falco-ai-alerts -n "$namespace" --timeout=300s
+    kubectl rollout status deployment/${environment:0:3}-falco-vanguard -n "$namespace" --timeout=300s
     
     print_status "All deployments are ready"
 }
@@ -327,7 +327,7 @@ wait_for_deployment() {
 # Show access information
 show_access_info() {
     local environment=${1:-dev}
-    local namespace="falco-ai-alerts-$environment"
+    local namespace="falco-vanguard-$environment"
     
     print_info "Getting access information..."
     
@@ -338,10 +338,10 @@ show_access_info() {
     case $PLATFORM in
         "gke"|"eks"|"aks")
             print_info "For external access, you may need to create an ingress or port-forward:"
-            echo "kubectl port-forward svc/${environment:0:3}-falco-ai-alerts 8080:8080 -n $namespace"
+            echo "kubectl port-forward svc/${environment:0:3}-falco-vanguard 8080:8080 -n $namespace"
             ;;
         "local")
-            local nodeport=$(kubectl get svc ${environment:0:3}-falco-ai-alerts -n "$namespace" -o jsonpath='{.spec.ports[0].nodePort}')
+            local nodeport=$(kubectl get svc ${environment:0:3}-falco-vanguard -n "$namespace" -o jsonpath='{.spec.ports[0].nodePort}')
             print_info "Access the application at: http://localhost:$nodeport"
             ;;
     esac

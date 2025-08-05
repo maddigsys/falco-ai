@@ -2,12 +2,12 @@ version: '3.8'
 
 services:
   # Main Falco Vanguard
-  falco-ai-alerts:
+  falco-vanguard:
     # Option 1: Use published image (recommended for production)
-    # image: maddigsys/falco-ai-alerts:latest
+    # image: maddigsys/falco-vanguard:latest
     # Option 2: Build locally (for development with new features)
     build: .
-    image: maddigsys/falco-ai-alerts:v2.1.0
+    image: maddigsys/falco-vanguard:v2.1.0
     ports:
       - "8080:8080"  # Main webhook and Web UI port
     environment:
@@ -64,10 +64,10 @@ services:
     volumes:
       - ./generate_events.py:/app/generate_events.py:ro
     environment:
-      - WEBHOOK_URL=http://falco-ai-alerts:8080/falco-webhook
+      - WEBHOOK_URL=http://falco-vanguard:8080/falco-webhook
       - GENERATION_INTERVAL=30
     depends_on:
-      - falco-ai-alerts
+      - falco-vanguard
     restart: unless-stopped
     networks:
       - falco-network

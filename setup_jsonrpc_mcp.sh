@@ -19,7 +19,7 @@ fi
 cat > "$CLAUDE_CONFIG_FILE" << EOF
 {
   "mcpServers": {
-    "falco-ai-alerts": {
+    "falco-vanguard": {
       "command": "python3",
       "args": ["$SCRIPT_DIR/jsonrpc_mcp_server.py"],
       "env": {
@@ -45,7 +45,7 @@ if [ -d "$VSCODE_CONFIG_DIR" ]; then
     cat > "$VSCODE_MCP_CONFIG" << EOF
 {
   "mcpServers": {
-    "falco-ai-alerts": {
+    "falco-vanguard": {
       "command": "python3",
       "args": ["$SCRIPT_DIR/jsonrpc_mcp_server.py"],
       "env": {
@@ -68,7 +68,7 @@ if [ -d "$CURSOR_CONFIG_DIR" ]; then
     cat > "$CURSOR_MCP_CONFIG" << EOF
 {
   "mcpServers": {
-    "falco-ai-alerts": {
+    "falco-vanguard": {
       "command": "python3",
       "args": ["$SCRIPT_DIR/jsonrpc_mcp_server.py"],
       "env": {

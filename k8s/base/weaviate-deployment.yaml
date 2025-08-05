@@ -4,7 +4,7 @@ metadata:
   name: weaviate
   labels:
     app: weaviate
-    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/name: falco-vanguard
     app.kubernetes.io/component: weaviate
     app.kubernetes.io/part-of: falco-ecosystem
 spec:
@@ -82,7 +82,7 @@ metadata:
   name: weaviate
   labels:
     app: weaviate
-    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/name: falco-vanguard
     app.kubernetes.io/component: weaviate
     app.kubernetes.io/part-of: falco-ecosystem
 spec:
@@ -105,7 +105,7 @@ metadata:
   name: weaviate-pvc
   labels:
     app: weaviate
-    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/name: falco-vanguard
     app.kubernetes.io/component: weaviate
     app.kubernetes.io/part-of: falco-ecosystem
 spec:

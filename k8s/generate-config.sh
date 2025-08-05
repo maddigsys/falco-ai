@@ -81,7 +81,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: falco-ai-alerts-$environment-auto
+  name: falco-vanguard-$environment-auto
   annotations:
     platform: $PLATFORM
     storage-class: $STORAGE_CLASS
@@ -90,7 +90,7 @@ metadata:
 resources:
   - ../../base
 
-namespace: falco-ai-alerts-$environment
+namespace: falco-vanguard-$environment
 
 namePrefix: ${environment:0:3}-
 
@@ -130,7 +130,7 @@ patches:
   # Environment-specific replicas
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/replicas
@@ -139,7 +139,7 @@ patches:
   # Environment-specific service URLs
   - target:
       kind: ConfigMap
-      name: falco-ai-alerts-config
+      name: falco-vanguard-config
     patch: |-
       - op: replace
         path: /data/OLLAMA_API_URL
@@ -196,8 +196,8 @@ patches:
           echo "Model initialization and warm-up complete!"
 
 images:
-  - name: falco-ai-alerts
-    newName: maddigsys/falco-ai-alerts
+  - name: falco-vanguard
+    newName: maddigsys/falco-vanguard
     newTag: $(if [[ "$environment" == "dev"* ]] || [[ "$environment" == "development"* ]]; then echo "latest"; else echo "v2.1.0"; fi)
 EOF
 

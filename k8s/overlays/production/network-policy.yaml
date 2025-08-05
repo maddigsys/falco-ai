@@ -1,15 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: falco-ai-alerts-network-policy
-  namespace: falco-ai-alerts
+  name: falco-vanguard-network-policy
+  namespace: falco-vanguard
   labels:
-    app.kubernetes.io/name: falco-ai-alerts
+    app.kubernetes.io/name: falco-vanguard
     app.kubernetes.io/component: security
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: falco-ai-alerts
+      app.kubernetes.io/name: falco-vanguard
   policyTypes:
   - Ingress
   - Egress

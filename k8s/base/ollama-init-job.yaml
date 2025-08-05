@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: ollama-model-init
-  namespace: falco-ai-alerts
+  namespace: falco-vanguard
   labels:
     app.kubernetes.io/name: ollama-init
     app.kubernetes.io/component: initialization

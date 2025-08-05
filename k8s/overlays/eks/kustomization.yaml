@@ -6,7 +6,7 @@ kind: Kustomization
 # Tested instance types: t3.xlarge, t4g.xlarge, m5.xlarge, m6g.xlarge
 # Cost optimization: ARM64 instances provide 20-40% cost savings
 metadata:
-  name: falco-ai-alerts-eks
+  name: falco-vanguard-eks
   annotations:
     cloud-provider: eks
     optimized-for: "Amazon Elastic Kubernetes Service"
@@ -18,7 +18,7 @@ resources:
   - ../../base
   - hpa.yaml
 
-namespace: falco-ai-alerts
+namespace: falco-vanguard
 
 namePrefix: prod-
 
@@ -39,7 +39,7 @@ patches:
   # AWS Load Balancer Controller instead of nginx
   - target:
       kind: Ingress
-      name: falco-ai-alerts-ingress
+      name: falco-vanguard-ingress
     patch: |-
       - op: replace
         path: /metadata/annotations
@@ -47,7 +47,7 @@ patches:
           kubernetes.io/ingress.class: "alb"
           alb.ingress.kubernetes.io/scheme: "internet-facing"
           alb.ingress.kubernetes.io/target-type: "ip"
-          alb.ingress.kubernetes.io/load-balancer-name: "falco-ai-alerts-alb"
+          alb.ingress.kubernetes.io/load-balancer-name: "falco-vanguard-alb"
           alb.ingress.kubernetes.io/ssl-redirect: "443"
           alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:region:account:certificate/cert-id"
       - op: remove
@@ -76,7 +76,7 @@ patches:
   # Production scaling with multi-architecture support
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/replicas
@@ -105,7 +105,7 @@ patches:
   # EKS ConfigMap timeout configuration
   - target:
       kind: ConfigMap
-      name: falco-ai-alerts-config
+      name: falco-vanguard-config
     patch: |-
       - op: replace
         path: /data/OLLAMA_TIMEOUT
@@ -163,7 +163,7 @@ patches:
   # Remove NetworkPolicy for EKS (use Security Groups instead)
   - target:
       kind: NetworkPolicy
-      name: falco-ai-alerts-network-policy
+      name: falco-vanguard-network-policy
     patch: |-
       - op: replace
         path: /metadata/annotations
@@ -173,8 +173,8 @@ patches:
 images:
   # Multi-architecture image (supports both AMD64 and ARM64)
   # Kubernetes automatically selects the correct architecture
-  - name: falco-ai-alerts
-    newName: maddigsys/falco-ai-alerts
+  - name: falco-vanguard
+    newName: maddigsys/falco-vanguard
     newTag: "v2.1.0"  # Multi-arch manifest
   - name: ollama
     newName: ollama/ollama
@@ -184,5 +184,5 @@ images:
 commonAnnotations:
   deployment.kubernetes.io/revision: "1"
   eks.amazonaws.com/compute-type: "mixed"  # Supports both x86_64 and arm64
-  falco-ai-alerts.io/arch-support: "amd64,arm64"
-  falco-ai-alerts.io/tested-instance-types: "t3.xlarge,t4g.xlarge,m5.xlarge,m6g.xlarge" 
+  falco-vanguard.io/arch-support: "amd64,arm64"
+  falco-vanguard.io/tested-instance-types: "t3.xlarge,t4g.xlarge,m5.xlarge,m6g.xlarge" 

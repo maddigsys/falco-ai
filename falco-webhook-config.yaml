@@ -9,7 +9,7 @@ json_include_tags_property: true
 # HTTP output configuration for webhook
 http_output:
   enabled: true
-  url: "http://falco-ai-alerts:8080/webhook"
+  url: "http://falco-vanguard:8080/webhook"
   user_agent: "falco-webhook"
   ca_file: ""
   ca_cert: ""
@@ -38,7 +38,7 @@ http_output:
 # Alternative: If both Falco and AI system are in same Docker network
 # http_output:
 #   enabled: true
-#   url: "http://falco-ai-alerts:8080/falco-webhook"
+#   url: "http://falco-vanguard:8080/falco-webhook"
 
 # Log level and output settings
 log_level: info

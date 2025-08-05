@@ -2,14 +2,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: falco-ai-alerts-production
+  name: falco-vanguard-production
 
 resources:
   - ../../base
   - hpa.yaml
   - network-policy.yaml
 
-namespace: falco-ai-alerts
+namespace: falco-vanguard
 
 namePrefix: prod-
 
@@ -21,7 +21,7 @@ patches:
   # Increase replicas for production
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/replicas
@@ -30,7 +30,7 @@ patches:
   # Increase resource limits for production
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/resources/requests/memory
@@ -50,7 +50,7 @@ patches:
   # Override ConfigMap values for production
   - target:
       kind: ConfigMap
-      name: falco-ai-alerts-config
+      name: falco-vanguard-config
     patch: |-
       - op: replace
         path: /data/LOG_LEVEL
@@ -132,6 +132,6 @@ patches:
           echo "      via the AI Configuration dashboard after deployment."
 
 images:
-  - name: falco-ai-alerts
-    newName: maddigsys/falco-ai-alerts
+  - name: falco-vanguard
+    newName: maddigsys/falco-vanguard
     newTag: "v2.1.12" 

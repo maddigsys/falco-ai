@@ -78,8 +78,8 @@ check_prerequisites() {
     
     # Show image tag information
     print_info "Image versions per environment:"
-    echo "   • Development: maddigsys/falco-ai-alerts:v2.0.4"
-    echo "   • Production: maddigsys/falco-ai-alerts:v2.0.4"
+    echo "   • Development: maddigsys/falco-vanguard:v2.0.4"
+    echo "   • Production: maddigsys/falco-vanguard:v2.0.4"
 
     print_info "New in v2.0.4: Dark/Light mode toggle in the top navigation bar!"
 }
@@ -111,13 +111,13 @@ get_secret_name() {
     local environment=$1
     case $environment in
         development)
-            echo "dev-falco-ai-alerts-secrets"
+            echo "dev-falco-vanguard-secrets"
             ;;
         production)
-            echo "prod-falco-ai-alerts-secrets"
+            echo "prod-falco-vanguard-secrets"
             ;;
         *)
-            echo "${environment}-falco-ai-alerts-secrets"
+            echo "${environment}-falco-vanguard-secrets"
             ;;
     esac
 }
@@ -292,10 +292,10 @@ install_environment() {
     
     case $environment in
         development)
-            namespace="falco-ai-alerts-dev"
+            namespace="falco-vanguard-dev"
             ;;
         production)
-            namespace="falco-ai-alerts"
+            namespace="falco-vanguard"
             ;;
         *)
             print_error "Unknown environment: $environment"
@@ -331,7 +331,7 @@ install_environment() {
     
     # Wait for Falco AI Alerts deployment
     print_info "Waiting for Falco AI Alerts deployment..."
-    kubectl wait --for=condition=available deployment/"${prefix}falco-ai-alerts" -n "$namespace" --timeout=300s
+    kubectl wait --for=condition=available deployment/"${prefix}falco-vanguard" -n "$namespace" --timeout=300s
     
     # Wait for Ollama deployment
     print_info "Waiting for Ollama deployment..."
@@ -381,13 +381,13 @@ show_access_instructions() {
     
     case $environment in
         development)
-            namespace="falco-ai-alerts-dev"
-            service_name="dev-falco-ai-alerts"
+            namespace="falco-vanguard-dev"
+            service_name="dev-falco-vanguard"
             port="30080"
             ;;
         production)
-            namespace="falco-ai-alerts"
-            service_name="prod-falco-ai-alerts"
+            namespace="falco-vanguard"
+            service_name="prod-falco-vanguard"
             port="8080"
             ;;
     esac
@@ -412,10 +412,10 @@ show_access_instructions() {
     
     print_info "🔗 Webhook URLs (for Falco configuration):"
     if [ "$environment" = "development" ]; then
-        echo "  Internal: http://dev-falco-ai-alerts-webhook.falco-ai-alerts-dev/falco-webhook"
+        echo "  Internal: http://dev-falco-vanguard-webhook.falco-vanguard-dev/falco-webhook"
         echo "  External: http://localhost:8080/falco-webhook (via port-forward)"
     else
-        echo "  Internal: http://prod-falco-ai-alerts-webhook.falco-ai-alerts/falco-webhook"
+        echo "  Internal: http://prod-falco-vanguard-webhook.falco-vanguard/falco-webhook"
         echo "  External: http://your-domain.com/falco-webhook (via ingress)"
     fi
     echo ""
@@ -795,10 +795,10 @@ main() {
     local namespace=""
     case $ENVIRONMENT in
         development)
-            namespace="falco-ai-alerts-dev"
+            namespace="falco-vanguard-dev"
             ;;
         production)
-            namespace="falco-ai-alerts"
+            namespace="falco-vanguard"
             ;;
     esac
     
@@ -816,11 +816,11 @@ main() {
     print_info "Environment: $ENVIRONMENT"
     print_info "Target cluster: $(kubectl config current-context)"
     if [ "$ENVIRONMENT" = "development" ]; then
-        print_info "Namespace: falco-ai-alerts-dev"
+        print_info "Namespace: falco-vanguard-dev"
         print_info "Features: Single replica, NodePort access, debug logging"
         print_info "AI Model: tinyllama (default, minimal RAM, ultra-fast inference)"
     else
-        print_info "Namespace: falco-ai-alerts"
+        print_info "Namespace: falco-vanguard"
         print_info "Features: 3 replicas, HPA auto-scaling, security hardening"
         print_info "AI Model: tinyllama (default, minimal RAM, ultra-fast inference)"
         print_info "Upgrade: jimscard/whiterabbit-neo available for enhanced security"

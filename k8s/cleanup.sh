@@ -74,7 +74,7 @@ backup_data() {
     fi
     
     # Get first pod name
-    local pod_name=$(kubectl get pods -n "$namespace" -l app.kubernetes.io/name=falco-ai-alerts -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+    local pod_name=$(kubectl get pods -n "$namespace" -l app.kubernetes.io/name=falco-vanguard -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
     
     if [ -z "$pod_name" ]; then
         print_warning "No running pods found in namespace $namespace. Skipping database backup."
@@ -92,7 +92,7 @@ backup_data() {
     
     # Backup Ollama model data if available
     local ollama_deployment=""
-    if [ "$namespace" = "falco-ai-alerts-dev" ]; then
+    if [ "$namespace" = "falco-vanguard-dev" ]; then
         ollama_deployment="dev-ollama"
     else
         ollama_deployment="prod-ollama"
@@ -166,8 +166,8 @@ cleanup_namespace() {
     fi
     
     print_info "Cleaning up cluster-wide resources..."
-    kubectl delete clusterrole "${prefix}falco-ai-alerts" 2>/dev/null || true
-    kubectl delete clusterrolebinding "${prefix}falco-ai-alerts" 2>/dev/null || true
+    kubectl delete clusterrole "${prefix}falco-vanguard" 2>/dev/null || true
+    kubectl delete clusterrolebinding "${prefix}falco-vanguard" 2>/dev/null || true
     
     print_success "$environment environment cleanup completed"
 }
@@ -177,21 +177,21 @@ verify_cleanup() {
     print_info "Verifying cleanup..."
     
     # Check namespaces
-    local remaining_namespaces=$(kubectl get namespace | grep falco-ai-alerts | wc -l)
+    local remaining_namespaces=$(kubectl get namespace | grep falco-vanguard | wc -l)
     if [ "$remaining_namespaces" -gt 0 ]; then
-        print_warning "Some falco-ai-alerts namespaces still exist:"
-        kubectl get namespace | grep falco-ai-alerts
+        print_warning "Some falco-vanguard namespaces still exist:"
+        kubectl get namespace | grep falco-vanguard
     else
-        print_success "All falco-ai-alerts namespaces removed"
+        print_success "All falco-vanguard namespaces removed"
     fi
     
     # Check cluster-wide resources
-    local remaining_clusterroles=$(kubectl get clusterrole | grep falco-ai-alerts | wc -l)
-    local remaining_clusterrolebindings=$(kubectl get clusterrolebinding | grep falco-ai-alerts | wc -l)
+    local remaining_clusterroles=$(kubectl get clusterrole | grep falco-vanguard | wc -l)
+    local remaining_clusterrolebindings=$(kubectl get clusterrolebinding | grep falco-vanguard | wc -l)
     
     if [ "$remaining_clusterroles" -gt 0 ] || [ "$remaining_clusterrolebindings" -gt 0 ]; then
         print_warning "Some cluster-wide resources still exist:"
-        kubectl get clusterrole,clusterrolebinding | grep falco-ai-alerts || true
+        kubectl get clusterrole,clusterrolebinding | grep falco-vanguard || true
     else
         print_success "All cluster-wide resources removed"
     fi
@@ -303,20 +303,20 @@ main() {
     # Show environment-specific details
     if [ "$ENVIRONMENT" = "dev" ]; then
         print_info "Development cleanup includes:"
-        echo "   • Image: maddigsys/falco-ai-alerts:latest"
-        echo "   • Namespace: falco-ai-alerts-dev"
+        echo "   • Image: maddigsys/falco-vanguard:latest"
+        echo "   • Namespace: falco-vanguard-dev"
         echo "   • Resources: NodePort services (30080, 30081)"
         echo "   • Storage: 15Gi ollama-data PVC"
     elif [ "$ENVIRONMENT" = "production" ]; then
         print_info "Production cleanup includes:"
-        echo "   • Image: maddigsys/falco-ai-alerts:v2.0.4 (with dark/light mode toggle in the UI navigation)"
-        echo "   • Namespace: falco-ai-alerts"
+        echo "   • Image: maddigsys/falco-vanguard:v2.0.4 (with dark/light mode toggle in the UI navigation)"
+        echo "   • Namespace: falco-vanguard"
         echo "   • Resources: HPA, Network Policies, Ingress"
         echo "   • Storage: 30Gi ollama-data PVC"
     elif [ "$ENVIRONMENT" = "all" ]; then
         print_info "Full cleanup includes both environments:"
-        echo "   • Development: falco-ai-alerts-dev namespace"
-        echo "   • Production: falco-ai-alerts namespace"
+        echo "   • Development: falco-vanguard-dev namespace"
+        echo "   • Production: falco-vanguard namespace"
         echo "   • All PVCs, HPAs, and network policies"
     fi
     
@@ -341,21 +341,21 @@ main() {
         print_info "Creating backups before cleanup..."
         
         if [ "$ENVIRONMENT" = "dev" ] || [ "$ENVIRONMENT" = "all" ]; then
-            backup_data "falco-ai-alerts-dev" "dev-falco-ai-alerts"
+            backup_data "falco-vanguard-dev" "dev-falco-vanguard"
         fi
         
         if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "all" ]; then
-            backup_data "falco-ai-alerts" "prod-falco-ai-alerts"
+            backup_data "falco-vanguard" "prod-falco-vanguard"
         fi
     fi
     
     # Perform cleanup
     if [ "$ENVIRONMENT" = "dev" ] || [ "$ENVIRONMENT" = "all" ]; then
-        cleanup_namespace "dev" "falco-ai-alerts-dev" "$SCRIPT_DIR/overlays/development"
+        cleanup_namespace "dev" "falco-vanguard-dev" "$SCRIPT_DIR/overlays/development"
     fi
     
     if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "all" ]; then
-        cleanup_namespace "production" "falco-ai-alerts" "$SCRIPT_DIR/overlays/production"
+        cleanup_namespace "production" "falco-vanguard" "$SCRIPT_DIR/overlays/production"
     fi
     
     # Verify cleanup

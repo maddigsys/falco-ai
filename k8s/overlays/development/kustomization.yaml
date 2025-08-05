@@ -2,12 +2,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: falco-ai-alerts-dev
+  name: falco-vanguard-dev
 
 resources:
   - ../../base
 
-namespace: falco-ai-alerts-dev
+namespace: falco-vanguard-dev
 
 namePrefix: dev-
 
@@ -19,7 +19,7 @@ patches:
   # Reduce replicas for development
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/replicas
@@ -37,7 +37,7 @@ patches:
   # Use NodePort for easy local access
   - target:
       kind: Service
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/type
@@ -49,7 +49,7 @@ patches:
   # Make webhook service also NodePort for development
   - target:
       kind: Service
-      name: falco-ai-alerts-webhook
+      name: falco-vanguard-webhook
     patch: |-
       - op: replace
         path: /spec/type
@@ -61,7 +61,7 @@ patches:
   # Reduce resource requests for development
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/resources/requests/memory
@@ -79,7 +79,7 @@ patches:
   # Override ConfigMap values for development
   - target:
       kind: ConfigMap
-      name: falco-ai-alerts-config
+      name: falco-vanguard-config
     patch: |-
       - op: replace
         path: /data/LOG_LEVEL
@@ -189,7 +189,7 @@ patches:
   # Increase readiness probe timeout for development
   - target:
       kind: Deployment
-      name: falco-ai-alerts
+      name: falco-vanguard
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/readinessProbe/initialDelaySeconds
@@ -207,7 +207,7 @@ patches:
   # Fix service names for development environment
   - target:
       kind: ConfigMap
-      name: falco-ai-alerts-config
+      name: falco-vanguard-config
     patch: |-
       - op: replace
         path: /data/OLLAMA_API_URL
@@ -217,6 +217,6 @@ patches:
         value: "dev-weaviate"
 
 images:
-  - name: falco-ai-alerts
-    newName: maddigsys/falco-ai-alerts
+  - name: falco-vanguard
+    newName: maddigsys/falco-vanguard
     newTag: latest 
