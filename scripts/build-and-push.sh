@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Multi-Architecture Docker Build and Push Script for Falco AI Alert System
+# Multi-Architecture Docker Build and Push Script for Falco Vanguard
 # Usage: ./scripts/build-and-push.sh [version] [--push] [--arch]
 
 set -e

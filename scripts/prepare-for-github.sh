@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GitHub Preparation Script for Falco AI Alert System
+# GitHub Preparation Script for Falco Vanguard
 # Usage: ./scripts/prepare-for-github.sh
 
 set -e
@@ -91,7 +91,7 @@ echo "# Add all files"
 echo "git add ."
 echo ""
 echo "# Create initial commit"
-echo "git commit -m \"Initial commit: Production-ready Falco AI Alert System"
+echo "git commit -m \"Initial commit: Production-ready Falco Vanguard"
 echo ""
 echo "- Complete MCP integration with 15 security tools"
 echo "- Cleaned codebase with only essential files"

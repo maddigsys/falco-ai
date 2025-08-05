@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Claude-compatible MCP Server for Falco AI Alert System
+Claude-compatible MCP Server for Falco Vanguard
 This script provides a JSON-RPC over stdio interface that Claude can connect to,
 while bridging to the existing Falco MCP service.
 """
@@ -207,7 +207,7 @@ class ClaudeMCPServer:
                 
         except requests.exceptions.ConnectionError:
             return {
-                "error": "Cannot connect to Falco AI Alert System",
+                "error": "Cannot connect to Falco Vanguard",
                 "message": "Please ensure the Falco service is running on http://localhost:8080",
                 "fallback": f"Tool '{tool_name}' called with arguments: {arguments}"
             }

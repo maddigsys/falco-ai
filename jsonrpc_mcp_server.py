@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-JSON-RPC over stdio MCP Server for Falco AI Alert System
+JSON-RPC over stdio MCP Server for Falco Vanguard
 Provides standard MCP compatibility with JSON-RPC protocol over stdin/stdout
 """
 
@@ -222,7 +222,7 @@ class JSONRPCMCPServer:
                     "logging": {}
                 },
                 "serverInfo": self.server_info,
-                "instructions": "Falco AI Alert System MCP Server - Access security alerts and analysis tools"
+                "instructions": "Falco Vanguard MCP Server - Access security alerts and analysis tools"
             }
         }
 
@@ -350,7 +350,7 @@ class JSONRPCMCPServer:
         except requests.exceptions.ConnectionError:
             return {
                 "success": False,
-                "error": "Cannot connect to Falco AI Alert System",
+                "error": "Cannot connect to Falco Vanguard",
                 "message": "Please ensure the Falco service is running on http://localhost:8080",
                 "tool": tool_name,
                 "arguments": arguments,

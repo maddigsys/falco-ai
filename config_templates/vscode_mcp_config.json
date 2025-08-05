@@ -8,7 +8,7 @@
         "FALCO_API_BASE": "http://localhost:8080",
         "LOG_LEVEL": "INFO"
       },
-      "description": "Falco AI Alert System - Security monitoring and threat analysis tools",
+      "description": "Falco Vanguard - Security monitoring and threat analysis tools",
       "capabilities": {
         "tools": true,
         "resources": false,
@@ -17,7 +17,7 @@
       "metadata": {
         "category": "security",
         "tags": ["falco", "security", "alerts", "monitoring"],
-        "author": "Falco AI Alert System",
+        "author": "Falco Vanguard",
         "version": "1.0.0"
       }
     }

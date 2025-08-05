@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Unified Falco AI Alert System Deployment Tool
+# Unified Falco Vanguard Deployment Tool
 # Consolidates all deployment operations into a single command-line interface
 
 set -e
@@ -40,7 +40,7 @@ print_step() { echo -e "${PURPLE}🚀 $1${NC}"; }
 print_header() {
     echo -e "${CYAN}"
     echo "=============================================="
-    echo "🚀 Falco AI Alert System - Unified Deploy Tool"
+    echo "🚀 Falco Vanguard - Unified Deploy Tool"
     echo "Version: $VERSION"
     echo "=============================================="
     echo -e "${NC}"
@@ -49,7 +49,7 @@ print_header() {
 # Help functions
 show_help() {
     cat << EOF
-Unified Falco AI Alert System Deployment Tool
+Unified Falco Vanguard Deployment Tool
 
 USAGE:
     $0 [COMMAND] [OPTIONS]
@@ -246,7 +246,7 @@ cmd_secrets() {
 
 cmd_install() {
     print_header
-    print_step "Installing Falco AI Alert System"
+    print_step "Installing Falco Vanguard"
     print_info "Environment: $ENVIRONMENT"
     print_info "Platform: $(detect_platform)"
     print_info "Namespace: $(get_namespace)"

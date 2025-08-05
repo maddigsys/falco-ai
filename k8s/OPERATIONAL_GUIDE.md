@@ -1,8 +1,8 @@
-# Operational Guide - Falco AI Alert System v2.1.12
+# Operational Guide - Falco Vanguard v2.1.12
 
 ## 🚀 Quick Access Commands
 
-Once your Falco AI Alert System is deployed, use these commands for day-to-day operations.
+Once your Falco Vanguard is deployed, use these commands for day-to-day operations.
 
 ## 🌐 Access Methods
 

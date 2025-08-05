@@ -1,4 +1,4 @@
-# Performance Optimization Guide - Falco AI Alert System v2.1.12
+# Performance Optimization Guide - Falco Vanguard v2.1.12
 
 ## 🎯 Model Selection & Resource Planning
 

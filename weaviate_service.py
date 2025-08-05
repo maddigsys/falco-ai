@@ -1,5 +1,5 @@
 """
-Weaviate Service Layer for Falco AI Alert System
+Weaviate Service Layer for Falco Vanguard
 
 This module provides vector storage and semantic search capabilities
 for security alerts, enabling pattern recognition and contextual analysis.

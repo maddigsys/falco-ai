@@ -1,6 +1,6 @@
 """
 MCP (Model Context Protocol) Service Implementation
-Provides MCP server and client functionality for the Falco AI Alert System
+Provides MCP server and client functionality for the Falco Vanguard
 """
 
 import json

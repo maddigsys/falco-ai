@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup script for Claude MCP integration with Falco AI Alert System
+# Setup script for Claude MCP integration with Falco Vanguard
 
 set -e
 
@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_CONFIG_DIR="$HOME/.config/claude-desktop"
 CLAUDE_CONFIG_FILE="$CLAUDE_CONFIG_DIR/config.json"
 
-echo "🚀 Setting up Claude MCP integration for Falco AI Alert System..."
+echo "🚀 Setting up Claude MCP integration for Falco Vanguard..."
 
 # Create Claude config directory if it doesn't exist
 if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
@@ -50,7 +50,7 @@ echo ""
 echo "🎉 Setup complete! Claude is now configured to use Falco MCP server."
 echo ""
 echo "📋 Next steps:"
-echo "   1. Ensure your Falco AI Alert System is running: python3 app.py"
+echo "   1. Ensure your Falco Vanguard is running: python3 app.py"
 echo "   2. Restart Claude Desktop application"
 echo "   3. Claude will now have access to Falco security tools!"
 echo ""

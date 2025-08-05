@@ -1,4 +1,4 @@
-# Kubernetes Deployment - Falco AI Alert System v2.1.12
+# Kubernetes Deployment - Falco Vanguard v2.1.12
 
 > **🚀 One-Command Deployment**: `cd k8s && ./install-dynamic.sh`
 

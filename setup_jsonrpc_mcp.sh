@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup script for JSON-RPC MCP integration with Falco AI Alert System
+# Setup script for JSON-RPC MCP integration with Falco Vanguard
 
 set -e
 
@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_CONFIG_DIR="$HOME/.config/claude-desktop"
 CLAUDE_CONFIG_FILE="$CLAUDE_CONFIG_DIR/config.json"
 
-echo "🚀 Setting up JSON-RPC MCP integration for Falco AI Alert System..."
+echo "🚀 Setting up JSON-RPC MCP integration for Falco Vanguard..."
 
 # Create Claude config directory if it doesn't exist
 if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
@@ -51,7 +51,7 @@ if [ -d "$VSCODE_CONFIG_DIR" ]; then
       "env": {
         "FALCO_API_BASE": "http://localhost:8080"
       },
-      "description": "Falco AI Alert System - Security monitoring and analysis tools"
+      "description": "Falco Vanguard - Security monitoring and analysis tools"
     }
   }
 }
@@ -74,7 +74,7 @@ if [ -d "$CURSOR_CONFIG_DIR" ]; then
       "env": {
         "FALCO_API_BASE": "http://localhost:8080"
       },
-      "description": "Falco AI Alert System - Security monitoring and analysis tools"
+      "description": "Falco Vanguard - Security monitoring and analysis tools"
     }
   }
 }
@@ -124,7 +124,7 @@ if [ -f "$CURSOR_MCP_CONFIG" ]; then
 fi
 echo ""
 echo "📋 Next steps:"
-echo "   1. Ensure your Falco AI Alert System is running: python3 app.py"
+echo "   1. Ensure your Falco Vanguard is running: python3 app.py"
 echo "   2. Restart your AI client (Claude Desktop, VS Code, Cursor)"
 echo "   3. Your AI client will now have access to Falco security tools!"
 echo ""

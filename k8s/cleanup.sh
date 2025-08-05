@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Falco AI Alert System - Cleanup Script
+# Falco Vanguard - Cleanup Script
 # This script provides safe cleanup of Kubernetes deployments
 
 set -e  # Exit on any error
@@ -37,7 +37,7 @@ print_error() {
 print_header() {
     echo -e "${BLUE}"
     echo "=============================================="
-    echo "🗑️  Falco AI Alert System - Cleanup Script"
+    echo "🗑️  Falco Vanguard - Cleanup Script"
     echo "=============================================="
     echo -e "${NC}"
 }
@@ -200,7 +200,7 @@ verify_cleanup() {
 # Function to show help
 show_help() {
     cat << EOF
-Falco AI Alert System - Cleanup Script
+Falco Vanguard - Cleanup Script
 
 USAGE:
     $0 [OPTIONS] ENVIRONMENT
@@ -323,7 +323,7 @@ main() {
     # Safety confirmation
     if [ "$FORCE" != "true" ]; then
         echo ""
-        print_warning "This will delete Falco AI Alert System resources from your cluster!"
+        print_warning "This will delete Falco Vanguard resources from your cluster!"
         if [ "$DELETE_DATA" = "true" ]; then
             print_error "⚠️  DATA DELETION ENABLED - This will permanently delete all alert data!"
         fi

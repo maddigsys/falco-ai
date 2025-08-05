@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-gRPC Streaming MCP Server for Falco AI Alert System
+gRPC Streaming MCP Server for Falco Vanguard
 Provides a more industry-standard alternative to JSON-RPC over stdio
 """
 
@@ -194,7 +194,7 @@ class SimplifiedGRPCServer:
                 "success": False,
                 "error": {
                     "code": 503,
-                    "message": "Cannot connect to Falco AI Alert System",
+                    "message": "Cannot connect to Falco Vanguard",
                     "details": "Please ensure the Falco service is running"
                 },
                 "execution_time_ms": int((time.time() - start_time) * 1000)

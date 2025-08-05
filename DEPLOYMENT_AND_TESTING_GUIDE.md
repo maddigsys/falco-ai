@@ -1,4 +1,4 @@
-# Deployment & Testing Guide - Falco AI Alert System v2.1.12
+# Deployment & Testing Guide - Falco Vanguard v2.1.12
 
 **Release Date**: January 30, 2025  
 **Docker Image**: `maddigsys/falco-ai-alerts:v2.1.12`  
@@ -327,4 +327,4 @@ Your deployment is successful when:
 
 ---
 
-**🚀 Your Falco AI Alert System is ready for production!**
+**🚀 Your Falco Vanguard is ready for production!**

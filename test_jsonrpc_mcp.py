@@ -13,7 +13,7 @@ import time
 async def test_jsonrpc_mcp_server():
     """Test the JSON-RPC MCP server with standard MCP protocol messages"""
     
-    print("🧪 Testing JSON-RPC MCP Server for Falco AI Alert System...")
+    print("🧪 Testing JSON-RPC MCP Server for Falco Vanguard...")
     
     # Start the MCP server process
     server_process = subprocess.Popen(

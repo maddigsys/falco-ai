@@ -1,4 +1,4 @@
-# Comprehensive Deployment Guide - Falco AI Alert System v2.1.12
+# Comprehensive Deployment Guide - Falco Vanguard v2.1.12
 
 ## 🚀 Quick Start - One Command Deployment
 

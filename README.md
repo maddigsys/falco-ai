@@ -1,4 +1,4 @@
-# Falco AI Alert System
+# Falco Vanguard
 
 > **⚠️ EXPERIMENTAL REPOSITORY DISCLAIMER**  
 > This repository is currently under active development and is considered experimental. Some features may not work as expected, and breaking changes may occur without notice. Use at your own risk in production environments. Please report issues and contribute feedback to help improve the system.
@@ -22,7 +22,7 @@ A comprehensive security alert system that combines Falco runtime security with 
 
 ![System Architecture](assets/Arch_Diagram.png)
 
-*Comprehensive overview of the Falco AI Alert System architecture showing data flow from Falco runtime security through AI analysis to various output channels.*
+*Comprehensive overview of the Falco Vanguard architecture showing data flow from Falco runtime security through AI analysis to various output channels.*
 
 ## Quick Start
 

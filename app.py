@@ -2570,7 +2570,7 @@ def index():
     if WEB_UI_ENABLED:
         return render_template('weaviate_analytics.html', page='enhanced_analytics')
     else:
-        return jsonify({"message": "Falco AI Alert System", "status": "running", "webhook": "/falco-webhook"})
+        return jsonify({"message": "Falco Vanguard", "status": "running", "webhook": "/falco-webhook"})
 
 @app.route('/dashboard')
 def dashboard():
@@ -3083,7 +3083,7 @@ def api_test_alert():
             "time": datetime.datetime.now().isoformat() + "Z",
             "rule": "Test Alert Rule",
             "priority": "Notice",
-            "output": "This is a test alert generated to verify the Falco AI Alert System is working correctly. This alert demonstrates the system's ability to receive, process, and display security events.",
+            "output": "This is a test alert generated to verify the Falco Vanguard is working correctly. This alert demonstrates the system's ability to receive, process, and display security events.",
             "source": "falco_ai_test",
             "hostname": "test-host",
             "tags": ["test", "verification", "demo"],
@@ -5636,13 +5636,13 @@ def test_slack_connection(bot_token, channel_name):
         try:
             test_response = test_client.chat_postMessage(
                 channel=channel_name,
-                text="🧪 Falco AI Alert System - Connection Test Successful! 🎉",
+                text="🧪 Falco Vanguard - Connection Test Successful! 🎉",
                 blocks=[
                     {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "*🧪 Connection Test*\n✅ Falco AI Alert System is successfully connected to Slack!\n\n*Bot Info:*\n• User: " + auth_response.get('user', 'Unknown') + "\n• Team: " + auth_response.get('team', 'Unknown') + "\n• URL: " + auth_response.get('url', 'Unknown')
+                            "text": "*🧪 Connection Test*\n✅ Falco Vanguard is successfully connected to Slack!\n\n*Bot Info:*\n• User: " + auth_response.get('user', 'Unknown') + "\n• Team: " + auth_response.get('team', 'Unknown') + "\n• URL: " + auth_response.get('url', 'Unknown')
                         }
                     }
                 ]
@@ -8057,7 +8057,7 @@ if __name__ == '__main__':
             for alert in sample_alerts:
                 store_alert_enhanced(alert)
     
-    logging.info(f"🚀 Starting Falco AI Alert System on port {falco_ai_port}")
+    logging.info(f"🚀 Starting Falco Vanguard on port {falco_ai_port}")
     logging.info(f"🤖 Provider: {os.environ.get('PROVIDER_NAME', 'openai')}")
     logging.info(f"⚠️ Min Priority: {MIN_FALCO_PRIORITY}")
     logging.info(f"📢 Slack: {'✅ Configured' if slack_client else '❌ Not configured'}")

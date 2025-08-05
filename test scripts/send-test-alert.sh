@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # =================================================================
-# Falco AI Alert System - Test Alert Sender
+# Falco Vanguard - Test Alert Sender
 # =================================================================
 # Sends sample security alerts to test the webhook
 
 WEBHOOK_URL="http://localhost:8080/falco-webhook"
 
-echo "🚨 Sending test security alerts to Falco AI Alert System"
+echo "🚨 Sending test security alerts to Falco Vanguard"
 echo "========================================================"
 
 # Test Alert 1: Container Shell Access

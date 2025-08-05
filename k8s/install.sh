@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Falco AI Alert System - Installation Script
+# Falco Vanguard - Installation Script
 # This script provides automated installation for Kubernetes deployments
 
 set -e  # Exit on any error
@@ -42,7 +42,7 @@ print_step() {
 print_header() {
     echo -e "${CYAN}"
     echo "=============================================="
-    echo "🚀 Falco AI Alert System - Installation Script"
+    echo "🚀 Falco Vanguard - Installation Script"
     echo "=============================================="
     echo -e "${NC}"
 }
@@ -688,7 +688,7 @@ monitor_ollama_progress() {
 # Function to show help
 show_help() {
     cat << EOF
-Falco AI Alert System - Installation Script
+Falco Vanguard - Installation Script
 
 USAGE:
     $0 [OPTIONS] ENVIRONMENT
@@ -850,7 +850,7 @@ main() {
     
     # Final success message
     echo ""
-    print_success "🎉 Falco AI Alert System installation completed!"
+    print_success "🎉 Falco Vanguard installation completed!"
     print_info "Your $ENVIRONMENT environment is ready to use."
     print_info "Check the access instructions above to start using the system."
     

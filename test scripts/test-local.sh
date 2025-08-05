@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # =================================================================
-# Falco AI Alert System - Local Testing Script
+# Falco Vanguard - Local Testing Script
 # =================================================================
 # This script helps you start and test the system locally
 
 set -e
 
-echo "🚀 Falco AI Alert System - Local Testing"
+echo "🚀 Falco Vanguard - Local Testing"
 echo "========================================="
 
 # Check if Docker is running
@@ -34,7 +34,7 @@ echo "🔍 Checking service health..."
 timeout=60
 while [ $timeout -gt 0 ]; do
     if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
-        echo "✅ Falco AI Alert System is healthy!"
+        echo "✅ Falco Vanguard is healthy!"
         break
     fi
     echo "⏳ Waiting for service to be ready... ($timeout seconds remaining)"

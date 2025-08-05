@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Dynamic Falco AI Alert System Installation
+# Dynamic Falco Vanguard Installation
 # Auto-detects platform and deploys with appropriate configurations
 
 set -e
@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 
 print_header() {
     echo -e "\n${BLUE}=============================================="
-    echo -e "🚀 Falco AI Alert System - Dynamic Install"
+    echo -e "🚀 Falco Vanguard - Dynamic Install"
     echo -e "=============================================${NC}\n"
 }
 
@@ -285,7 +285,7 @@ deploy_application() {
     local environment=${1:-dev}
     local config_dir="$SCRIPT_DIR/overlays/$environment-auto"
     
-    print_info "Deploying Falco AI Alert System for $environment..."
+    print_info "Deploying Falco Vanguard for $environment..."
     
     if [[ ! -d "$config_dir" ]]; then
         print_error "Configuration directory not found: $config_dir"

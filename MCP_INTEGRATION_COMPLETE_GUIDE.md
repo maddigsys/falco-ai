@@ -1,8 +1,8 @@
-# Complete MCP Integration Guide - Falco AI Alert System
+# Complete MCP Integration Guide - Falco Vanguard
 
 ## 🎉 Status: Complete & Unified
 
-Your Falco AI Alert System supports **multiple MCP protocols** and **AI clients** with comprehensive security monitoring tools.
+Your Falco Vanguard supports **multiple MCP protocols** and **AI clients** with comprehensive security monitoring tools.
 
 **🎯 UNIFIED INTERFACE**: All MCP integrations consolidated into a single **MCP Hub** at `/mcp-dashboard`
 
