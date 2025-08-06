@@ -31,8 +31,8 @@ A comprehensive security alert system that combines Falco runtime security with 
 ### Kubernetes (Recommended - Auto-Platform Detection)
 ```bash
 # Clone the repository
-git clone https://github.com/maddigsys/falco-ai.git
-cd falco-ai/k8s
+git clone https://github.com/maddigsys/falco-vanguard.git
+cd falco-vanguard/k8s
 
 # One-command deployment (auto-detects GKE, EKS, AKS, etc.)
 ./install-dynamic.sh development
@@ -45,8 +45,8 @@ open http://localhost:8080/dashboard
 ### Docker Compose (Local Development)
 ```bash
 # Clone the repository
-git clone https://github.com/maddigsys/falco-ai.git
-cd falco-ai
+git clone https://github.com/maddigsys/falco-vanguard.git
+cd falco-vanguard
 
 # Start the system
 docker-compose up -d
@@ -78,7 +78,7 @@ The interactive web dashboard provides comprehensive security monitoring with mu
 ### Docker Run (Quick Test)
 ```bash
 # Run the latest version (multi-architecture: AMD64 + ARM64)
-docker run -d -p 8080:8080 --name falco-ai-alerts maddigsys/falco-ai-alerts:v2.0.0
+docker run -d -p 8080:8080 --name falco-vanguard maddigsys/falco-vanguard:v2.1.1
 
 # Access Web UI
 open http://localhost:8080/dashboard
@@ -153,20 +153,20 @@ The Docker images support both AMD64 and ARM64 architectures:
 
 ```bash
 # Latest version (recommended)
-docker pull maddigsys/falco-ai-alerts:v2.0.0
+docker pull maddigsys/falco-vanguard:v2.1.1
 
 # Always latest
-docker pull maddigsys/falco-ai-alerts:latest
+docker pull maddigsys/falco-vanguard:latest
 
 # Platform-specific (if needed)
-docker pull maddigsys/falco-ai-alerts:v2.0.0-amd64
+docker pull maddigsys/falco-vanguard:v2.1.1-amd64
 ```
 
 ### Available Tags
 - `latest` - Latest stable release (multi-arch)
-- `v2.0.0` - Current stable release (multi-arch)
-- `v2.0.0-amd64` - AMD64 specific build
-- `v1.5.7` - Previous stable release
+- `v2.1.1` - Current stable release (multi-arch)
+- `v2.1.1-amd64` - AMD64 specific build
+- `v2.0.0` - Previous stable release
 
 ## Legacy Kubernetes Deployment
 
@@ -202,7 +202,12 @@ The system includes 15 functional MCP (Model Context Protocol) tools:
 - **Analytics**: `cluster_alerts`, `get_alert_statistics`, `search_security_events`
 - **Configuration**: `get_ai_config`, `get_slack_config`, `get_system_health`
 
-## Recent Updates (v2.0.0)
+## Recent Updates (v2.1.1)
+
+### 🎨 **Branding & UI Updates**
+- **Unified Branding**: Consistent "Falco Vanguard" branding throughout the application
+- **Navigation Improvements**: Enhanced navigation bar with proper visual hierarchy
+- **Template Updates**: Updated all templates and configuration files with new branding
 
 ### 🚀 **Multi-Platform Kubernetes Support**
 - **Auto-Platform Detection**: Automatically detects GKE, EKS, AKS, DOKS, IBM Cloud, and local K8s
