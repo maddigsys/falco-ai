@@ -110,7 +110,7 @@ eksctl create cluster --name falco-cluster --region us-west-2 \
 # 2. Install required add-ons
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/aws/deploy.yaml
 
-# 3. Deploy Falco AI
+# 3. Deploy Falco Vanguard
 cd k8s && ./install.sh --cloud aws
 ```
 
@@ -125,7 +125,7 @@ gcloud container clusters create falco-cluster \
 # 2. Get credentials
 gcloud container clusters get-credentials falco-cluster --zone us-central1-a
 
-# 3. Deploy Falco AI
+# 3. Deploy Falco Vanguard
 cd k8s && ./install.sh --cloud gcp
 ```
 
@@ -142,7 +142,7 @@ az aks create --resource-group falco-rg --name falco-cluster \
 # 3. Get credentials
 az aks get-credentials --resource-group falco-rg --name falco-cluster
 
-# 4. Deploy Falco AI
+# 4. Deploy Falco Vanguard
 cd k8s && ./install.sh --cloud azure
 ```
 

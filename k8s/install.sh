@@ -329,8 +329,8 @@ install_environment() {
         prefix="prod-"
     fi
     
-    # Wait for Falco AI Alerts deployment
-    print_info "Waiting for Falco AI Alerts deployment..."
+    # Wait for Falco Vanguard deployment
+    print_info "Waiting for Falco Vanguard deployment..."
     kubectl wait --for=condition=available deployment/"${prefix}falco-vanguard" -n "$namespace" --timeout=300s
     
     # Wait for Ollama deployment

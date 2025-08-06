@@ -61,7 +61,7 @@ kubectl apply -k k8s/overlays/aks
 
 | Component | CPU Request | Memory Request | CPU Limit | Memory Limit |
 |-----------|-------------|----------------|-----------|--------------|
-| Falco AI | 250m | 256Mi | 500m | 512Mi |
+| Falco Vanguard | 250m | 256Mi | 500m | 512Mi |
 | Ollama | 1000m | 2Gi | 2000m | 4Gi |
 | Weaviate | 500m | 1Gi | 1000m | 2Gi |
 

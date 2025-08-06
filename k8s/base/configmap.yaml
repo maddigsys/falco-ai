@@ -48,7 +48,7 @@ data:
   # Slack Configuration
   SLACK_ENABLED: "true"
   SLACK_CHANNEL_NAME: "#security-alerts"
-  SLACK_USERNAME: "Falco AI Alerts"
+  SLACK_USERNAME: "Falco Vanguard"
   SLACK_ICON_EMOJI: ":shield:"
   SLACK_TEMPLATE_STYLE: "detailed"
   SLACK_MIN_PRIORITY: "warning"

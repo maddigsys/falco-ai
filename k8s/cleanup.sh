@@ -298,7 +298,7 @@ main() {
     # Show current cluster info
     print_info "Current cluster context: $(kubectl config current-context)"
     print_info "Cleanup environment: $ENVIRONMENT"
-    print_info "Will clean up: Falco AI Alerts + Ollama (tinyllama) + model data"
+    print_info "Will clean up: Falco Vanguard + Ollama (tinyllama) + model data"
     
     # Show environment-specific details
     if [ "$ENVIRONMENT" = "dev" ]; then

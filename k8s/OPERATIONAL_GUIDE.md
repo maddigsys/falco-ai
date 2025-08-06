@@ -359,7 +359,7 @@ data:
   dashboard.json: |
     {
       "dashboard": {
-        "title": "Falco AI Alerts",
+        "title": "Falco Vanguard",
         "panels": [...monitoring panels...]
       }
     }
